@@ -10,60 +10,105 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+using System.Diagnostics;
 
 namespace DiscordERPGAutoTyper
 {
     internal class Program
     {
         static IWebDriver driver;
-        static Timer timer1;
-        static Timer timer2;
+        static Timer huntT;
+        static Timer workT;
+        static Timer farmT;
         static readonly string baseURL = "https://discord.com";
         static readonly string discordChannelAuto = "https://discord.com/channels/1180781501940518932/1264330502005985391";
 
+
+        static Queue<string> messageQueue = new Queue<string>();
         static string hunt = "rpg hunt";
-        static string work = "rpg chainsaw";
+        static string work = "rpg chop";
         static string farm = "rpg farm";
-        
-        static int huntCount = 0;
-        static int workCount = 0;
-        static int farmCount = 0;
+
+        static int area = 1;
 
         
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             string password = "pass";
             string email = "email";
 
-            Initialize();
-            //Login(email,password);
-            GoToChannel(discordChannelAuto);
-            // Set up the first timer to send "hi" every 20 seconds
-            timer1 = new Timer(20000); // 20000 milliseconds = 20 seconds
-            timer1.Elapsed += (sender, e) => SendMessage(hunt, huntCount); // po prvním sendu se to rozbije
-            timer1.AutoReset = true;
-            timer1.Enabled = true;
+            KillAllChromeProcesses();
 
-            // Set up the second timer to send "Hey" every 42 seconds
-            /*timer2 = new Timer(42000); // 42000 milliseconds = 42 seconds
-            timer2.Elapsed += (sender, e) => SendMessage("Hey");
-            timer2.AutoReset = true;
-            timer2.Enabled = true;*/
+            Initialize();
+
+            GoToChannel(discordChannelAuto);
+
+            if (CheckIfLoggedIn() == true)
+            {
+                Login(email, password);
+                GoToChannel(discordChannelAuto);
+            }
+            
+            PrvniStart();
+
+            huntT = new Timer(20000); // 20000 milliseconds = 20 seconds
+            huntT.Elapsed += (sender, e) => QueueMessage(hunt); 
+            huntT.AutoReset = true;
+            huntT.Enabled = true;
+
+            workT = new Timer(97000); 
+            workT.Elapsed += (sender, e) => QueueMessage(work);
+            workT.AutoReset = true;
+            workT.Enabled = true;
+            if (area >= 4)
+            {
+                farmT = new Timer(192000);
+                farmT.Elapsed += (sender, e) => QueueMessage(farm);
+                farmT.AutoReset = true;
+                farmT.Enabled = true;
+            }
+            await ProcessQueue();
 
             // Keep the application running to allow the timers to fire
             Console.WriteLine("Press [Enter] to exit the program...");
             Console.ReadLine();
 
             // Clean up
-            timer1.Stop();
-            timer1.Dispose();
-            //timer2.Stop();
-            //timer2.Dispose();
+            huntT.Stop();
+            huntT.Dispose();
+            workT.Stop();
+            workT.Dispose();
+            farmT.Stop();
+            farmT.Dispose();
+                
             driver.Quit();
+        }
+        static void KillAllChromeProcesses()
+        {
+            // Get all processes running on the system
+            Process[] chromeProcesses = Process.GetProcessesByName("chrome");
+
+            foreach (Process process in chromeProcesses)
+            {
+                try
+                {
+                    // Terminate the process
+                    process.Kill();
+                    process.WaitForExit(); // Optional: Wait for the process to exit to ensure it has been terminated
+                    Console.WriteLine($"Killed process {process.Id}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred while killing process {process.Id}: {ex.Message}");
+                }
+            }
+
+            Console.WriteLine("All Chrome processes have been terminated.");
         }
         static void Initialize()
         {
             Console.WriteLine("Initializing");
+            
             var options = new ChromeOptions();
             // Using a user profile
 
@@ -82,11 +127,40 @@ namespace DiscordERPGAutoTyper
             Console.WriteLine($"{channel}");
             driver.Navigate().GoToUrl(channel);
         }
-        void PrvniStart()
+        static void PrvniStart()
         {
-
+            Console.WriteLine("Startuju v: " + DateTime.Now);
+            SendMessage("rpg cd");
+            System.Threading.Thread.Sleep(2001);
+            SendMessage(hunt);
+            System.Threading.Thread.Sleep(2001);
+            SendMessage(work);
+            System.Threading.Thread.Sleep(2001);
+            if (area >= 4)
+                SendMessage(farm);
         }
-        private static void SendMessage(string command, int commandCount)
+        static void QueueMessage(string message)
+        {
+            messageQueue.Enqueue(message);
+            Console.WriteLine($"Message '{message}' queued at: " + DateTime.Now);
+        }
+        static async Task ProcessQueue()
+        {
+            while (true)
+            {
+                if (messageQueue.Count > 0)
+                {
+                    var message = messageQueue.Dequeue();
+                    SendMessage(message);
+                    await Task.Delay(2000); // Wait for 2 seconds before sending the next message
+                }
+                else
+                {
+                    await Task.Delay(500); // Check the queue every 0.5 seconds if empty
+                }
+            }
+        }
+        private static void SendMessage(string command)
         {
             try
             {
@@ -94,26 +168,26 @@ namespace DiscordERPGAutoTyper
                 // Locate the chat box element
 
                 IWebElement chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("span[data-slate-node='text']")));
-                // Clear the chat box
-                Console.WriteLine("vyčistil jsem pole");
-                chatBox.Clear();
 
                 // Type the message
-                Console.WriteLine("píšu příkaz");
                 chatBox.SendKeys(command);
-                //System.Threading.Thread.Sleep(500);
                 // Submit the message
 
-                chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("span[data-slate-node='text']")));
-                Console.WriteLine("Posílám zprávu");
+                chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div[role='textbox']")));
                 chatBox.SendKeys(Keys.Enter);
-                Console.WriteLine("Poslal jsem zprávu");
-                Console.WriteLine(command + " number: " + commandCount++ + " sent at: " + DateTime.Now );
+
+                Console.WriteLine(command + " sent at: " + DateTime.Now);
+                //Check if cooldown
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+        }
+        private static void CheckGuard()
+        {
+
         }
         static void Login(string email, string password)
         {
@@ -127,7 +201,12 @@ namespace DiscordERPGAutoTyper
 
             Console.WriteLine("button found");
             loginButton.Click();
-
+            if (wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[text()='Choose an account']"))) != null)
+            {
+                Console.WriteLine("Našel jsem choose an account");
+                IWebElement addAnAccount = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//*[text()='Add an account']")));
+                addAnAccount.Click();
+            }
             // Wait for the email input to become visible
             IWebElement emailInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("email")));
             emailInput.SendKeys(email);
@@ -137,9 +216,34 @@ namespace DiscordERPGAutoTyper
             passwordInput.SendKeys(password);
 
             // Wait for the submit button to become clickable and click it
+
             IWebElement submitButton = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//button[@type='submit']")));
             submitButton.Click();
             
+        }
+        static bool CheckIfLoggedIn()
+        {
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+            Console.WriteLine("Checkuju jestli jsem logged in");
+            // Wait for the login button and click it   
+            try 
+            {
+                Console.WriteLine("tady");
+                IWebElement discordDetected = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[text()='Discord App Detected']")));
+                Console.WriteLine("tady1");
+                if (discordDetected != null)
+                {
+                    Console.WriteLine("tady2");
+                    return true;
+                }
+                    
+            }
+            catch
+            {
+
+            }
+            Console.WriteLine("tady3");
+            return false;
         }
     }
 }
