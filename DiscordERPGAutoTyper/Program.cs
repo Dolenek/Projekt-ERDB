@@ -29,7 +29,7 @@ namespace DiscordERPGAutoTyper
         static string work = "rpg chop";
         static string farm = "rpg farm";
 
-        static int area = 1;
+        static int area = 3;
 
         
         static async Task Main(string[] args)
@@ -74,14 +74,7 @@ namespace DiscordERPGAutoTyper
             Console.ReadLine();
 
             // Clean up
-            huntT.Stop();
-            huntT.Dispose();
-            workT.Stop();
-            workT.Dispose();
-            farmT.Stop();
-            farmT.Dispose();
-                
-            driver.Quit();
+            CleanUp();
         }
         static void KillAllChromeProcesses()
         {
@@ -127,9 +120,41 @@ namespace DiscordERPGAutoTyper
             Console.WriteLine($"{channel}");
             driver.Navigate().GoToUrl(channel);
         }
+        static void CleanUp()
+        {
+            // Clean up
+            huntT.Stop();
+            huntT.Dispose();
+            workT.Stop();
+            workT.Dispose();
+            farmT.Stop();
+            farmT.Dispose();
+
+            driver.Quit();
+        }
         static void PrvniStart()
         {
             Console.WriteLine("Startuju v: " + DateTime.Now);
+            //setup work
+            switch (area)
+            {   
+                case 3 or 4 or 5:
+                    work = "rpg axe";
+                    Console.WriteLine("Používám: " + work);
+                    break;
+                case 6 or 7 or 8:
+                    work = "rpg pickaxe";
+                    Console.WriteLine("Používám: " + work);
+                    break;
+                case 9 or 10 or 11:
+                    work = "rpg chainsaw";
+                    Console.WriteLine("Používám: " + work);
+                    break;
+                default:
+                    work = "rpg chop";
+                    Console.WriteLine("Používám: "+work);
+                    break;
+            }
             SendMessage("rpg cd");
             System.Threading.Thread.Sleep(2001);
             SendMessage(hunt);
@@ -178,16 +203,32 @@ namespace DiscordERPGAutoTyper
 
                 Console.WriteLine(command + " sent at: " + DateTime.Now);
                 //Check if cooldown
-
+                
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
+        private static string GetLastMessageContent()
+        {
+            try
+            {
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                IWebElement message = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("")));
+
+                return "xd";
+            }
+            catch
+            {
+
+            }
+            return ":(";
+        }
+
         private static void CheckGuard()
         {
-
+            
         }
         static void Login(string email, string password)
         {
