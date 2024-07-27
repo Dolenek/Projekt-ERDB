@@ -29,9 +29,13 @@ namespace DiscordERPGAutoTyper
         static string work = "rpg chop";
         static string farm = "rpg farm";
 
-        static int area = 3;
+        static int huntCooldown = 20000;
+        static int workCooldown = 97000;
+        static int farmCooldown = 192000;
 
-        
+        static int area = 4;
+
+
         static async Task Main(string[] args)
         {
             string password = "pass";
@@ -51,24 +55,23 @@ namespace DiscordERPGAutoTyper
             
             PrvniStart();
 
-            huntT = new Timer(20000); // 20000 milliseconds = 20 seconds
+            huntT = new Timer(huntCooldown); // 20000 milliseconds = 20 seconds
             huntT.Elapsed += (sender, e) => QueueMessage(hunt); 
             huntT.AutoReset = true;
             huntT.Enabled = true;
 
-            workT = new Timer(97000); 
+            workT = new Timer(workCooldown);
             workT.Elapsed += (sender, e) => QueueMessage(work);
             workT.AutoReset = true;
             workT.Enabled = true;
             if (area >= 4)
             {
-                farmT = new Timer(192000);
+                farmT = new Timer(farmCooldown);
                 farmT.Elapsed += (sender, e) => QueueMessage(farm);
                 farmT.AutoReset = true;
                 farmT.Enabled = true;
             }
             await ProcessQueue();
-
             // Keep the application running to allow the timers to fire
             Console.WriteLine("Press [Enter] to exit the program...");
             Console.ReadLine();
@@ -112,6 +115,9 @@ namespace DiscordERPGAutoTyper
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
             options.AddArgument("--disable-gpu");
+
+            
+
             driver = new ChromeDriver(options);
             
         }
@@ -122,6 +128,7 @@ namespace DiscordERPGAutoTyper
         }
         static void CleanUp()
         {
+            Console.WriteLine("EXECUTE ORDER 66");
             // Clean up
             huntT.Stop();
             huntT.Dispose();
@@ -203,32 +210,115 @@ namespace DiscordERPGAutoTyper
 
                 Console.WriteLine(command + " sent at: " + DateTime.Now);
                 //Check if cooldown
-                
+                System.Threading.Thread.Sleep(2001);
+
+                EventCheck(CheckLastMessage());
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                Console.WriteLine($"SEND MESSAGE    An error occurred: {ex.Message}");
             }
         }
-        private static string GetLastMessageContent()
+        static void EventCheck(string message)
+        {
+            //Console.WriteLine("Event checking with message : " + message);
+            if (message.Contains("Select the item of the image above or respond with the item name")) //Guard
+            {
+                Console.WriteLine("AAAAAAAAAAA PANIC AAAAAAAAAAAAAAAAAAAA");
+            }
+            else if (message.Contains("STOP")) //stop everything
+            {
+
+            }
+            else if (message.Contains("wait at least")) //msg Cooldown
+            {
+                Console.WriteLine("Cooldown wait x");
+            }
+            else if (message.Contains("AN EPIC TREE HAS JUST GROWN")) //Tree
+            {
+                Console.WriteLine("Tree event at: " + DateTime.Now);
+                SendMessage("CUT");
+            }
+            else if (message.Contains("God accidentally dropped an EPIC coin")) //Epic coin
+            {
+                Console.WriteLine("Epic coin event at: " + DateTime.Now);
+                if (message.Contains("I SHALL BRING THE EPIC TO THE COIN"))
+                    SendMessage("I SHALL BRING THE EPIC TO THE COIN");
+                else if (message.Contains("MY PRECIOUS"))
+                    SendMessage("MY PRECIOUS");
+                else if (message.Contains("WHAT IS EPIC? THIS COIN"))
+                    SendMessage("WHAT IS EPIC? THIS COIN");
+                else if (message.Contains("YES! AN EPIC COIN"))
+                    SendMessage("YES! AN EPIC COIN");
+                else if (message.Contains("MY PRECIOUS"))
+                    SendMessage("MY PRECIOUS");
+                else if (message.Contains("OPERATION: EPIC COIN"))
+                    SendMessage("OPERATION: EPIC COIN");
+            }
+            else if (message.Contains("A MEGALODON HAS SPAWNED IN THE RIVER")) //fish
+            {
+                Console.WriteLine("Fish event at: " + DateTime.Now);
+                SendMessage("LURE");
+            }
+            else if (message.Contains(":coin: OOPS! God accidentally dropped")) //coins
+            {
+                Console.WriteLine("Coin event at: " + DateTime.Now);
+                if (message.Contains("BACK OFF THIS IS MINE!!"))
+                    SendMessage("BACK OFF THIS IS MINE!!");
+                else if (message.Contains("HACOINA MATATA"))
+                    SendMessage("HACOINA MATATA");
+                else if (message.Contains("THIS IS MINE"))
+                    SendMessage("THIS IS MINE");
+                else if (message.Contains("ALL THE COINS BELONG TO ME"))
+                    SendMessage("ALL THE COINS BELONG TO ME");
+                else if (message.Contains("GIMME DA MONEY"))
+                    SendMessage("GIMME DA MONEY");
+                else if (message.Contains("OPERATION: COINS"))
+                    SendMessage("OPERATION: COINS");
+            }
+            else if (message.Contains("EPIC NPC: I have a special trade today!")) //epic npc
+            {
+                Console.WriteLine("Epic NPC trade event at: " + DateTime.Now);
+                if (message.Contains("YUP I WILL DO THAT"))
+                    SendMessage("YUP I WILL DO THAT");
+                else if (message.Contains("I WANT THAT"))
+                    SendMessage("I WANT THAT");
+                else if (message.Contains("HEY EPIC NPC! I WANT TO TRADE WITH YOU"))
+                    SendMessage("HEY EPIC NPC! I WANT TO TRADE WITH YOU");
+                else if (message.Contains("THAT SOUNDS LIKE AN OP BUSINESS"))
+                    SendMessage("THAT SOUNDS LIKE AN OP BUSINESS");
+                else if (message.Contains("OWO ME!!!"))
+                    SendMessage("OWO ME!!!");
+            }
+            else if (message.Contains("A LOOTBOX SUMMONING HAS STARTED")) //lootboxes
+            {
+                Console.WriteLine("Lootbox event at: " + DateTime.Now);
+                SendMessage("SUMMON");
+            }
+            else if (message.Contains("A LEGENDARY BOSS JUST SPAWNED"))
+            {
+                Console.WriteLine("Boss event at: " + DateTime.Now);
+                SendMessage("TIME TO FIGHT");
+            }
+        }
+        static string CheckLastMessage()
         {
             try
             {
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                IWebElement message = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("")));
 
-                return "xd";
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(2));
+                IList<IWebElement> messages = driver.FindElements(By.CssSelector("li[id^='chat-messages-']"));
+
+                IWebElement lastMessageElement = messages[messages.Count - 1];
+
+                //Console.WriteLine(lastMessageElement.Text);
+                return lastMessageElement.Text;
             }
-            catch
-            {
-
+            catch 
+            { 
+                Console.WriteLine("nenašel jsem žádnou zprávu v CheckLastMessage"); 
             }
             return ":(";
-        }
-
-        private static void CheckGuard()
-        {
-            
         }
         static void Login(string email, string password)
         {
@@ -269,21 +359,17 @@ namespace DiscordERPGAutoTyper
             // Wait for the login button and click it   
             try 
             {
-                Console.WriteLine("tady");
                 IWebElement discordDetected = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[text()='Discord App Detected']")));
-                Console.WriteLine("tady1");
                 if (discordDetected != null)
                 {
-                    Console.WriteLine("tady2");
                     return true;
                 }
                     
             }
-            catch
+            catch(Exception ex)
             {
-
+                Console.WriteLine($"{ex.Message}");
             }
-            Console.WriteLine("tady3");
             return false;
         }
     }
