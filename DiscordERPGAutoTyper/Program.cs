@@ -11,6 +11,9 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System.Diagnostics;
+using Microsoft.Toolkit.Uwp.Notifications;
+using Windows.UI.Notifications;
+using System.Runtime.InteropServices;
 
 namespace DiscordERPGAutoTyper
 {
@@ -20,20 +23,23 @@ namespace DiscordERPGAutoTyper
         static Timer huntT;
         static Timer workT;
         static Timer farmT;
+        static Timer checkMessageT;
         static readonly string baseURL = "https://discord.com";
         static readonly string discordChannelAuto = "https://discord.com/channels/1180781501940518932/1264330502005985391";
 
+        static string lastMessageId = string.Empty;
 
         static Queue<string> messageQueue = new Queue<string>();
         static string hunt = "rpg hunt";
         static string work = "rpg chop";
         static string farm = "rpg farm";
 
-        static int huntCooldown = 20000;
-        static int workCooldown = 97000;
-        static int farmCooldown = 192000;
+        static int huntCooldown = 40000;
+        static int workCooldown = 197000;
+        static int farmCooldown = 392000;
 
-        static int area = 4;
+        static int area = 9;
+
 
 
         static async Task Main(string[] args)
@@ -52,11 +58,11 @@ namespace DiscordERPGAutoTyper
                 Login(email, password);
                 GoToChannel(discordChannelAuto);
             }
-            
+
             PrvniStart();
 
             huntT = new Timer(huntCooldown); // 20000 milliseconds = 20 seconds
-            huntT.Elapsed += (sender, e) => QueueMessage(hunt); 
+            huntT.Elapsed += (sender, e) => QueueMessage(hunt);
             huntT.AutoReset = true;
             huntT.Enabled = true;
 
@@ -71,6 +77,10 @@ namespace DiscordERPGAutoTyper
                 farmT.AutoReset = true;
                 farmT.Enabled = true;
             }
+            checkMessageT = new Timer(2000);
+            checkMessageT.Elapsed += (sender, e) => EventCheck(CheckLastMessage());
+            checkMessageT.AutoReset = true;
+            checkMessageT.Enabled = true;
             await ProcessQueue();
             // Keep the application running to allow the timers to fire
             Console.WriteLine("Press [Enter] to exit the program...");
@@ -104,22 +114,21 @@ namespace DiscordERPGAutoTyper
         static void Initialize()
         {
             Console.WriteLine("Initializing");
-            
-            var options = new ChromeOptions();
+
+            //Chrome setup
+            ChromeOptions options = new ChromeOptions();
             // Using a user profile
 
-            string userProfile = @"C:\Users\thesa\AppData\Local\Google\Chrome\User Data";
-            string profileName = "Profile 1"; // Or the name of the profile you want to use
+            string userProfile = @"C:\Users\Uživatel\AppData\Local\Google\Chrome\User Data";
+            string profileName = "Profile 2"; // Or the name of the profile you want to use
             options.AddArgument($"user-data-dir={userProfile}");
             options.AddArgument($"profile-directory={profileName}");
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
             options.AddArgument("--disable-gpu");
 
-            
-
             driver = new ChromeDriver(options);
-            
+
         }
         static void GoToChannel(string channel)
         {
@@ -144,7 +153,7 @@ namespace DiscordERPGAutoTyper
             Console.WriteLine("Startuju v: " + DateTime.Now);
             //setup work
             switch (area)
-            {   
+            {
                 case 3 or 4 or 5:
                     work = "rpg axe";
                     Console.WriteLine("Používám: " + work);
@@ -159,7 +168,7 @@ namespace DiscordERPGAutoTyper
                     break;
                 default:
                     work = "rpg chop";
-                    Console.WriteLine("Používám: "+work);
+                    Console.WriteLine("Používám: " + work);
                     break;
             }
             SendMessage("rpg cd");
@@ -224,11 +233,13 @@ namespace DiscordERPGAutoTyper
             //Console.WriteLine("Event checking with message : " + message);
             if (message.Contains("Select the item of the image above or respond with the item name")) //Guard
             {
+                ShowToastNotification("POLICIEEE", "Guard seen at: " + DateTime.Now);
                 Console.WriteLine("AAAAAAAAAAA PANIC AAAAAAAAAAAAAAAAAAAA");
             }
             else if (message.Contains("STOP")) //stop everything
             {
-
+                Console.WriteLine("STOP");
+                ShowToastNotification("STOP", "Stop message was sent");
             }
             else if (message.Contains("wait at least")) //msg Cooldown
             {
@@ -260,8 +271,9 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine("Fish event at: " + DateTime.Now);
                 SendMessage("LURE");
             }
-            else if (message.Contains(":coin: OOPS! God accidentally dropped")) //coins
+            else if (message.Contains(":coin: OOPS! God accidentally dropped")) //coins IT'S RAINING COINS
             {
+                
                 Console.WriteLine("Coin event at: " + DateTime.Now);
                 if (message.Contains("BACK OFF THIS IS MINE!!"))
                     SendMessage("BACK OFF THIS IS MINE!!");
@@ -300,6 +312,7 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine("Boss event at: " + DateTime.Now);
                 SendMessage("TIME TO FIGHT");
             }
+
         }
         static string CheckLastMessage()
         {
@@ -309,16 +322,31 @@ namespace DiscordERPGAutoTyper
                 WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(2));
                 IList<IWebElement> messages = driver.FindElements(By.CssSelector("li[id^='chat-messages-']"));
 
+                if (messages.Count == 0)
+                {
+                    //onsole.WriteLine("No messages found");
+                    return string.Empty;
+                }
+
                 IWebElement lastMessageElement = messages[messages.Count - 1];
+                string currentMessageId = lastMessageElement.GetAttribute("id");
+
+                if (currentMessageId == lastMessageId)
+                {
+                    //Console.WriteLine("CheckLastMessage ID is the same");
+                    return string.Empty;
+                }
+
+                lastMessageId = currentMessageId;
 
                 //Console.WriteLine(lastMessageElement.Text);
                 return lastMessageElement.Text;
             }
-            catch 
-            { 
-                Console.WriteLine("nenašel jsem žádnou zprávu v CheckLastMessage"); 
+            catch
+            {
+                Console.WriteLine("nenašel jsem žádnou zprávu v CheckLastMessage");
             }
-            return ":(";
+            return string.Empty;
         }
         static void Login(string email, string password)
         {
@@ -326,7 +354,7 @@ namespace DiscordERPGAutoTyper
             driver.Navigate().GoToUrl(baseURL);
 
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            
+
             // Wait for the login button and click it   
             IWebElement loginButton = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("a[data-track-nav = 'login']")));
 
@@ -350,27 +378,49 @@ namespace DiscordERPGAutoTyper
 
             IWebElement submitButton = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//button[@type='submit']")));
             submitButton.Click();
-            
+
         }
         static bool CheckIfLoggedIn()
         {
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
             Console.WriteLine("Checkuju jestli jsem logged in");
             // Wait for the login button and click it   
-            try 
+            try
             {
                 IWebElement discordDetected = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[text()='Discord App Detected']")));
                 if (discordDetected != null)
                 {
                     return true;
                 }
-                    
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
             }
             return false;
+        }
+        static void ShowToastNotification(string notificationTitle, string notificationBody)
+        {
+            // Initialize the toast notification content
+            var toastContent = new ToastContentBuilder()
+                .AddArgument("action", "viewApp")
+                .AddText(notificationTitle)
+                .AddText(notificationBody)
+                .AddButton(new ToastButton()
+                    .SetContent("Bring to Front")
+                    .AddArgument("action", "bringToFront"))
+                .AddAudio(new Uri("ms-winsoundevent:Notification.Default")) // Add sound
+                .GetToastContent();
+
+            // Show the toast notification
+            var notification = new ToastNotification(toastContent.GetXml())
+            {
+                // Ensure the toast is displayed immediately
+                ExpirationTime = DateTime.Now.AddMinutes(1)
+            };
+            ToastNotificationManagerCompat.CreateToastNotifier().Show(notification);
+
         }
     }
 }
