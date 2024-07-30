@@ -81,6 +81,7 @@ namespace DiscordERPGAutoTyper
             checkMessageT.Elapsed += (sender, e) => EventCheck(CheckLastMessage());
             checkMessageT.AutoReset = true;
             checkMessageT.Enabled = true;
+
             await ProcessQueue();
             // Keep the application running to allow the timers to fire
             Console.WriteLine("Press [Enter] to exit the program...");
@@ -245,10 +246,24 @@ namespace DiscordERPGAutoTyper
             {
                 Console.WriteLine("Cooldown wait x");
             }
+            else if (message.Contains("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way"))
+            {
+                ShowToastNotification("Zombie Horde", "" + DateTime.Now);
+            }
             else if (message.Contains("AN EPIC TREE HAS JUST GROWN")) //Tree
             {
                 Console.WriteLine("Tree event at: " + DateTime.Now);
                 SendMessage("CUT");
+            }
+            else if (message.Contains("A MEGALODON HAS SPAWNED IN THE RIVER")) //fish
+            {
+                Console.WriteLine("Fish event at: " + DateTime.Now);
+                SendMessage("LURE");
+            }
+            else if (message.Contains("IT'S RAINING COINS"))
+            {
+                Console.WriteLine("Coins event at: " + DateTime.Now);
+                SendMessage("CATCH");
             }
             else if (message.Contains("God accidentally dropped an EPIC coin")) //Epic coin
             {
@@ -266,15 +281,10 @@ namespace DiscordERPGAutoTyper
                 else if (message.Contains("OPERATION: EPIC COIN"))
                     SendMessage("OPERATION: EPIC COIN");
             }
-            else if (message.Contains("A MEGALODON HAS SPAWNED IN THE RIVER")) //fish
-            {
-                Console.WriteLine("Fish event at: " + DateTime.Now);
-                SendMessage("LURE");
-            }
-            else if (message.Contains(":coin: OOPS! God accidentally dropped")) //coins IT'S RAINING COINS
+            else if (message.Contains("OOPS! God accidentally dropped")) //solo coins
             {
                 
-                Console.WriteLine("Coin event at: " + DateTime.Now);
+                Console.WriteLine("Solo Coin event at: " + DateTime.Now);
                 if (message.Contains("BACK OFF THIS IS MINE!!"))
                     SendMessage("BACK OFF THIS IS MINE!!");
                 else if (message.Contains("HACOINA MATATA"))
