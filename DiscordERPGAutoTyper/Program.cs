@@ -38,7 +38,7 @@ namespace DiscordERPGAutoTyper
         static int workCooldown = 197000;
         static int farmCooldown = 392000;
 
-        static int area = 9;
+        static int area = 10;
 
 
 
@@ -163,7 +163,7 @@ namespace DiscordERPGAutoTyper
                     work = "rpg pickaxe";
                     Console.WriteLine("Používám: " + work);
                     break;
-                case 9 or 10 or 11:
+                case 9 or 10 or 11 or 12 or 13:
                     work = "rpg chainsaw";
                     Console.WriteLine("Používám: " + work);
                     break;
@@ -229,6 +229,33 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine($"SEND MESSAGE    An error occurred: {ex.Message}");
             }
         }
+        private static void SendCommand(string command,Timer timer,int count)
+        {
+            try
+            {
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                // Locate the chat box element
+
+                IWebElement chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("span[data-slate-node='text']")));
+
+                // Type the message
+                chatBox.SendKeys(command);
+                // Submit the message
+
+                chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div[role='textbox']")));
+                chatBox.SendKeys(Keys.Enter);
+
+                Console.WriteLine(command + " sent at: " + DateTime.Now);
+                //Check if cooldown
+                System.Threading.Thread.Sleep(2001);
+
+                EventCheck(CheckLastMessage());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SEND MESSAGE    An error occurred: {ex.Message}");
+            }
+        }
         static void EventCheck(string message)
         {
             //Console.WriteLine("Event checking with message : " + message);
@@ -242,12 +269,17 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine("STOP");
                 ShowToastNotification("STOP", "Stop message was sent");
             }
+            else if (message.Contains("START")) //start again
+            {
+                
+            }
             else if (message.Contains("wait at least")) //msg Cooldown
             {
                 Console.WriteLine("Cooldown wait x");
             }
             else if (message.Contains("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way"))
             {
+                Console.WriteLine("Zombie horde event at: " + DateTime.Now);
                 ShowToastNotification("Zombie Horde", "" + DateTime.Now);
             }
             else if (message.Contains("AN EPIC TREE HAS JUST GROWN")) //Tree
@@ -283,7 +315,7 @@ namespace DiscordERPGAutoTyper
             }
             else if (message.Contains("OOPS! God accidentally dropped")) //solo coins
             {
-                
+
                 Console.WriteLine("Solo Coin event at: " + DateTime.Now);
                 if (message.Contains("BACK OFF THIS IS MINE!!"))
                     SendMessage("BACK OFF THIS IS MINE!!");
