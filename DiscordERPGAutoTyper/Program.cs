@@ -24,6 +24,9 @@ namespace DiscordERPGAutoTyper
         static Timer workT;
         static Timer farmT;
         static Timer checkMessageT;
+        static Stopwatch huntS;
+        static Stopwatch workS;
+        static Stopwatch farmS;
         static readonly string baseURL = "https://discord.com";
         static readonly string discordChannelAuto = "https://discord.com/channels/1180781501940518932/1264330502005985391";
 
@@ -38,7 +41,17 @@ namespace DiscordERPGAutoTyper
         static int workCooldown = 197000;
         static int farmCooldown = 392000;
 
-        static int area = 10;
+        static int huntCount = 0;
+        static int workCount = 0;
+        static int farmCount = 0;
+
+        static int boostCount = 0;
+
+        static double huntRemainingInterval = 0;
+        static double workRemainingInterval = 0;
+        static double farmRemainingInterval = 0;
+
+        static int area = 8;
 
 
 
@@ -61,21 +74,25 @@ namespace DiscordERPGAutoTyper
 
             PrvniStart();
 
+
             huntT = new Timer(huntCooldown); // 20000 milliseconds = 20 seconds
             huntT.Elapsed += (sender, e) => QueueMessage(hunt);
             huntT.AutoReset = true;
             huntT.Enabled = true;
+            
 
             workT = new Timer(workCooldown);
             workT.Elapsed += (sender, e) => QueueMessage(work);
             workT.AutoReset = true;
             workT.Enabled = true;
+            
+            farmT = new Timer(farmCooldown);
             if (area >= 4)
             {
-                farmT = new Timer(farmCooldown);
                 farmT.Elapsed += (sender, e) => QueueMessage(farm);
                 farmT.AutoReset = true;
                 farmT.Enabled = true;
+                
             }
             checkMessageT = new Timer(2000);
             checkMessageT.Elapsed += (sender, e) => EventCheck(CheckLastMessage());
@@ -229,23 +246,26 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine($"SEND MESSAGE    An error occurred: {ex.Message}");
             }
         }
-        private static void SendCommand(string command,Timer timer,int count)
+        private static void SendCommand(string command,Timer timer,int count,Stopwatch stopwatch)
         {
             try
             {
                 WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                // Locate the chat box element
 
+                // Locate the chat box element
                 IWebElement chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("span[data-slate-node='text']")));
 
                 // Type the message
                 chatBox.SendKeys(command);
-                // Submit the message
+                count++;
 
+                // Submit the message
                 chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div[role='textbox']")));
                 chatBox.SendKeys(Keys.Enter);
 
-                Console.WriteLine(command + " sent at: " + DateTime.Now);
+                Console.WriteLine(command + " number: " + count + " sent at: " + DateTime.Now);
+                stopwatch.Restart();
+                timer.Interval = 420; //FIX
                 //Check if cooldown
                 System.Threading.Thread.Sleep(2001);
 
@@ -264,14 +284,22 @@ namespace DiscordERPGAutoTyper
                 ShowToastNotification("POLICIEEE", "Guard seen at: " + DateTime.Now);
                 Console.WriteLine("AAAAAAAAAAA PANIC AAAAAAAAAAAAAAAAAAAA");
             }
+            if (message.Contains("TEST"))
+            {
+                Console.WriteLine("I hear you");
+                ShowToastNotification("I hear you", "" + DateTime.Now);
+                SendMessage("I hear you");
+            }
             else if (message.Contains("STOP")) //stop everything
             {
                 Console.WriteLine("STOP");
                 ShowToastNotification("STOP", "Stop message was sent");
+                StopCommands();
             }
             else if (message.Contains("START")) //start again
             {
-                
+                Console.WriteLine("START");
+                StartCommands();
             }
             else if (message.Contains("wait at least")) //msg Cooldown
             {
@@ -281,6 +309,12 @@ namespace DiscordERPGAutoTyper
             {
                 Console.WriteLine("Zombie horde event at: " + DateTime.Now);
                 ShowToastNotification("Zombie Horde", "" + DateTime.Now);
+            }
+            else if (message.Contains("megarace boost"))
+            {
+                boostCount++;
+                Console.WriteLine(boostCount + " Event mega boost at: " + DateTime.Now);
+                SendMessage("yes");
             }
             else if (message.Contains("AN EPIC TREE HAS JUST GROWN")) //Tree
             {
@@ -355,6 +389,28 @@ namespace DiscordERPGAutoTyper
                 SendMessage("TIME TO FIGHT");
             }
 
+        }
+        static void StopCommands()
+        {
+            /*workRemainingInterval = GetRemainingTime(workS, workCooldown);
+            huntRemainingInterval = GetRemainingTime(huntS, huntCooldown);
+            farmRemainingInterval = GetRemainingTime(farmS, farmCooldown);*/
+            workT.Stop();
+            huntT.Stop();
+            farmT.Stop();
+        }
+        static void StartCommands()
+        {
+
+            workT.Start();
+            huntT.Start();
+            farmT.Start();
+        }
+        static double GetRemainingTime(Stopwatch stopwatch, int cooldown)
+        {
+            // Calculate the remaining time based on the cooldown and the elapsed time
+            double elapsed = stopwatch.ElapsedMilliseconds;
+            return cooldown - elapsed;
         }
         static string CheckLastMessage()
         {
