@@ -24,9 +24,9 @@ namespace DiscordERPGAutoTyper
         static Timer workT;
         static Timer farmT;
         static Timer checkMessageT;
-        static Stopwatch huntS;
+        /*static Stopwatch huntS;
         static Stopwatch workS;
-        static Stopwatch farmS;
+        static Stopwatch farmS;*/
         static readonly string baseURL = "https://discord.com";
         static readonly string discordChannelAuto = "https://discord.com/channels/1180781501940518932/1264330502005985391";
 
@@ -51,7 +51,7 @@ namespace DiscordERPGAutoTyper
         static double workRemainingInterval = 0;
         static double farmRemainingInterval = 0;
 
-        static int area = 8;
+        static int area = 3;
 
 
 
@@ -177,7 +177,7 @@ namespace DiscordERPGAutoTyper
                     Console.WriteLine("Používám: " + work);
                     break;
                 case 6 or 7 or 8:
-                    work = "rpg pickaxe";
+                    work = "rpg bowsaw";
                     Console.WriteLine("Používám: " + work);
                     break;
                 case 9 or 10 or 11 or 12 or 13:
@@ -284,26 +284,49 @@ namespace DiscordERPGAutoTyper
                 ShowToastNotification("POLICIEEE", "Guard seen at: " + DateTime.Now);
                 Console.WriteLine("AAAAAAAAAAA PANIC AAAAAAAAAAAAAAAAAAAA");
             }
-            if (message.Contains("TEST"))
+            else if (message.Contains("TEST"))
             {
                 Console.WriteLine("I hear you");
                 ShowToastNotification("I hear you", "" + DateTime.Now);
                 SendMessage("I hear you");
             }
+            else if (message.Contains("BOT HELP"))
+            {
+                Console.WriteLine("BOT HELP");
+                SendMessage("Change w0rk ch0p/4xe/b0wsaw/ch4insaw");
+            }
             else if (message.Contains("STOP")) //stop everything
             {
                 Console.WriteLine("STOP");
-                ShowToastNotification("STOP", "Stop message was sent");
                 StopCommands();
             }
             else if (message.Contains("START")) //start again
             {
                 Console.WriteLine("START");
+                SendMessage("rpg cd");
+                System.Threading.Thread.Sleep(2001);
+                SendMessage(hunt);
+                System.Threading.Thread.Sleep(2001);
+                SendMessage(work);
+                System.Threading.Thread.Sleep(2001);
+                if (area >= 4)
+                    SendMessage(farm);
                 StartCommands();
             }
             else if (message.Contains("wait at least")) //msg Cooldown
             {
                 Console.WriteLine("Cooldown wait x");
+            }
+            else if (message.Contains("Change work"))
+            {
+                if (message.Contains("chop"))
+                    work = "rpg chop";
+                else if (message.Contains("axe"))
+                    work = "rpg axe";
+                else if (message.Contains("bowsaw"))
+                    work = "rpg bowsaw";
+                else if (message.Contains("chainsaw"))
+                    work = "rpg chainsaw";
             }
             else if (message.Contains("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way"))
             {
