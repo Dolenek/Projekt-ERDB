@@ -33,7 +33,7 @@ namespace DiscordERPGAutoTyper
         static string lastMessageId = string.Empty;
 
         static Queue<string> messageQueue = new Queue<string>();
-        static string hunt = "rpg hunt";
+        static string hunt = "rpg hunt h";
         static string work = "rpg chop";
         static string farm = "rpg farm";
 
@@ -51,7 +51,7 @@ namespace DiscordERPGAutoTyper
         static double workRemainingInterval = 0;
         static double farmRemainingInterval = 0;
 
-        static int area = 3;
+        static int area = 10;
 
 
 
@@ -168,7 +168,7 @@ namespace DiscordERPGAutoTyper
         }
         static void PrvniStart()
         {
-            Console.WriteLine("Startuju v: " + DateTime.Now);
+            Console.WriteLine("Startuju. v: " + DateTime.Now);
             //setup work
             switch (area)
             {
@@ -180,7 +180,7 @@ namespace DiscordERPGAutoTyper
                     work = "rpg bowsaw";
                     Console.WriteLine("Používám: " + work);
                     break;
-                case 9 or 10 or 11 or 12 or 13:
+                case 9 or 10 or 11 or 12 or 13 or 14 or 15:
                     work = "rpg chainsaw";
                     Console.WriteLine("Používám: " + work);
                     break;
@@ -200,6 +200,15 @@ namespace DiscordERPGAutoTyper
         }
         static void QueueMessage(string message)
         {
+            if (message == "rpg hunt h" && huntCount == 0)
+            {
+                message = "rpg hunt h t";
+                huntCount++;
+            }
+            else if (message == "rpg hunt h" && huntCount >= 1)
+            {
+                huntCount = 0;
+            }
             messageQueue.Enqueue(message);
             Console.WriteLine($"Message '{message}' queued at: " + DateTime.Now);
         }
