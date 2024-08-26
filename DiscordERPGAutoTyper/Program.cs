@@ -138,7 +138,11 @@ namespace DiscordERPGAutoTyper
             // Using a user profile
 
             string userProfile = @"C:\Users\Uživatel\AppData\Local\Google\Chrome\User Data";
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
             string profileName = "Profile 2"; // Or the name of the profile you want to use
+=======
+            string profileName = "Profile 1"; // Or the name of the profile you want to use
+>>>>>>> Stashed changes:test/Program.cs
             options.AddArgument($"user-data-dir={userProfile}");
             options.AddArgument($"profile-directory={profileName}");
             options.AddArgument("--no-sandbox");
@@ -259,7 +263,12 @@ namespace DiscordERPGAutoTyper
         {
             try
             {
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
                 WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+=======
+
+                command = HuntMarrySwapper(command);
+>>>>>>> Stashed changes:test/Program.cs
 
                 // Locate the chat box element
                 IWebElement chatBox = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("span[data-slate-node='text']")));
@@ -285,31 +294,65 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine($"SEND MESSAGE    An error occurred: {ex.Message}");
             }
         }
-        static void EventCheck(string message)
+        static string HuntMarrySwapper(string message)
+        {
+            if (message == "rpg hunt h" && huntMarryTracker == 0) //alternates between solo and together HARDCORE hunt
+            {
+                huntMarryTracker = 1;
+            }
+            else if (message == "rpg hunt h" && huntMarryTracker == 1)
+            {
+                message = "rpg hunt h t";
+                huntMarryTracker = 0;
+            }
+            if (message == "rpg hunt" && huntMarryTracker == 0) //alternates between solo and together normal hunt
+            {
+                huntMarryTracker = 1;
+            }
+            else if (message == "rpg hunt" && huntMarryTracker == 1)
+            {
+                message = "rpg hunt t";
+                huntMarryTracker = 0;
+            }
+            return message;
+        }
+        static void EventCheck(string message) //TODO---CHANGE TO SWITCH CASE
         {
             //Console.WriteLine("Event checking with message : " + message);
-            if (message.Contains("Select the item of the image above or respond with the item name")) //Guard
+            if (message.Contains("Select the item of the image above or respond with the item name")) //Guard alert
             {
                 ShowToastNotification("POLICIEEE", "Guard seen at: " + DateTime.Now);
                 Console.WriteLine("AAAAAAAAAAA PANIC AAAAAAAAAAAAAAAAAAAA");
             }
-            else if (message.Contains("TEST"))
+            else if (message.Contains("TEST")) //INPUT test
             {
                 Console.WriteLine("I hear you");
                 ShowToastNotification("I hear you", "" + DateTime.Now);
                 SendMessage("I hear you");
             }
-            else if (message.Contains("BOT HELP"))
+            else if (message.Contains("wait at least")) //msg Cooldown
+            {
+                Console.WriteLine("Cooldown wait x");
+            }
+            else if (message.Contains("BOT HELP")) //INPUT help
             {
                 Console.WriteLine("BOT HELP");
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
                 SendMessage("Change w0rk ch0p/4xe/b0wsaw/ch4insaw");
+=======
+                SendMessage("Change work - chop / axe / bowsaw / chainsaw ");
+                SendMessage("Change farm - farm / potato / carrot / bread");
+                SendMessage("Bot farming - will start farming");
+                SendMessage("Hunt swap - normal / hard");
+>>>>>>> Stashed changes:test/Program.cs
             }
-            else if (message.Contains("STOP")) //stop everything
+            else if (message.Contains("STOP")) //INPUT stop everything
             {
                 Console.WriteLine("STOP");
                 StopCommands();
+                SendMessage("i stopped :(");
             }
-            else if (message.Contains("START")) //start again
+            else if (message.Contains("START")) //INPUT start again
             {
                 Console.WriteLine("START");
                 SendMessage("rpg cd");
@@ -322,11 +365,24 @@ namespace DiscordERPGAutoTyper
                     SendMessage(farm);
                 StartCommands();
             }
-            else if (message.Contains("wait at least")) //msg Cooldown
+            else if (message.Contains("HUNT SWAP ")) //INPUT hunt difficulty swap
             {
-                Console.WriteLine("Cooldown wait x");
+                if (message.Contains("NORMAL"))
+                {
+                    hunt = "rpg hunt";
+                    SendMessage("L BOZO XDXDXD NOOB HUNTING");
+                }
+                else if (message.Contains("HARD"))
+                {
+                    hunt = "rpg hunt h";
+                    SendMessage("HARDCORE HUNTING GAMING");
+                }
             }
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
             else if (message.Contains("Change work"))
+=======
+            else if (message.Contains("CHANGE WORK")) //INPUT Change work
+>>>>>>> Stashed changes:test/Program.cs
             {
                 if (message.Contains("chop"))
                     work = "rpg chop";
@@ -336,8 +392,45 @@ namespace DiscordERPGAutoTyper
                     work = "rpg bowsaw";
                 else if (message.Contains("chainsaw"))
                     work = "rpg chainsaw";
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
+=======
+                }
             }
-            else if (message.Contains("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way"))
+            else if (message.Contains("CHANGE FARM")) //INPUT Change Farm
+            {
+                if (message.Contains("FARM FARM"))
+                {
+                    farm = "rpg farm";
+                    SendMessage("I am farming normally");
+                }
+                else if (message.Contains("CARROT"))
+                {
+                    farm = "rpg farm carrot";
+                    SendMessage("I am farming carrots");
+                }
+                else if (message.Contains("POTATO"))
+                {
+                    farm = "rpg farm potato";
+                    SendMessage("I am farming potatoes");
+                }
+                else if (message.Contains("BREAD"))
+                {
+                    farm = "rpg farm bread";
+                    SendMessage("I am farming bread");
+                }
+
+            }
+            else if (message.Contains("BOT FARMING")) //INPUT turn on farming
+            {
+                SendMessage("I am farming");
+                farmT = new Timer(farmCooldown);
+                farmT.Elapsed += (sender, e) => SendCommand(farm, 3);
+                farmT.AutoReset = true;
+                farmT.Enabled = true;
+                farmRunning = true;
+>>>>>>> Stashed changes:test/Program.cs
+            }
+            else if (message.Contains("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way")) //Zombie event
             {
                 Console.WriteLine("Zombie horde event at: " + DateTime.Now);
                 ShowToastNotification("Zombie Horde", "" + DateTime.Now);
@@ -358,7 +451,7 @@ namespace DiscordERPGAutoTyper
                 Console.WriteLine("Fish event at: " + DateTime.Now);
                 SendMessage("LURE");
             }
-            else if (message.Contains("IT'S RAINING COINS"))
+            else if (message.Contains("IT'S RAINING COINS")) //Coins
             {
                 Console.WriteLine("Coins event at: " + DateTime.Now);
                 SendMessage("CATCH");
@@ -414,6 +507,10 @@ namespace DiscordERPGAutoTyper
             {
                 Console.WriteLine("Lootbox event at: " + DateTime.Now);
                 SendMessage("SUMMON");
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/Program.cs
+=======
+
+>>>>>>> Stashed changes:test/Program.cs
             }
             else if (message.Contains("A LEGENDARY BOSS JUST SPAWNED"))
             {
@@ -454,7 +551,7 @@ namespace DiscordERPGAutoTyper
 
                 if (messages.Count == 0)
                 {
-                    //onsole.WriteLine("No messages found");
+                    //Console.WriteLine("No messages found");
                     return string.Empty;
                 }
 

@@ -1,6 +1,7 @@
 {
   "format": 1,
   "restore": {
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/obj/DiscordERPGAutoTyper.csproj.nuget.dgspec.json
     "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\DiscordERPGAutoTyper.csproj": {}
   },
   "projects": {
@@ -12,6 +13,19 @@
         "projectPath": "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\DiscordERPGAutoTyper.csproj",
         "packagesPath": "C:\\Users\\Uživatel\\.nuget\\packages\\",
         "outputPath": "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\obj\\",
+=======
+    "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj": {}
+  },
+  "projects": {
+    "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj",
+        "projectName": "EpicRPGBotCSharp",
+        "projectPath": "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj",
+        "packagesPath": "C:\\Users\\Uživatel\\.nuget\\packages\\",
+        "outputPath": "D:\\EpicRPGBotCSHARP\\test\\obj\\",
+>>>>>>> Stashed changes:test/obj/EpicRPGBotCSharp.csproj.nuget.dgspec.json
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
         "configFilePaths": [

@@ -2093,11 +2093,19 @@
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< Updated upstream:DiscordERPGAutoTyper/obj/project.assets.json
       "projectUniqueName": "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\DiscordERPGAutoTyper.csproj",
       "projectName": "DiscordERPGAutoTyper",
       "projectPath": "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\DiscordERPGAutoTyper.csproj",
       "packagesPath": "C:\\Users\\Uživatel\\.nuget\\packages\\",
       "outputPath": "D:\\EpicRPGBotCSHARP\\DiscordERPGAutoTyper\\obj\\",
+=======
+      "projectUniqueName": "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj",
+      "projectName": "EpicRPGBotCSharp",
+      "projectPath": "D:\\EpicRPGBotCSHARP\\test\\EpicRPGBotCSharp.csproj",
+      "packagesPath": "C:\\Users\\Uživatel\\.nuget\\packages\\",
+      "outputPath": "D:\\EpicRPGBotCSHARP\\test\\obj\\",
+>>>>>>> Stashed changes:test/obj/project.assets.json
       "projectStyle": "PackageReference",
       "skipContentFileWrite": true,
       "configFilePaths": [
