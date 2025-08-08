@@ -1,0 +1,16 @@
+# Build artifacts
+**/bin/
+**/obj/
+
+# VS/IDE cache
+.vs/
+
+# User secrets / env
+.env
+.env.local
+
+# Logs
+**/run.log
+**/run.err
+
+
