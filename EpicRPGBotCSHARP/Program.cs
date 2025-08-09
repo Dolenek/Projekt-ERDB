@@ -21,7 +21,6 @@ namespace EpicRPGBotCSharp
     {
         private sealed class BotConfig
         {
-            public string BaseUrl { get; private set; }
             public string DiscordChannelUrl { get; private set; }
             public int? Area { get; private set; }
             public string DiscordEmail { get; private set; }
@@ -33,7 +32,6 @@ namespace EpicRPGBotCSharp
             {
                 var cfg = new BotConfig
                 {
-                    BaseUrl = GetEnv("BASE_URL"),
                     DiscordChannelUrl = GetEnv("DISCORD_CHANNEL_URL"),
                     DiscordEmail = GetEnv("DISCORD_EMAIL"),
                     DiscordPassword = GetEnv("DISCORD_PASSWORD"),
@@ -56,8 +54,8 @@ namespace EpicRPGBotCSharp
         static Timer farmT;
         static Timer checkMessageT;
 
-        static string baseURL = "https://discord.com";
-        static string discordChannelAuto = "https://discord.com/channels/1180781501940518932/1264330502005985391";
+        // Use DISCORD_CHANNEL_URL from env; fall back to @me for safer default
+        static string channelUrlFallback = "https://discord.com/channels/@me";
 
         //Player
         static int area = 10;
@@ -89,8 +87,9 @@ namespace EpicRPGBotCSharp
             LoadEnv();
             Config = BotConfig.LoadFromEnv();
             ConfigureAssemblyResolve();
-            if (!string.IsNullOrWhiteSpace(Config.BaseUrl)) baseURL = Config.BaseUrl;
-            if (!string.IsNullOrWhiteSpace(Config.DiscordChannelUrl)) discordChannelAuto = Config.DiscordChannelUrl;
+            string channelUrl = !string.IsNullOrWhiteSpace(Config.DiscordChannelUrl)
+                ? Config.DiscordChannelUrl
+                : channelUrlFallback;
             if (Config.Area.HasValue) area = Config.Area.Value;
             string email = Config.DiscordEmail ?? string.Empty;
             string password = Config.DiscordPassword ?? string.Empty;
@@ -98,7 +97,7 @@ namespace EpicRPGBotCSharp
             KillAllChromeProcesses();
 
             Initialize();
-            GoToChannel(discordChannelAuto);
+            GoToChannel(channelUrl);
 
             // Login is disabled; relying on existing Chrome profile session
             StartBot();
@@ -206,53 +205,73 @@ namespace EpicRPGBotCSharp
                 ? Config.SourceUserDataDir
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "User Data");
             string profileName = !string.IsNullOrWhiteSpace(Config?.ProfileName) ? Config.ProfileName : "Profile 1";
+            bool useOriginalProfile = string.Equals(GetEnv("USE_ORIGINAL_PROFILE"), "true", StringComparison.OrdinalIgnoreCase);
 
-            // Create an isolated temp user-data-dir cloned from the user's profile to avoid locks
-            string tempUserDataDir = Path.Combine(Path.GetTempPath(), "EpicRPG_Auto_ChromeProfile");
-            try
+            string userDataDir;            
+            if (useOriginalProfile)
             {
-                if (Directory.Exists(tempUserDataDir))
-                {
-                    try { Directory.Delete(tempUserDataDir, true); } catch { }
-                }
-                Directory.CreateDirectory(tempUserDataDir);
-
-                // Copy Local State and the selected profile folder
-                string localStateSrc = Path.Combine(sourceUserDataDir, "Local State");
-                string localStateDst = Path.Combine(tempUserDataDir, "Local State");
-                if (File.Exists(localStateSrc))
-                {
-                    File.Copy(localStateSrc, localStateDst, true);
-                }
-
-                string profileSrc = Path.Combine(sourceUserDataDir, profileName);
-                string profileDst = Path.Combine(tempUserDataDir, profileName);
-                if (Directory.Exists(profileSrc))
-                {
-                    CopyDirectory(profileSrc, profileDst);
-                }
-                else
-                {
-                    Console.WriteLine($"Profile folder not found: {profileSrc}");
-                }
+                userDataDir = sourceUserDataDir;
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Failed to prepare temp user-data-dir: {ex.Message}");
+                // Create an isolated temp user-data-dir cloned from the user's profile to avoid locks
+                string tempUserDataDir = Path.Combine(Path.GetTempPath(), "EpicRPG_Auto_ChromeProfile");
+                try
+                {
+                    if (Directory.Exists(tempUserDataDir))
+                    {
+                        try { Directory.Delete(tempUserDataDir, true); } catch { }
+                    }
+                    Directory.CreateDirectory(tempUserDataDir);
+
+                    // Copy Local State and the selected profile folder
+                    string localStateSrc = Path.Combine(sourceUserDataDir, "Local State");
+                    string localStateDst = Path.Combine(tempUserDataDir, "Local State");
+                    if (File.Exists(localStateSrc))
+                    {
+                        File.Copy(localStateSrc, localStateDst, true);
+                    }
+
+                    string profileSrc = Path.Combine(sourceUserDataDir, profileName);
+                    string profileDst = Path.Combine(tempUserDataDir, profileName);
+                    if (Directory.Exists(profileSrc))
+                    {
+                        CopyDirectory(profileSrc, profileDst);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Profile folder not found: {profileSrc}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to prepare temp user-data-dir: {ex.Message}");
+                }
+                userDataDir = tempUserDataDir;
             }
 
-            options.AddArgument($"--user-data-dir={tempUserDataDir}");
+            options.AddArgument($"--user-data-dir={userDataDir}");
             options.AddArgument($"--profile-directory={profileName}");
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
             options.AddArgument("--disable-gpu");
             options.AddArgument("--start-maximized");
+            // Reduce Chrome logs/noise
+            options.AddExcludedArgument("enable-logging");
+            options.AddArgument("--log-level=3");
+            options.AddArgument("--disable-logging");
+            options.AddArgument("--silent");
             options.PageLoadStrategy = PageLoadStrategy.Eager;
 
             // Ensure profile is not locked by leftover files
-            TryUnlockChromeProfile(tempUserDataDir);
+            TryUnlockChromeProfile(userDataDir);
 
-            driver = new ChromeDriver(options);
+            // Start ChromeDriver with suppressed diagnostics
+            var service = ChromeDriverService.CreateDefaultService();
+            service.SuppressInitialDiagnosticInformation = true;
+            service.HideCommandPromptWindow = true;
+            service.EnableVerboseLogging = false;
+            driver = new ChromeDriver(service, options);
 
             // Configure timeouts for reliability
             try
@@ -372,19 +391,48 @@ namespace EpicRPGBotCSharp
             }
 
             // Step 1: navigate to the target channel
-            bool reached = false;
+            bool reached = TryNavigate(channel);
+
+            // Handle common interstitials (Open in browser / Continue)
+            ClickInterstitials();
+
+            if (!reached)
+            {
+                System.Threading.Thread.Sleep(1500);
+                try { reached = driver.Url.Contains("/channels/"); Console.WriteLine($"After wait URL: {driver.Url}"); } catch { }
+            }
+
+            if (!reached)
+            {
+                reached = TrySetUrl(channel);
+            }
+
+            if (!reached)
+            {
+                JsRedirect(channel);
+            }
+
+            // Final confirmation wait (non-throwing)
+            try { wait.Until(d => d.Url.Contains("/channels/")); Console.WriteLine($"Navigation confirmed. URL: {driver.Url}"); } catch { }
+        }
+
+        private static bool TryNavigate(string url)
+        {
             try
             {
-                driver.Navigate().GoToUrl(channel);
+                driver.Navigate().GoToUrl(url);
                 Console.WriteLine($"Requested channel. URL: {driver.Url}");
-                reached = driver.Url.Contains("/channels/");
+                return driver.Url.Contains("/channels/");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Navigate() error: {ex.Message}");
+                return false;
             }
+        }
 
-            // Handle common interstitials (Open in browser / Continue)
+        private static void ClickInterstitials()
+        {
             try
             {
                 var shortWait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
@@ -406,48 +454,35 @@ namespace EpicRPGBotCSharp
                 }
             }
             catch { }
+        }
 
-            if (!reached)
-            {
-                System.Threading.Thread.Sleep(1500);
-                try { reached = driver.Url.Contains("/channels/"); Console.WriteLine($"After wait URL: {driver.Url}"); } catch { }
-            }
-
-            if (!reached)
-            {
-                try
-                {
-                    driver.Url = channel;
-                    Console.WriteLine($"Fallback set Url. Current URL: {driver.Url}");
-                    reached = driver.Url.Contains("/channels/");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fallback set Url error: {ex.Message}");
-                }
-            }
-
-            if (!reached)
-            {
-                try
-                {
-                    var js = (IJavaScriptExecutor)driver;
-                    js.ExecuteScript("window.location.href = arguments[0];", channel);
-                    Console.WriteLine("Fallback JS redirect issued");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"JS redirect error: {ex.Message}");
-                }
-            }
-
-            // Final confirmation wait (non-throwing)
+        private static bool TrySetUrl(string url)
+        {
             try
             {
-                wait.Until(d => d.Url.Contains("/channels/"));
-                Console.WriteLine($"Navigation confirmed. URL: {driver.Url}");
+                driver.Url = url;
+                Console.WriteLine($"Fallback set Url. Current URL: {driver.Url}");
+                return driver.Url.Contains("/channels/");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fallback set Url error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static void JsRedirect(string url)
+        {
+            try
+            {
+                var js = (IJavaScriptExecutor)driver;
+                js.ExecuteScript("window.location.href = arguments[0];", url);
+                Console.WriteLine("Fallback JS redirect issued");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"JS redirect error: {ex.Message}");
+            }
         }
         static void CleanUp()
         {
@@ -858,7 +893,8 @@ namespace EpicRPGBotCSharp
         static void Login(string email, string password)
         {
             Console.WriteLine("I am logging in");
-            driver.Navigate().GoToUrl(baseURL);
+            const string discordBaseUrl = "https://discord.com";
+            driver.Navigate().GoToUrl(discordBaseUrl);
 
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
