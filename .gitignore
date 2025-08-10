@@ -4,6 +4,7 @@
 
 # VS/IDE cache
 .vs/
+.vscode/
 
 # User secrets / env
 .env
