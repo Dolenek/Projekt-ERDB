@@ -12,22 +12,22 @@ Key behavior
 - The last 5 messages detected are shown in the Stats tab; all actions are logged in the Console tab.
 
 Project structure (UI-layer)
-- EpicRPGBot.UI/EpicRPGBot.UI.csproj
-- EpicRPGBot.UI/App.xaml
-- EpicRPGBot.UI/App.xaml.cs
-- EpicRPGBot.UI/MainWindow.xaml
-- EpicRPGBot.UI/MainWindow.xaml.cs
+- [EpicRPGBot.UI.csproj](EpicRPGBot.UI/EpicRPGBot.UI.csproj)
+- [App.xaml](EpicRPGBot.UI/App.xaml)
+- [App.xaml.cs](EpicRPGBot.UI/App.xaml.cs)
+- [MainWindow.xaml](EpicRPGBot.UI/MainWindow.xaml)
+- [MainWindow.xaml.cs](EpicRPGBot.UI/MainWindow.xaml.cs)
 - Engine:
-  - EpicRPGBot.UI/BotEngine.cs
+  - [BotEngine.cs](EpicRPGBot.UI/BotEngine.cs)
 - Models:
-  - EpicRPGBot.UI/Models/MessageItem.cs
-  - EpicRPGBot.UI/Models/LogEntry.cs
+  - [Models/MessageItem.cs](EpicRPGBot.UI/Models/MessageItem.cs)
+  - [Models/LogEntry.cs](EpicRPGBot.UI/Models/LogEntry.cs)
 - Services:
-  - EpicRPGBot.UI/Services/InMemoryLog.cs
-  - EpicRPGBot.UI/Services/LastMessagesBuffer.cs
-  - EpicRPGBot.UI/Services/UiDispatcher.cs
+  - [Services/InMemoryLog.cs](EpicRPGBot.UI/Services/InMemoryLog.cs)
+  - [Services/LastMessagesBuffer.cs](EpicRPGBot.UI/Services/LastMessagesBuffer.cs)
+  - [Services/UiDispatcher.cs](EpicRPGBot.UI/Services/UiDispatcher.cs)
 - Env loader (shared with original console app style):
-  - EpicRPGBot.UI/Env.cs
+  - [Env.cs](EpicRPGBot.UI/Env.cs)
 
 Requirements
 - .NET Framework 4.8 Developer Pack
@@ -72,14 +72,14 @@ Notes on behavior
 - Event scanning: The engine polls the DOM to capture the last chat message and triggers bot reactions for certain keywords.
 
 Files of interest
-- UI layout: EpicRPGBot.UI/MainWindow.xaml
-- UI logic / event wiring: EpicRPGBot.UI/MainWindow.xaml.cs
-- Bot automation: EpicRPGBot.UI/BotEngine.cs
+- UI layout: [MainWindow.xaml](EpicRPGBot.UI/MainWindow.xaml)
+- UI logic / event wiring: [MainWindow.xaml.cs](EpicRPGBot.UI/MainWindow.xaml.cs)
+- Bot automation: [BotEngine.cs](EpicRPGBot.UI/BotEngine.cs)
 - Logging and buffers:
-  - EpicRPGBot.UI/Services/InMemoryLog.cs
-  - EpicRPGBot.UI/Services/LastMessagesBuffer.cs
-  - EpicRPGBot.UI/Models/LogEntry.cs
-  - EpicRPGBot.UI/Models/MessageItem.cs
+  - [Services/InMemoryLog.cs](EpicRPGBot.UI/Services/InMemoryLog.cs)
+  - [Services/LastMessagesBuffer.cs](EpicRPGBot.UI/Services/LastMessagesBuffer.cs)
+  - [Models/LogEntry.cs](EpicRPGBot.UI/Models/LogEntry.cs)
+  - [Models/MessageItem.cs](EpicRPGBot.UI/Models/MessageItem.cs)
 
 Troubleshooting
 - WebView2 init failed:
