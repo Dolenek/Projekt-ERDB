@@ -302,6 +302,13 @@ namespace EpicRPGBot.UI
             }
         }
 
+        private async Task<bool> SendAndEmitAsync(string text)
+        {
+            var ok = await SendMessageAsyncDevTools(text);
+            if (ok) OnCommandSent?.Invoke(text);
+            return ok;
+        }
+
         // Exposed helper to send immediately (used by Start button)
         public async Task<bool> SendImmediateAsync(string text)
         {
@@ -400,13 +407,13 @@ namespace EpicRPGBot.UI
             }
             else if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendMessageAsyncDevTools("I hear you: " + DateTime.Now);
+                _ = SendAndEmitAsync("I hear you: " + DateTime.Now);
             }
             else if (msg.IndexOf("BOT HELP", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendMessageAsyncDevTools("Change work - chop / axe / bowsaw / chainsaw ");
-                _ = SendMessageAsyncDevTools("Change farm - farm / potato / carrot / bread");
-                _ = SendMessageAsyncDevTools("bot farming - will start farming");
+                _ = SendAndEmitAsync("Change work - chop / axe / bowsaw / chainsaw ");
+                _ = SendAndEmitAsync("Change farm - farm / potato / carrot / bread");
+                _ = SendAndEmitAsync("bot farming - will start farming");
             }
             else if (msg.IndexOf("STOP", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -416,14 +423,14 @@ namespace EpicRPGBot.UI
             {
                 _ = Task.Run(async () =>
                 {
-                    await SendMessageAsyncDevTools("rpg cd");
+                    await SendAndEmitAsync("rpg cd");
                     await SafeDelay(2001);
-                    await SendMessageAsyncDevTools(_hunt);
+                    await SendAndEmitAsync(_hunt);
                     await SafeDelay(2001);
-                    await SendMessageAsyncDevTools(_work);
+                    await SendAndEmitAsync(_work);
                     await SafeDelay(2001);
                     if (_area >= 4)
-                        await SendMessageAsyncDevTools(_farm);
+                        await SendAndEmitAsync(_farm);
                 });
                 StartTimers();
             }
@@ -435,22 +442,22 @@ namespace EpicRPGBot.UI
             {
                 if (msg.IndexOf("CHOP", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    _ = SendMessageAsyncDevTools("I am chopping treez");
+                    _ = SendAndEmitAsync("I am chopping treez");
                     _work = "rpg chop";
                 }
                 else if (msg.IndexOf("AXE", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    _ = SendMessageAsyncDevTools("I am using an axe");
+                    _ = SendAndEmitAsync("I am using an axe");
                     _work = "rpg axe";
                 }
                 else if (msg.IndexOf("BOWSAW", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    _ = SendMessageAsyncDevTools("I am using a bowsaw");
+                    _ = SendAndEmitAsync("I am using a bowsaw");
                     _work = "rpg bowsaw";
                 }
                 else if (msg.IndexOf("CHAINSAW", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    _ = SendMessageAsyncDevTools("I am using a chainsaw");
+                    _ = SendAndEmitAsync("I am using a chainsaw");
                     _work = "rpg chainsaw";
                 }
             }
@@ -459,27 +466,27 @@ namespace EpicRPGBot.UI
                 if (msg.IndexOf("FARM FARM", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     _farm = "rpg farm";
-                    _ = SendMessageAsyncDevTools("I am farming normally");
+                    _ = SendAndEmitAsync("I am farming normally");
                 }
                 else if (msg.IndexOf("CARROT", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     _farm = "rpg farm carrot";
-                    _ = SendMessageAsyncDevTools("I am farming carrots");
+                    _ = SendAndEmitAsync("I am farming carrots");
                 }
                 else if (msg.IndexOf("POTATO", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     _farm = "rpg farm potato";
-                    _ = SendMessageAsyncDevTools("I am farming potatoes");
+                    _ = SendAndEmitAsync("I am farming potatoes");
                 }
                 else if (msg.IndexOf("BREAD", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     _farm = "rpg farm bread";
-                    _ = SendMessageAsyncDevTools("I am farming bread");
+                    _ = SendAndEmitAsync("I am farming bread");
                 }
             }
             else if (msg.IndexOf("BOT FARMING", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendMessageAsyncDevTools("I am farming");
+                _ = SendAndEmitAsync("I am farming");
                 if (!_farmT.IsEnabled)
                 {
                     _farmT.Interval = TimeSpan.FromMilliseconds(_farmCooldown);
@@ -488,11 +495,11 @@ namespace EpicRPGBot.UI
             }
             else if (msg.IndexOf("A LOOTBOX SUMMONING HAS", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendMessageAsyncDevTools("SUMMON");
+                _ = SendAndEmitAsync("SUMMON");
             }
             else if (msg.IndexOf("A LEGENDARY BOSS JUST SPAWNED", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendMessageAsyncDevTools("TIME TO FIGHT");
+                _ = SendAndEmitAsync("TIME TO FIGHT");
             }
         }
 

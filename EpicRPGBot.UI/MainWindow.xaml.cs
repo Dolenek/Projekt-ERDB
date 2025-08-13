@@ -19,6 +19,9 @@ namespace EpicRPGBot.UI
         private readonly InMemoryLog _log = new InMemoryLog();
         private readonly LastMessagesBuffer _last = new LastMessagesBuffer(5);
         private string _prevPolled = string.Empty;
+        private int _huntCount = 0;
+        private System.Windows.Controls.Grid _lastMessagesPanel;
+        private System.Windows.Controls.TextBlock _huntCountText;
 
         public MainWindow()
         {
@@ -40,6 +43,10 @@ namespace EpicRPGBot.UI
             StatsList.ItemsSource = _last.Items;
             ConsoleList.ItemsSource = _log.Items;
             _log.Engine("UI loaded");
+
+            // Cache named elements for tabs/stats to avoid compile-time field generation issues
+            _lastMessagesPanel = (System.Windows.Controls.Grid)FindName("LastMessagesPanel");
+            _huntCountText = (System.Windows.Controls.TextBlock)FindName("HuntCountText");
 
             await InitializeWebViewAsync();
             await NavigateToChannelAsync(GetChannelUrl());
@@ -245,6 +252,22 @@ namespace EpicRPGBot.UI
 
             _engine = new BotEngine(Web, area, hunt, work, farm);
 
+            // Wire events BEFORE any sends to ensure we log the immediate 'rpg cd'
+            _engine.OnCommandSent += (cmd) =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    _log.Command($"Message ({cmd}) sent");
+                    if (!string.IsNullOrWhiteSpace(cmd) &&
+                        cmd.Trim().StartsWith("rpg hunt", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _huntCount++;
+                        if (_huntCountText != null)
+                            _huntCountText.Text = $"Hunt sent: {_huntCount}";
+                    }
+                });
+            };
+
             // Immediately send "rpg cd" before starting timers
             var sent = await _engine.SendImmediateAsync("rpg cd");
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
@@ -266,14 +289,23 @@ namespace EpicRPGBot.UI
         }
 
         // Left header buttons
+        private void LastMessagesTabBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lastMessagesPanel != null) _lastMessagesPanel.Visibility = Visibility.Visible;
+            StatsPanel.Visibility = Visibility.Collapsed;
+            ConsolePanel.Visibility = Visibility.Collapsed;
+        }
+
         private void StatsTabBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (_lastMessagesPanel != null) _lastMessagesPanel.Visibility = Visibility.Collapsed;
             StatsPanel.Visibility = Visibility.Visible;
             ConsolePanel.Visibility = Visibility.Collapsed;
         }
 
         private void ConsoleTabBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (_lastMessagesPanel != null) _lastMessagesPanel.Visibility = Visibility.Collapsed;
             StatsPanel.Visibility = Visibility.Collapsed;
             ConsolePanel.Visibility = Visibility.Visible;
         }

@@ -18,13 +18,14 @@
         <Border Grid.Column="0" Background="#242529" BorderBrush="#2f3136" BorderThickness="0,0,1,0">
             <DockPanel Margin="12">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <Button Name="LastMessagesTabBtn" Content="Last messages" Margin="0,0,8,0" Padding="8,4" Click="LastMessagesTabBtn_Click"/>
                     <Button Name="StatsTabBtn" Content="Stats" Margin="0,0,8,0" Padding="8,4" Click="StatsTabBtn_Click"/>
                     <Button Name="ConsoleTabBtn" Content="Console" Padding="8,4" Click="ConsoleTabBtn_Click"/>
                 </StackPanel>
 
                 <Grid>
                     <!-- Stats view: last 5 messages -->
-                    <Grid Name="StatsPanel" Visibility="Visible">
+                    <Grid Name="LastMessagesPanel" Visibility="Visible">
                         <ListBox Name="StatsList"
                                  Background="#1e1f22"
                                  Foreground="#ddd"
@@ -37,6 +38,14 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+                    </Grid>
+
+                    <!-- Stats counters -->
+                    <Grid Name="StatsPanel" Visibility="Collapsed">
+                        <StackPanel Background="#1e1f22" Margin="4">
+                            <TextBlock Text="Stats" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Name="HuntCountText" Text="Hunt sent: 0" Foreground="#ddd"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- Console view: log lines -->

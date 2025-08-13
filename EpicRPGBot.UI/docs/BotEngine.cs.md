@@ -1,15 +1,21 @@
 # BotEngine.cs
 
 Purpose
-- Core automation engine that drives Discord through WebView2 DevTools. 
-- Sends commands, manages cooldown timers, reads last messages, and publishes simple events for the UI.
+- Core automation engine that drives Discord through WebView2 DevTools.
+- Sends commands, manages cooldown timers, reads last messages, and publishes events for the UI (logging and stats).
+
+Files
+- [EpicRPGBot.UI/BotEngine.cs](EpicRPGBot.UI/BotEngine.cs:1)
+- UI consumers:
+  - [EpicRPGBot.UI/MainWindow.xaml.cs](EpicRPGBot.UI/MainWindow.xaml.cs:1)
+  - [EpicRPGBot.UI/MainWindow.xaml](EpicRPGBot.UI/MainWindow.xaml:1)
 
 Key Responsibilities
 - Start/Stop the automation loop
-- Send commands using WebView2 DevTools (Input.insertText and key events) into the real message composer
+- Send commands using WebView2 DevTools (Input.insertText and Enter key events) into the real message composer
 - Keep and use cooldown timers via DispatcherTimer (hunt/work/farm)
 - Poll the DOM for the latest message for lightweight reactions
-- Raise UI events for logging and “last messages” panel
+- Raise UI events for logging and the “Last messages” panel
 
 Public API
 - bool IsRunning
@@ -26,16 +32,17 @@ Events
 - OnEngineStarted
 - OnEngineStopped
 - OnCommandSent(string cmd)
+  - Raised after a successful send. The UI logs “Message (cmd) sent” and updates stats (e.g., hunt counter).
 - OnMessageSeen(string text)
 
 How sending works
 1) FocusComposerAsync()
-   - Finds the Discord message composer reliably (bottom-most visible role="textbox" / data-slate-editor).
+   - Finds the Discord message composer reliably (bottom-most visible role="textbox"/data-slate-editor).
    - Scrolls to, clicks, focuses, and places caret at the end to avoid the header search box.
 2) DevTools send
    - Input.insertText to type the text
    - Input.dispatchKeyEvent for Enter (keyDown + keyUp)
-   - Fallback: if DevTools fails, use document.execCommand insertText + dispatch KeyboardEvent(Enter)
+   - Fallback: if DevTools fails, uses document.execCommand('insertText') + KeyboardEvent(Enter)
 
 Timers
 - _huntT: Hunt cooldown
@@ -48,8 +55,15 @@ DOM polling (CheckLastMessageAsync)
 - Emits OnMessageSeen when a new message id appears (simple rolling detection)
 
 Opening salvo
-- The UI sends “rpg cd” immediately (via Start button) using SendImmediateAsync
+- The UI first sends “rpg cd” (via Start button) using SendImmediateAsync
 - Start() then waits ~2s and sends hunt, wait, work, wait, and optionally farm
+- All these scheduled sends raise OnCommandSent so the UI can log and count
+
+Internal reactions and event emission
+- EventCheck(...) reacts to certain keywords in the chat text (e.g., “BOT HELP”, “START”, etc.)
+- To ensure the UI receives OnCommandSent for these reactions, the engine uses an internal helper:
+  - SendAndEmitAsync(string text): wraps the actual send and raises OnCommandSent on success
+- This guarantees UI logging (“Message (message) sent”) and stats updates (e.g., “rpg hunt” counter) for both timer-based and reaction-based sends.
 
 Notes
 - The composer focus and DevTools strategy avoid typing into Discord’s header search.

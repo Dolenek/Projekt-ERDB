@@ -4,44 +4,43 @@ Purpose
 - Lightweight, in-memory console log for the UI.
 - Exposes an ObservableCollection<LogEntry> for direct data binding in WPF (ConsoleList.ItemsSource = _log.Items).
 
-Key Types
-- LogEntry (Models/LogEntry.cs)
-  - Timestamp (DateTime)
-  - Kind (string) — e.g., "info", "warn", "error", "engine"
-  - Message (string)
+Files
+- [EpicRPGBot.UI/Services/InMemoryLog.cs](EpicRPGBot.UI/Services/InMemoryLog.cs:1)
+- [EpicRPGBot.UI/Models/LogEntry.cs](EpicRPGBot.UI/Models/LogEntry.cs:1)
+- [EpicRPGBot.UI/Services/UiDispatcher.cs](EpicRPGBot.UI/Services/UiDispatcher.cs:1)
 
 Public API
 - ObservableCollection<LogEntry> Items
   - Bind this to a ListBox/ItemsControl in XAML to render the console-like view.
-- int MaxItems (default: 500)
-  - Rolling cap to prevent unbounded memory growth.
-- void Append(LogEntry entry)
-  - Appends a new entry and prunes if over MaxItems.
-- void Info(string message)
-- void Warn(string message)
-- void Error(string message)
-- void Engine(string message)
-  - Convenience methods that create a LogEntry with the given kind.
+- Methods (convenience)
+  - Info(string message)
+  - Command(string message)
+  - Warning(string message)
+  - Error(string message)
+  - Engine(string message)
+- Append(LogEntry entry)
+  - Appends a new entry and prunes oldest items to keep at most 500.
 
-Threading Notes
+Threading notes
 - Items is a WPF-bound ObservableCollection and must be updated on the UI thread.
 - Use UiDispatcher.OnUI(() => _log.Info("...")) if you are appending from a non-UI context.
+- In the current UI, all engine event callbacks are marshaled to UI via UiDispatcher before logging.
 
-Typical Usage
-- In MainWindow.xaml.cs:
+Typical usage
+- In [EpicRPGBot.UI/MainWindow.xaml.cs](EpicRPGBot.UI/MainWindow.xaml.cs:1):
   - ConsoleList.ItemsSource = _log.Items
   - _log.Info("Start button clicked");
   - _log.Engine("Engine started (timers running; hunt/work[/farm] scheduled)");
+  - On bot send event:
+    - _log.Command($"Message ({cmd}) sent")
 
 Behavior
-- Each append creates a LogEntry with a UTC timestamp.
-- When the collection size exceeds MaxItems, the oldest items are removed.
+- Each append creates a LogEntry with a timestamp and kind.
+- When the collection size exceeds 500, the oldest items are removed (rolling buffer).
 
 Extending
 - Add more convenience methods if you need additional categories (e.g., Debug).
 - Consider persisting to disk if you need historical logs (this class intentionally keeps only an in-memory rolling buffer).
 
-Related Files
-- Models/LogEntry.cs — log record model.
-- Services/UiDispatcher.cs — helper to marshal actions onto the WPF UI thread.
-- MainWindow.xaml(.cs) — binds ConsoleList.ItemsSource to InMemoryLog.Items and writes log lines on user actions/engine events.
+Related
+- The bot engine emits a send event; the UI subscribes and writes “Message (message) sent” via _log.Command. See [EpicRPGBot.UI/BotEngine.cs](EpicRPGBot.UI/BotEngine.cs) and [EpicRPGBot.UI/MainWindow.xaml.cs](EpicRPGBot.UI/MainWindow.xaml.cs).
