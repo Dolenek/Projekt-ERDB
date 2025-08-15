@@ -11,7 +11,7 @@ Layout
       - StatsPanel: simple counters (e.g., “Hunt sent: N”).
       - ConsolePanel: ListBox (ConsoleList) bound to log entries.
   - Center: WebView2 host (Discord) with a small header row containing navigation buttons.
-  - Right: 300px settings panel including channel URL, bot parameters and Start/Stop buttons.
+  - Right: 300px settings panel including channel URL, bot parameters, Start/Stop buttons, and a “Cooldowns (visual)” list rendered under the Start/Stop buttons.
 
 Key named elements
 - LastMessagesTabBtn / StatsTabBtn / ConsoleTabBtn: toggle which panel is visible in the left column.
@@ -28,3 +28,7 @@ Notes
 - Uses a dark theme palette aligned loosely with Discord.
 - Top row in the center provides Reload and “Go To Channel” actions.
 - XAML names are referenced in code-behind for logic and bindings.
+- Better Settings: The right panel shows a read-only “Cooldowns (visual)” section that lists common Epic RPG commands with placeholder timers:
+  - Rewards: daily, weekly, lootbox, card hand, vote
+  - Experience: hunt, adventure, training, duel, quest | epic quest
+  - Progress: chop | fish | pickup | mine, farm, horse breeding | horse race, arena, dungeon | miniboss
