@@ -493,6 +493,57 @@ namespace EpicRPGBot.UI
                     _farmT.Start();
                 }
             }
+            else if (msg.IndexOf("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _ = SendMessageAsyncDevTools("RUN");
+            }
+            else if (msg.IndexOf("megarace boost", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _ = SendMessageAsyncDevTools("yes");
+            }
+            else if (msg.IndexOf("AN EPIC TREE HAS JUST GROWN", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _ = SendMessageAsyncDevTools("CUT");
+            }
+            else if (msg.IndexOf("A MEGALODON HAS SPAWNED IN THE RIVER", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _ = SendMessageAsyncDevTools("LURE");
+            }
+            else if (msg.IndexOf("IT'S RAINING COINS", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _ = SendMessageAsyncDevTools("CATCH");
+            }
+            else if (msg.IndexOf("God accidentally dropped an EPIC coin", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                RespondFirstPresent(msg,
+                    "I SHALL BRING THE EPIC TO THE COIN",
+                    "MY PRECIOUS",
+                    "WHAT IS EPIC? THIS COIN",
+                    "YES! AN EPIC COIN",
+                    "OPERATION: EPIC COIN"
+                );
+            }
+            else if (msg.IndexOf("OOPS! God accidentally dropped", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                RespondFirstPresent(msg,
+                    "BACK OFF THIS IS MINE!!",
+                    "HACOINA MATATA",
+                    "THIS IS MINE",
+                    "ALL THE COINS BELONG TO ME",
+                    "GIMME DA MONEY",
+                    "OPERATION: COINS"
+                );
+            }
+            else if (msg.IndexOf("EPIC NPC: I have a special trade today!", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                RespondFirstPresent(msg,
+                    "YUP I WILL DO THAT",
+                    "I WANT THAT",
+                    "HEY EPIC NPC! I WANT TO TRADE WITH YOU",
+                    "THAT SOUNDS LIKE AN OP BUSINESS",
+                    "OWO ME!!!"
+                );
+            }
             else if (msg.IndexOf("A LOOTBOX SUMMONING HAS", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _ = SendAndEmitAsync("SUMMON");
@@ -501,6 +552,24 @@ namespace EpicRPGBot.UI
             {
                 _ = SendAndEmitAsync("TIME TO FIGHT");
             }
+        }
+
+        private void RespondFirstPresent(string msg, params string[] options)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(msg) || options == null || options.Length == 0) return;
+                foreach (var opt in options)
+                {
+                    if (string.IsNullOrEmpty(opt)) continue;
+                    if (msg.IndexOf(opt, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        _ = SendMessageAsyncDevTools(opt);
+                        return;
+                    }
+                }
+            }
+            catch { }
         }
 
         private static Task SafeDelay(int ms)
