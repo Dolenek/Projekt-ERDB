@@ -48,6 +48,7 @@ namespace EpicRPGBot.UI
             WorkCdBox.Text = Env.Get("WORK_COOLDOWN", "99000");
             FarmCdBox.Text = Env.Get("FARM_COOLDOWN", "196000");
 
+
             // Bind left panels
             StatsList.ItemsSource = _last.Items;
             ConsoleList.ItemsSource = _log.Items;
@@ -56,6 +57,15 @@ namespace EpicRPGBot.UI
             // Cache named elements for tabs/stats to avoid compile-time field generation issues
             _lastMessagesPanel = (System.Windows.Controls.Grid)FindName("LastMessagesPanel");
             _huntCountText = (System.Windows.Controls.TextBlock)FindName("HuntCountText");
+
+            // Load persisted initialization ms (defaults if missing)
+            try
+            {
+                HuntCdBox.Text = LoadCooldownMsOrDefault("hunt_ms", 61000).ToString();
+                WorkCdBox.Text = LoadCooldownMsOrDefault("work_ms", SafeInt(WorkCdBox.Text, 99000)).ToString();
+                FarmCdBox.Text = LoadCooldownMsOrDefault("farm_ms", SafeInt(FarmCdBox.Text, 196000)).ToString();
+            }
+            catch { }
 
             // Setup cooldown label mapping + ticking
             InitCooldownTracking();
@@ -207,11 +217,67 @@ namespace EpicRPGBot.UI
         private async Task<bool> SendMessageAsync(string message)
         {
             if (Web.CoreWebView2 == null) return false;
-            string escaped = (message ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
-            string js = $@"
+
+            // Focus the real Discord composer (bottom-most visible textbox)
+            string focusJs = @"
+(function(){
+  let candidates = Array.from(document.querySelectorAll(
+    'div[role=""textbox""][data-slate-editor=""true""], ' +
+    'div[aria-label^=""Message""][role=""textbox""], ' +
+    'div[aria-label*=""Message""][role=""textbox""]'
+  ));
+  if (candidates.length === 0) {
+    candidates = Array.from(document.querySelectorAll('div[role=""textbox""], div[contenteditable=""true""]'));
+  }
+  if (candidates.length === 0) return false;
+  candidates.sort((a,b)=>a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const editor = candidates[candidates.length - 1];
+  try { editor.scrollIntoView({block:'center'}); } catch(e) {}
+  try { editor.click(); } catch(e) {}
+  try { editor.focus(); } catch(e) {}
+  return true;
+})();";
+            try { await Web.CoreWebView2.ExecuteScriptAsync(focusJs); } catch { }
+
+            // Prefer DevTools to type and press Enter
+            try
+            {
+                string text = (message ?? string.Empty)
+                    .Replace("\\", "\\\\")
+                    .Replace("\"", "\\\"")
+                    .Replace("\r", "")
+                    .Replace("\n", "\\n");
+
+                await Web.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Input.insertText",
+                    $"{{\"text\":\"{text}\"}}"
+                );
+
+                const string keyDown = "{\"type\":\"keyDown\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
+                const string keyUp   = "{\"type\":\"keyUp\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
+
+                await Web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyDown);
+                await Web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyUp);
+                return true;
+            }
+            catch
+            {
+                // Fallback to execCommand if DevTools path fails
+                string escaped = (message ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
+                string js = $@"
 (async () => {{
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  const editor = document.querySelector(""div[role='textbox']"") || document.querySelector(""[contenteditable='true']"");
+  let candidates = Array.from(document.querySelectorAll(
+    'div[role=""textbox""][data-slate-editor=""true""], ' +
+    'div[aria-label^=""Message""][role=""textbox""], ' +
+    'div[aria-label*=""Message""][role=""textbox""]'
+  ));
+  if (candidates.length === 0) {{
+    candidates = Array.from(document.querySelectorAll('div[role=""textbox""], div[contenteditable=""true""]'));
+  }}
+  if (candidates.length === 0) return false;
+  candidates.sort((a,b)=>a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const editor = candidates[candidates.length - 1];
   if (!editor) return false;
   editor.focus();
   try {{
@@ -225,12 +291,13 @@ namespace EpicRPGBot.UI
   }} catch (e) {{ return false; }}
 }})();
 ";
-            try
-            {
-                var r = (await Web.CoreWebView2.ExecuteScriptAsync(js))?.Trim();
-                return string.Equals(r, "true", StringComparison.OrdinalIgnoreCase);
+                try
+                {
+                    var r = (await Web.CoreWebView2.ExecuteScriptAsync(js))?.Trim();
+                    return string.Equals(r, "true", StringComparison.OrdinalIgnoreCase);
+                }
+                catch { return false; }
             }
-            catch { return false; }
         }
 
         private void ReloadBtn_Click(object sender, RoutedEventArgs e)
@@ -246,6 +313,78 @@ namespace EpicRPGBot.UI
         private async void GoChannelBtn_Click(object sender, RoutedEventArgs e)
         {
             await NavigateToChannelAsync(GetChannelUrl());
+        }
+
+        private async void InitBtn_Click(object sender, RoutedEventArgs e)
+        {
+            _log.Info("Inicialize sequence started");
+
+            if (Web.CoreWebView2 == null)
+            {
+                _log.Info("WebView2 not ready");
+                return;
+            }
+
+            // Sequential initialization per request:
+            // For each: send action, wait 2s; send 'rpg cd', wait 1s + extra 1s; parse cd; add (2+1+1)=4s overhead; save; update UI ms; wait 3s before next
+            const int actionDelayMs = 2000;           // after action
+            const int afterCdDelayMs = 1000;          // after 'rpg cd'
+            const int extraLagMs = 1000;              // additional safety before computing baseline
+            const int overheadMs = actionDelayMs + afterCdDelayMs + extraLagMs; // 4000 total
+            const int betweenCommandsMs = 3000;
+
+            // Hunt
+            await InitializeOneAsync(
+                canonical: "hunt",
+                sendAction: "rpg hunt h",
+                defaultMs: 61000,
+                applyMsToUi: (ms) => HuntCdBox.Text = ms.ToString(),
+                actionDelayMs: actionDelayMs,
+                afterCdDelayMs: afterCdDelayMs,
+                extraLagMs: extraLagMs,
+                overheadMs: overheadMs
+            );
+            await Task.Delay(betweenCommandsMs);
+
+            // Adventure (persist; no textbox to show)
+            await InitializeOneAsync(
+                canonical: "adventure",
+                sendAction: "rpg adventure",
+                defaultMs: 61000,
+                applyMsToUi: null,
+                actionDelayMs: actionDelayMs,
+                afterCdDelayMs: afterCdDelayMs,
+                extraLagMs: extraLagMs,
+                overheadMs: overheadMs
+            );
+            await Task.Delay(betweenCommandsMs);
+
+            // Farm
+            await InitializeOneAsync(
+                canonical: "farm",
+                sendAction: "rpg farm",
+                defaultMs: SafeInt(FarmCdBox.Text, 196000),
+                applyMsToUi: (ms) => FarmCdBox.Text = ms.ToString(),
+                actionDelayMs: actionDelayMs,
+                afterCdDelayMs: afterCdDelayMs,
+                extraLagMs: extraLagMs,
+                overheadMs: overheadMs
+            );
+            await Task.Delay(betweenCommandsMs);
+
+            // Work (explicit chainsaw as requested)
+            await InitializeOneAsync(
+                canonical: "work",
+                sendAction: "rpg chainsaw",
+                defaultMs: SafeInt(WorkCdBox.Text, 99000),
+                applyMsToUi: (ms) => WorkCdBox.Text = ms.ToString(),
+                actionDelayMs: actionDelayMs,
+                afterCdDelayMs: afterCdDelayMs,
+                extraLagMs: extraLagMs,
+                overheadMs: overheadMs
+            );
+
+            _log.Info("Inicialize sequence finished");
         }
 
         private async void StartBtn_Click(object sender, RoutedEventArgs e)
@@ -300,6 +439,146 @@ namespace EpicRPGBot.UI
         private int SafeInt(string s, int def)
         {
             return int.TryParse(s, out var v) ? v : def;
+        }
+
+        // --------- Persisted initialization (concept for Hunt only) ---------
+
+        private static string GetSettingsFilePath()
+        {
+            var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EpicRPGBot.UI", "settings");
+            Directory.CreateDirectory(root);
+            return Path.Combine(root, "cooldowns.ini");
+        }
+
+        private int LoadHuntCooldownMsOrDefault()
+        {
+            try
+            {
+                var path = GetSettingsFilePath();
+                if (File.Exists(path))
+                {
+                    foreach (var line in File.ReadAllLines(path))
+                    {
+                        var t = line.Trim();
+                        if (t.StartsWith("hunt_ms=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var val = t.Substring("hunt_ms=".Length).Trim();
+                            if (int.TryParse(val, out var ms) && ms > 0) return ms;
+                        }
+                    }
+                }
+            }
+            catch { }
+            // Default if not initialized: 1 minute 1 second
+            return 61000;
+        }
+
+        private void SaveHuntCooldownMs(int ms)
+        {
+            try
+            {
+                var path = GetSettingsFilePath();
+                File.WriteAllText(path, $"hunt_ms={ms}{Environment.NewLine}");
+            }
+            catch { }
+        }
+
+        // --------- Persisted initialization (generic helpers) ---------
+
+        private int LoadCooldownMsOrDefault(string key, int @default)
+        {
+            try
+            {
+                var path = GetSettingsFilePath();
+                if (File.Exists(path))
+                {
+                    foreach (var line in File.ReadAllLines(path))
+                    {
+                        var t = line.Trim();
+                        if (t.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var val = t.Substring((key + "=").Length).Trim();
+                            if (int.TryParse(val, out var ms) && ms > 0) return ms;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return @default;
+        }
+
+        private void SaveCooldownMs(string key, int ms)
+        {
+            try
+            {
+                var path = GetSettingsFilePath();
+                var lines = new List<string>();
+                var written = false;
+
+                if (File.Exists(path))
+                {
+                    foreach (var line in File.ReadAllLines(path))
+                    {
+                        if (line.TrimStart().StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            lines.Add($"{key}={ms}");
+                            written = true;
+                        }
+                        else
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                }
+
+                if (!written)
+                {
+                    lines.Add($"{key}={ms}");
+                }
+
+                File.WriteAllLines(path, lines);
+            }
+            catch { }
+        }
+
+        private async Task InitializeOneAsync(
+            string canonical,
+            string sendAction,
+            int defaultMs,
+            Action<int> applyMsToUi,
+            int actionDelayMs,
+            int afterCdDelayMs,
+            int extraLagMs,
+            int overheadMs)
+        {
+            _log.Info($"Inicialize: {canonical} via '{sendAction}'");
+
+            var sent1 = await SendMessageAsync(sendAction);
+            if (!sent1) _log.Info($"Failed to send '{sendAction}'");
+
+            await Task.Delay(actionDelayMs);
+
+            var sentCd = await SendMessageAsync("rpg cd");
+            if (!sentCd) _log.Info("Failed to send 'rpg cd'");
+
+            await Task.Delay(afterCdDelayMs + extraLagMs);
+
+            var last = await GetLastMessageTextAsync();
+            if (!string.IsNullOrWhiteSpace(last))
+            {
+                TryParseCooldowns(last);
+            }
+
+            int baseMs = defaultMs;
+            if (_cooldowns.TryGetValue(canonical, out var entry))
+            {
+                if (entry?.Remaining.HasValue == true)
+                    baseMs = (int)Math.Max(0, entry.Remaining.Value.TotalMilliseconds) + overheadMs;
+            }
+
+            SaveCooldownMs($"{canonical}_ms", baseMs);
+            applyMsToUi?.Invoke(baseMs);
+            _log.Info($"Inicialize: {canonical} cooldown set to {baseMs} ms (saved)");
         }
 
         // ------------------------- Cooldowns (visual -> functional) -------------------------
