@@ -7,6 +7,10 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.Models;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Linq;
+using System.Windows.Controls;
 
 namespace EpicRPGBot.UI
 {
@@ -23,6 +27,11 @@ namespace EpicRPGBot.UI
         private System.Windows.Controls.Grid _lastMessagesPanel;
         private System.Windows.Controls.TextBlock _huntCountText;
 
+        // Cooldown tracking
+        private DispatcherTimer _cooldownTimer;
+        private readonly Dictionary<string, CooldownEntry> _cooldowns = new();
+        private readonly Dictionary<string, string> _aliasToCanonical = new();
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -48,6 +57,9 @@ namespace EpicRPGBot.UI
             _lastMessagesPanel = (System.Windows.Controls.Grid)FindName("LastMessagesPanel");
             _huntCountText = (System.Windows.Controls.TextBlock)FindName("HuntCountText");
 
+            // Setup cooldown label mapping + ticking
+            InitCooldownTracking();
+            
             await InitializeWebViewAsync();
             await NavigateToChannelAsync(GetChannelUrl());
             StartPollingLastMessage();
@@ -156,6 +168,8 @@ namespace EpicRPGBot.UI
                     {
                         _prevPolled = msg;
                         UiDispatcher.OnUI(_last.Add, msg);
+                        // Parse and apply cooldowns when the 'cooldowns' message appears
+                        UiDispatcher.OnUI(() => TryParseCooldowns(msg));
                     }
                 }
                 catch { }
@@ -286,6 +300,179 @@ namespace EpicRPGBot.UI
         private int SafeInt(string s, int def)
         {
             return int.TryParse(s, out var v) ? v : def;
+        }
+
+        // ------------------------- Cooldowns (visual -> functional) -------------------------
+
+        private class CooldownEntry
+        {
+            public TextBlock Label { get; }
+            public TimeSpan? Remaining { get; set; }
+
+            public CooldownEntry(TextBlock label)
+            {
+                Label = label;
+                Remaining = null;
+            }
+        }
+
+        private void InitCooldownTracking()
+        {
+            TextBlock T(string name) => (TextBlock)FindName(name);
+
+            // Canonical -> label
+            // Canonical keys
+            _cooldowns["daily"]      = new CooldownEntry(T("DailyCdText"));
+            _cooldowns["weekly"]     = new CooldownEntry(T("WeeklyCdText"));
+            _cooldowns["lootbox"]    = new CooldownEntry(T("LootboxCdText"));
+            _cooldowns["card_hand"]  = new CooldownEntry(T("CardHandCdText"));
+            _cooldowns["vote"]       = new CooldownEntry(T("VoteCdText"));
+
+            _cooldowns["hunt"]       = new CooldownEntry(T("HuntCdText"));
+            _cooldowns["adventure"]  = new CooldownEntry(T("AdventureCdText"));
+            _cooldowns["training"]   = new CooldownEntry(T("TrainingCdText"));
+            _cooldowns["duel"]       = new CooldownEntry(T("DuelCdText"));
+            _cooldowns["quest"]      = new CooldownEntry(T("QuestCdText"));
+
+            _cooldowns["work"]       = new CooldownEntry(T("WorkCdText"));
+            _cooldowns["farm"]       = new CooldownEntry(T("FarmCdText"));
+            _cooldowns["horse"]      = new CooldownEntry(T("HorseCdText"));
+            _cooldowns["arena"]      = new CooldownEntry(T("ArenaCdText"));
+            _cooldowns["dungeon"]    = new CooldownEntry(T("DungeonCdText"));
+
+            // Aliases from message -> canonical keys
+            void Map(string alias, string canonical) => _aliasToCanonical[alias] = canonical;
+
+            Map("daily", "daily");
+            Map("weekly", "weekly");
+            Map("lootbox", "lootbox");
+            Map("card hand", "card_hand");
+            Map("vote", "vote");
+
+            Map("hunt", "hunt");
+            Map("adventure", "adventure");
+            Map("training", "training");
+            Map("duel", "duel");
+            Map("quest", "quest");
+            Map("epic quest", "quest");
+
+            Map("chop", "work");
+            Map("fish", "work");
+            Map("pickup", "work");
+            Map("mine", "work");
+
+            Map("farm", "farm");
+
+            Map("horse breeding", "horse");
+            Map("horse race", "horse");
+
+            Map("arena", "arena");
+
+            Map("dungeon", "dungeon");
+            Map("miniboss", "dungeon");
+
+            // 1-second ticking to decrement visible timers
+            _cooldownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _cooldownTimer.Tick += (s, e) =>
+            {
+                foreach (var entry in _cooldowns.Values.Distinct())
+                {
+                    if (entry.Label == null) continue;
+
+                    if (entry.Remaining.HasValue)
+                    {
+                        var left = entry.Remaining.Value - TimeSpan.FromSeconds(1);
+                        if (left <= TimeSpan.Zero)
+                        {
+                            entry.Remaining = null; // ready
+                            UpdateCooldownLabel(entry.Label, null);
+                        }
+                        else
+                        {
+                            entry.Remaining = left;
+                            UpdateCooldownLabel(entry.Label, left);
+                        }
+                    }
+                }
+            };
+            _cooldownTimer.Start();
+        }
+
+        private void TryParseCooldowns(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            if (message.IndexOf("cooldowns", StringComparison.OrdinalIgnoreCase) < 0) return;
+
+            var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var raw in lines)
+            {
+                var line = raw.Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                // Skip headings
+                var header = line.ToLowerInvariant();
+                if (header.Contains("cooldowns") || header == "rewards" || header == "experience" || header == "progress")
+                    continue;
+
+                // Extract "names (time)" where names can be "a | b | c"
+                var match = Regex.Match(line, @"^\s*[~`\-\*]*\s*(.+?)\s*(?:\(([^)]+)\))?\s*$");
+                if (!match.Success) continue;
+
+                var namesPart = match.Groups[1].Value.Trim();
+                var timePart = match.Groups[2].Success ? match.Groups[2].Value.Trim() : null;
+
+                // For each alias in the names, update its canonical cooldown
+                TimeSpan? dur = ParseDuration(timePart); // null => Ready
+                foreach (var alias in namesPart.Split('|'))
+                {
+                    var a = alias.Trim().ToLowerInvariant();
+                    if (_aliasToCanonical.TryGetValue(a, out var canonical) && _cooldowns.TryGetValue(canonical, out var entry))
+                    {
+                        entry.Remaining = dur.HasValue && dur.Value > TimeSpan.Zero ? dur : null;
+                        UpdateCooldownLabel(entry.Label, entry.Remaining);
+                    }
+                }
+            }
+        }
+
+        private static TimeSpan? ParseDuration(string time)
+        {
+            if (string.IsNullOrWhiteSpace(time)) return null; // Ready
+            var matches = Regex.Matches(time, @"(\d+)\s*([dhms])", RegexOptions.IgnoreCase);
+            if (matches.Count == 0) return null;
+
+            int d = 0, h = 0, m = 0, s = 0;
+            foreach (Match mt in matches)
+            {
+                var val = int.Parse(mt.Groups[1].Value);
+                switch (mt.Groups[2].Value.ToLowerInvariant())
+                {
+                    case "d": d = val; break;
+                    case "h": h = val; break;
+                    case "m": m = val; break;
+                    case "s": s = val; break;
+                }
+            }
+
+            try { return new TimeSpan(d, h, m, s); }
+            catch { return null; }
+        }
+
+        private static string FormatDuration(TimeSpan ts)
+        {
+            var parts = new List<string>();
+            if (ts.Days > 0) parts.Add($"{ts.Days}d");
+            if (ts.Days > 0 || ts.Hours > 0) parts.Add($"{ts.Hours}h");
+            if (ts.Days > 0 || ts.Hours > 0 || ts.Minutes > 0) parts.Add($"{ts.Minutes}m");
+            parts.Add($"{ts.Seconds}s");
+            return string.Join(" ", parts);
+        }
+
+        private void UpdateCooldownLabel(TextBlock tb, TimeSpan? remaining)
+        {
+            if (tb == null) return;
+            tb.Text = remaining.HasValue ? FormatDuration(remaining.Value) : "Ready";
         }
 
         // Left header buttons

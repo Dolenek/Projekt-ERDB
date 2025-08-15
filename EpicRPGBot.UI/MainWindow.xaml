@@ -141,7 +141,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="daily" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="DailyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -150,7 +150,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="weekly" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="WeeklyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -159,7 +159,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="lootbox" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="LootboxCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -168,7 +168,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="card hand" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="CardHandCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,8">
@@ -177,7 +177,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="vote" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="VoteCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <!-- Experience -->
@@ -189,7 +189,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="hunt" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="HuntCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -198,7 +198,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="adventure" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="AdventureCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -207,7 +207,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="training" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="TrainingCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -216,7 +216,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="duel" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="DuelCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,8">
@@ -225,7 +225,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="quest | epic quest" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="QuestCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <!-- Progress -->
@@ -237,7 +237,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="chop | fish | pickup | mine" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="WorkCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -246,7 +246,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="farm" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="FarmCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -255,7 +255,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="horse breeding | horse race" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="HorseCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,2">
@@ -264,7 +264,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="arena" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="ArenaCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                         <Grid Margin="0,2,0,0">
@@ -273,7 +273,7 @@
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="dungeon | miniboss" Foreground="#ddd"/>
-                            <TextBlock Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            <TextBlock Name="DungeonCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
                         </Grid>
 
                     </StackPanel>
