@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Windows.Controls;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace EpicRPGBot.UI
 {
@@ -53,6 +55,17 @@ namespace EpicRPGBot.UI
             StatsList.ItemsSource = _last.Items;
             ConsoleList.ItemsSource = _log.Items;
             _log.Engine("UI loaded");
+
+            // Optional offline self-test for captcha classifier
+            try
+            {
+                var selfTest = Env.Get("CAPTCHA_SELFTEST", null);
+                if (string.Equals(selfTest, "1", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RunCaptchaSelfTestAsync();
+                }
+            }
+            catch { }
 
             // Cache named elements for tabs/stats to avoid compile-time field generation issues
             _lastMessagesPanel = (System.Windows.Controls.Grid)FindName("LastMessagesPanel");
@@ -421,6 +434,12 @@ namespace EpicRPGBot.UI
                 });
             };
 
+            // Wire solver telemetry to Console log
+            _engine.OnSolverInfo += (info) =>
+            {
+                UiDispatcher.OnUI(() => _log.Info("[solver] " + info));
+            };
+
             // Immediately send "rpg cd" before starting timers
             var sent = await _engine.SendImmediateAsync("rpg cd");
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
@@ -774,6 +793,127 @@ namespace EpicRPGBot.UI
             if (_lastMessagesPanel != null) _lastMessagesPanel.Visibility = Visibility.Collapsed;
             StatsPanel.Visibility = Visibility.Collapsed;
             ConsolePanel.Visibility = Visibility.Visible;
+        }
+
+        // ------------------------ Captcha Classifier Offline Self-Test ------------------------
+        private async Task RunCaptchaSelfTestAsync()
+        {
+            await Task.Yield();
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var defaultRefs = Path.Combine(baseDir, "CaptchaRefs");
+                var refsDir = Env.Get("CAPTCHA_REFS_DIR", defaultRefs);
+                int threshold = 12;
+                try
+                {
+                    var tStr = Env.Get("CAPTCHA_HASH_THRESHOLD", null);
+                    if (!string.IsNullOrWhiteSpace(tStr) && int.TryParse(tStr, out var t) && t > 0 && t <= 64) threshold = t;
+                }
+                catch { }
+
+                if (!Directory.Exists(refsDir))
+                {
+                    _log.Info($"[selftest] Refs dir not found: {refsDir}");
+                    return;
+                }
+
+                var files = Directory.EnumerateFiles(refsDir, "*.png", SearchOption.TopDirectoryOnly)
+                                     .Concat(Directory.EnumerateFiles(refsDir, "*.jpg", SearchOption.TopDirectoryOnly))
+                                     .Concat(Directory.EnumerateFiles(refsDir, "*.jpeg", SearchOption.TopDirectoryOnly))
+                                     .ToList();
+
+                _log.Info($"[selftest] Found {files.Count} refs in {refsDir}. Threshold={threshold}");
+
+                var clf = new Services.CaptchaClassifier(refsDir, threshold);
+
+                foreach (var f in files)
+                {
+                    var label = System.IO.Path.GetFileNameWithoutExtension(f);
+
+                    // Original image
+                    byte[] original = File.ReadAllBytes(f);
+                    var r0 = clf.Classify(original);
+                    _log.Info($"[selftest] {label}: original => {r0.Label} (dist={r0.Distance}, method={r0.Method})");
+var top0 = clf.Rank(original, 3);
+if (top0 != null && top0.Count > 0)
+{
+    var tops = string.Join("; ", top0.Select((m, i) => $"{i + 1}) {m.Label} (d={m.Distance}, {m.Method})"));
+    _log.Info($"[selftest] {label}: original top -> {tops}");
+}
+
+                    // Variant: squashed + thin white lines overlay (simulate noise)
+                    using (var bmp = new Bitmap(f))
+                    using (var variant = CreateVariant(bmp))
+                    using (var ms = new MemoryStream())
+                    {
+                        variant.Save(ms, ImageFormat.Png);
+                        var r1 = clf.Classify(ms.ToArray());
+                        _log.Info($"[selftest] {label}: variant => {r1.Label} (dist={r1.Distance}, method={r1.Method})");
+                    }
+                }
+
+                _log.Info("[selftest] Completed.");
+            }
+            catch (Exception ex)
+            {
+                _log.Info("[selftest] Error: " + ex.Message);
+            }
+        }
+
+        private static Bitmap CreateVariant(Bitmap src)
+        {
+            int target = Math.Max(64, Math.Min(128, Math.Max(src.Width, src.Height)));
+            var canvas = new Bitmap(target, target, PixelFormat.Format24bppRgb);
+            using (var g = Graphics.FromImage(canvas))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.Clear(Color.Black);
+
+                double sw = src.Width;
+                double sh = src.Height;
+                // squash width by 0.9
+                double scale = 0.9 * Math.Min(target / sw, target / sh);
+                int w = Math.Max(1, (int)Math.Round(sw * scale));
+                int h = Math.Max(1, (int)Math.Round(sh * scale));
+                int x = (target - w) / 2;
+                int y = (target - h) / 2;
+
+                // grayscale draw
+                using (var gray = new Bitmap(src.Width, src.Height, PixelFormat.Format24bppRgb))
+                using (var gg = Graphics.FromImage(gray))
+                {
+                    var cm = new ColorMatrix(new float[][]
+                    {
+                        new float[] {0.299f,0.299f,0.299f,0,0},
+                        new float[] {0.587f,0.587f,0.587f,0,0},
+                        new float[] {0.114f,0.114f,0.114f,0,0},
+                        new float[] {0,0,0,1,0},
+                        new float[] {0,0,0,0,1}
+                    });
+                    using (var ia = new ImageAttributes())
+                    {
+                        ia.SetColorMatrix(cm);
+                        gg.DrawImage(src, new Rectangle(0, 0, src.Width, src.Height),
+                            0, 0, src.Width, src.Height, GraphicsUnit.Pixel, ia);
+                    }
+                    g.DrawImage(gray, new Rectangle(x, y, w, h), new Rectangle(0, 0, gray.Width, gray.Height), GraphicsUnit.Pixel);
+                }
+
+                // overlay thin lines
+                using (var pen = new Pen(Color.FromArgb(255, 255, 255), 1))
+                {
+                    int n = 4;
+                    for (int i = 1; i <= n; i++)
+                    {
+                        int yy = i * (target / (n + 1));
+                        g.DrawLine(pen, 0, yy, target - 1, yy);
+                    }
+                }
+            }
+            return canvas;
         }
     }
 }

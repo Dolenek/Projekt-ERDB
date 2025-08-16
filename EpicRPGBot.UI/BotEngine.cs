@@ -1,9 +1,12 @@
+using System.Net.Http;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
+using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
 {
@@ -27,6 +30,8 @@ namespace EpicRPGBot.UI
 
         private int _huntMarryTracker = 0;
         private string _lastMessageId = string.Empty;
+        private string _prevMessageId = string.Empty;
+        private string _prevMessageText = string.Empty;
 
         private bool _running;
 
@@ -39,8 +44,16 @@ namespace EpicRPGBot.UI
         public event Action<string> OnCommandSent;
         public event Action<string> OnMessageSeen;
 
+        // Solver telemetry (optional UI console log)
+        public event Action<string> OnSolverInfo;
+
         // Tracks manual "rpg cd" to avoid duplicate opening cd when Start() runs
         private DateTime _lastManualCdUtc = DateTime.MinValue;
+
+        // Captcha solver state
+        private bool _captchaInProgress = false;
+        private HttpClient _http;
+        private CaptchaClassifier _classifier;
 
         public BotEngine(WebView2 web, int area, int huntCooldown, int workCooldown, int farmCooldown)
         {
@@ -128,6 +141,21 @@ namespace EpicRPGBot.UI
             _workT.Start();
             if (_area >= 4) _farmT.Start();
             _checkMessageT.Start();
+        }
+
+        private void PauseWorkTimers()
+        {
+            _huntT.Stop();
+            _workT.Stop();
+            _farmT.Stop();
+            // keep _checkMessageT running to observe chat while solving
+        }
+
+        private void ResumeWorkTimers()
+        {
+            _huntT.Start();
+            _workT.Start();
+            if (_area >= 4) _farmT.Start();
         }
 
         private void StopTimers()
@@ -342,6 +370,7 @@ namespace EpicRPGBot.UI
                 var text = ExtractField(s, "text");
 
                 if (string.IsNullOrEmpty(id) || id == _lastMessageId) return string.Empty;
+                _prevMessageId = _lastMessageId;
                 _lastMessageId = id;
                 OnMessageSeen?.Invoke(text);
                 return text ?? string.Empty;
@@ -401,9 +430,18 @@ namespace EpicRPGBot.UI
         {
             var msg = message ?? string.Empty;
 
-            if (msg.IndexOf("Select the item of the image above or respond with the item name", StringComparison.OrdinalIgnoreCase) >= 0)
+            // Trigger by alternate guard phrase requested for testing:
+            // Look for "EPIC GUARD: stop there," in the last two messages.
+            const string GuardAlt = "EPIC GUARD: stop there,";
+            bool inCurrent = msg?.IndexOf(GuardAlt, StringComparison.OrdinalIgnoreCase) >= 0;
+            bool inPrev = (!string.IsNullOrEmpty(_prevMessageText) && _prevMessageText.IndexOf(GuardAlt, StringComparison.OrdinalIgnoreCase) >= 0);
+
+            if (inCurrent || inPrev)
             {
-                Debug.WriteLine("Guard seen");
+                Debug.WriteLine("Guard seen (alt phrase)");
+                OnSolverInfo?.Invoke("Captcha detected (alt phrase).");
+                var targetId = inCurrent ? _lastMessageId : _prevMessageId;
+                _ = SolveCaptchaAsync(targetId); // fire-and-forget
             }
             else if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -552,6 +590,9 @@ namespace EpicRPGBot.UI
             {
                 _ = SendAndEmitAsync("TIME TO FIGHT");
             }
+
+            // Track last message text so we can check the last two messages for guard triggers
+            _prevMessageText = msg;
         }
 
         private void RespondFirstPresent(string msg, params string[] options)
@@ -570,6 +611,253 @@ namespace EpicRPGBot.UI
                 }
             }
             catch { }
+        }
+
+        private async Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId)
+        {
+            if (_web.CoreWebView2 == null) return null;
+            if (string.IsNullOrWhiteSpace(messageId)) return null;
+
+            string js = $@"
+(() => {{
+  const root = document.getElementById('{messageId.Replace("'", "\\'")}');
+  if (!root) return '';
+  // Prefer visible imgs
+  const imgs = Array.from(root.querySelectorAll('img'));
+  let best = '';
+  for (const im of imgs) {{
+    const src = im.getAttribute('src') || im.src || '';
+    if (!src) continue;
+    const r = im.getBoundingClientRect();
+    const styles = window.getComputedStyle(im);
+    const visible = r.width > 0 && r.height > 0 && styles.visibility !== 'hidden' && styles.display !== 'none';
+    if (visible) {{
+      best = src;
+      break;
+    }}
+    if (!best) best = src;
+  }}
+  return best || '';
+}})();";
+            try
+            {
+                var res = await _web.CoreWebView2.ExecuteScriptAsync(js);
+                var url = UnquoteJson(res);
+                return string.IsNullOrWhiteSpace(url) ? null : url;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private CaptchaClassifier EnsureClassifier()
+        {
+            if (_classifier != null) return _classifier;
+
+            // Resolve refs dir and threshold from env
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var defaultRefs = Path.Combine(baseDir, "CaptchaRefs");
+            var refsDir = Env.Get("CAPTCHA_REFS_DIR", defaultRefs);
+            int threshold = 12;
+            try
+            {
+                var tStr = Env.Get("CAPTCHA_HASH_THRESHOLD", null);
+                if (!string.IsNullOrWhiteSpace(tStr) && int.TryParse(tStr, out var t) && t > 0 && t <= 64) threshold = t;
+            }
+            catch { }
+
+            try
+            {
+                _classifier = new CaptchaClassifier(refsDir, threshold);
+                OnSolverInfo?.Invoke($"Solver initialized (refs={refsDir}, threshold={threshold}).");
+            }
+            catch (Exception ex)
+            {
+                OnSolverInfo?.Invoke($"Solver init failed: {ex.Message}");
+                _classifier = null;
+            }
+            return _classifier;
+        }
+
+        // Capture the first visible IMG inside the specified message as a PNG via DevTools, avoiding WEBP/CORS issues.
+        private async Task<byte[]> CaptureCaptchaImagePngAsync(string messageId)
+        {
+            if (_web.CoreWebView2 == null) return null;
+            if (string.IsNullOrWhiteSpace(messageId)) return null;
+
+            // Get IMG bounding rect in CSS pixels, adjusted for page scroll, from the specific message LI.
+            string js = $@"
+(() => {{
+  const root = document.getElementById('{messageId.Replace("'", "\\'")}');
+  if (!root) return JSON.stringify({{ ok:false }});
+  const imgs = Array.from(root.querySelectorAll('img'));
+  let el = null;
+  for (const im of imgs) {{
+    const r = im.getBoundingClientRect();
+    const st = window.getComputedStyle(im);
+    const vis = r.width > 1 && r.height > 1 && st.visibility !== 'hidden' && st.display !== 'none';
+    if (vis) {{ el = im; break; }}
+  }}
+  if (!el) return JSON.stringify({{ ok:false }});
+  try {{ el.scrollIntoView({{block:'center'}}); }} catch {{}}
+  const r = el.getBoundingClientRect();
+  const x = r.left + window.scrollX;
+  const y = r.top + window.scrollY;
+  return JSON.stringify({{
+    ok:true,
+    x:x, y:y, w:r.width, h:r.height
+  }});
+}})();";
+            try
+            {
+                var json = await _web.CoreWebView2.ExecuteScriptAsync(js);
+                var s = UnquoteJson(json);
+                var ok = ExtractField(s, "ok");
+                if (string.IsNullOrEmpty(ok) || ok.IndexOf("true", StringComparison.OrdinalIgnoreCase) < 0)
+                    return null;
+
+                double x = 0, y = 0, w = 0, h = 0;
+                double.TryParse(ExtractField(s, "x"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x);
+                double.TryParse(ExtractField(s, "y"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y);
+                double.TryParse(ExtractField(s, "w"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out w);
+                double.TryParse(ExtractField(s, "h"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out h);
+
+                if (w < 2 || h < 2) return null;
+
+                // Use CSS pixels with scale=1 and allow beyond-viewport capture so the rect is cropped to only the IMG.
+                var clipX = Math.Max(0, x);
+                var clipY = Math.Max(0, y);
+                var clipW = Math.Max(2, w);
+                var clipH = Math.Max(2, h);
+
+                string payload =
+                    $"{{\"format\":\"png\",\"fromSurface\":true,\"captureBeyondViewport\":true," +
+                    $"\"clip\":{{\"x\":{clipX.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                    $"\"y\":{clipY.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                    $"\"width\":{clipW.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                    $"\"height\":{clipH.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                    $"\"scale\":1}}}}";
+
+                var res = await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Page.captureScreenshot", payload);
+                var data = ExtractField(UnquoteJson(res), "data");
+                if (string.IsNullOrWhiteSpace(data)) return null;
+
+                try
+                {
+                    return Convert.FromBase64String(data);
+                }
+                catch { return null; }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private HttpClient EnsureHttp()
+        {
+            if (_http != null) return _http;
+            _http = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(4)
+            };
+            return _http;
+        }
+
+        private async Task SolveCaptchaAsync() => await SolveCaptchaAsync(_lastMessageId);
+
+        private async Task SolveCaptchaAsync(string targetMessageId)
+        {
+            if (_captchaInProgress) return;
+            _captchaInProgress = true;
+
+            try
+            {
+                PauseWorkTimers();
+
+                var clf = EnsureClassifier();
+                if (clf == null)
+                {
+                    OnSolverInfo?.Invoke("Solver unavailable (classifier init failed).");
+                    return;
+                }
+
+                var msgId = targetMessageId;
+                if (string.IsNullOrWhiteSpace(msgId))
+                {
+                    OnSolverInfo?.Invoke("Cannot solve: message id is empty.");
+                    return;
+                }
+
+                // First try capturing a PNG of the IMG via DevTools (handles WEBP/CORS).
+                byte[] bytes = await CaptureCaptchaImagePngAsync(msgId);
+
+                string url = null;
+                if (bytes == null || bytes.Length == 0)
+                {
+                    url = await GetCaptchaImageUrlForMessageIdAsync(msgId);
+                }
+
+                if ((bytes == null || bytes.Length == 0) && string.IsNullOrWhiteSpace(url))
+                {
+                    // Fallback: try the other of the last two messages to support separated text/image posts
+                    var altId = msgId == _lastMessageId ? _prevMessageId : _lastMessageId;
+                    if (!string.IsNullOrWhiteSpace(altId))
+                    {
+                        OnSolverInfo?.Invoke("Primary message had no image; trying adjacent message.");
+                        bytes = await CaptureCaptchaImagePngAsync(altId);
+                        if (bytes == null || bytes.Length == 0)
+                            url = await GetCaptchaImageUrlForMessageIdAsync(altId);
+                    }
+                }
+
+                if ((bytes == null || bytes.Length == 0) && string.IsNullOrWhiteSpace(url))
+                {
+                    OnSolverInfo?.Invoke("Captcha image not found in selected/adjacent messages.");
+                    return;
+                }
+
+                if (bytes == null || bytes.Length == 0)
+                {
+                    OnSolverInfo?.Invoke($"Captcha image via URL: {url}");
+                    try
+                    {
+                        bytes = await EnsureHttp().GetByteArrayAsync(url);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnSolverInfo?.Invoke($"Download failed: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    OnSolverInfo?.Invoke("Captcha image captured via DevTools screenshot.");
+                }
+
+                var t0 = Stopwatch.GetTimestamp();
+                var result = clf.Classify(bytes);
+                var ms = (int)(1000.0 * (Stopwatch.GetTimestamp() - t0) / Stopwatch.Frequency);
+
+                if (!result.IsMatch || string.IsNullOrWhiteSpace(result.Label))
+                {
+                    OnSolverInfo?.Invoke($"Classifier uncertain; closest='{(string.IsNullOrWhiteSpace(result.Label) ? "<none>" : result.Label)}' (dist={result.Distance}, method={result.Method}, {ms} ms). Skipping.");
+                    return;
+                }
+
+                OnSolverInfo?.Invoke($"Classifier answer '{result.Label}' (dist={result.Distance}, method={result.Method}, {ms} ms). Sending.");
+                await SendAndEmitAsync(result.Label);
+            }
+            catch (Exception ex)
+            {
+                OnSolverInfo?.Invoke($"SolveCaptcha error: {ex.Message}");
+            }
+            finally
+            {
+                ResumeWorkTimers();
+                _captchaInProgress = false;
+            }
         }
 
         private static Task SafeDelay(int ms)
