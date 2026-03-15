@@ -94,7 +94,7 @@
                 <StackPanel Margin="12">
                     <TextBlock Text="Settings" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
                     <StackPanel Orientation="Vertical" Margin="0,4,0,0">
-                        <TextBlock Text="Discord Channel URL (.env DISCORD_CHANNEL_URL)" Foreground="#aaa"/>
+                        <TextBlock Text="Discord Channel URL" Foreground="#aaa"/>
                         <TextBox Name="ChannelUrlBox" Margin="0,4,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
                         <CheckBox Name="UseAtMeFallback" Content="Fallback to @me if empty" Foreground="#ddd" IsChecked="True" Margin="0,0,0,12"/>
                     </StackPanel>

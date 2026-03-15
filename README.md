@@ -1,100 +1,44 @@
 # EpicRPGBot.UI
 
-A WPF (.NET Framework 4.8) desktop UI that embeds Discord via WebView2. The center shows the live Discord channel, the left sidebar provides a Stats/Console view, and the right panel contains bot settings and controls. The bot automation is integrated directly in this app using WebView2 DevTools (no separate Chrome/Selenium instance).
+This repository now centers on `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` desktop app that embeds Discord with WebView2 and drives the Epic RPG workflow from the UI.
 
-- Center: Embedded Discord chat (WebView2)
-- Left: Toggleable Stats (last 5 messages) or Console (structured logs)
-- Right: Settings and Start/Stop controls
+What the app provides:
+- Embedded Discord browser with persistent sign-in state
+- Start/stop automation for hunt, work, and farm
+- Last-message feed, hunt counter, and structured console log
+- Cooldown discovery and visual cooldown tracking
+- Integrated captcha solver and optional offline self-test
 
-Key behavior
-- Start Bot immediately sends “rpg cd”, then continues with hunt/work/farm sequence and timers.
-- Commands are sent via WebView2 DevTools to the real message composer (not the header search).
-- The last 5 messages detected are shown in the Stats tab; all actions are logged in the Console tab.
+Docs:
+- [Documentation index](documentation.md)
+- [UI shell](docs/ui-shell.md)
+- [Automation engine](docs/automation-engine.md)
+- [Cooldown management](docs/cooldown-management.md)
+- [Captcha solver](docs/captcha-solver.md)
 
-Project structure (UI-layer)
-- EpicRPGBot.UI/EpicRPGBot.UI.csproj
-- EpicRPGBot.UI/App.xaml
-- EpicRPGBot.UI/App.xaml.cs
-- EpicRPGBot.UI/MainWindow.xaml
-- EpicRPGBot.UI/MainWindow.xaml.cs
-- Engine:
-  - EpicRPGBot.UI/BotEngine.cs
-- Models:
-  - EpicRPGBot.UI/Models/MessageItem.cs
-  - EpicRPGBot.UI/Models/LogEntry.cs
-- Services:
-  - EpicRPGBot.UI/Services/InMemoryLog.cs
-  - EpicRPGBot.UI/Services/LastMessagesBuffer.cs
-  - EpicRPGBot.UI/Services/UiDispatcher.cs
-- Env loader (shared with original console app style):
-  - EpicRPGBot.UI/Env.cs
-
-Requirements
-- .NET Framework 4.8 Developer Pack
-- WebView2 Evergreen Runtime (installed system-wide)
+Requirements:
 - Windows 10/11 x64
+- .NET Framework 4.8 Developer Pack
+- Microsoft Edge WebView2 Runtime
 
-Install WebView2 Runtime (if needed)
-- Using winget:
-  winget install --id Microsoft.EdgeWebView2Runtime --exact --accept-package-agreements --accept-source-agreements
+Build and run:
+```bash
+dotnet build EpicRPGBotCSharp.sln -c Debug
+dotnet run --project EpicRPGBot.UI -c Debug
+```
 
-Environment configuration (.env)
-At repository root, create a .env file (copy from .env.example) and set the following keys as needed:
-- DISCORD_CHANNEL_URL=https://discord.com/channels/yourGuildId/yourChannelId
-- AREA=10
-- HUNT_COOLDOWN=21000
-- WORK_COOLDOWN=99000
-- FARM_COOLDOWN=196000
+Local settings:
+- User-editable settings are stored in `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`.
+- The right-side settings fields auto-save when changed and are restored on the next launch.
 
-Build and run
-- Build the whole solution:
-  dotnet build EpicRPGBotCSharp.sln -c Debug
-- Run the UI project:
-  dotnet run --project EpicRPGBot.UI -c Debug
+Captcha `.env`:
+- Only captcha-related configuration stays in `.env` at the repository root.
+- Supported keys:
+  - `CAPTCHA_REFS_DIR`
+  - `CAPTCHA_HASH_THRESHOLD`
+  - `CAPTCHA_SELFTEST`
 
-Usage
-1) Launch the app and log into Discord in the center pane if not already authenticated. The app keeps a persistent WebView2 user data folder.
-2) Enter or confirm the Discord Channel URL (right panel). The “Go To Channel” button navigates directly there.
-3) Adjust area/cooldowns if needed.
-4) Click “Start Bot”:
-   - Immediately sends “rpg cd”
-   - Then sends hunt/work/farm opening salvo based on your area
-   - Continues on timers
-5) Left sidebar:
-   - Stats: Shows rolling last 5 messages from the active channel with timestamps
-   - Console: Shows structured log lines when commands are sent or the engine starts/stops
-   - Use the “Stats” and “Console” buttons to toggle the left view
-6) Click “Stop Bot” to stop timers and pause the engine.
-
-Notes on behavior
-- Message composition: The engine focuses the bottom message composer and sends text using DevTools Input.insertText, then presses Enter by dispatching DevTools key events. This avoids accidentally typing into the header search box.
-- Start behavior: The app always sends “rpg cd” once on Start, and logs this to Console. If you also press Start again quickly, deduplication is handled at the engine level to avoid rapid duplicates.
-- Event scanning: The engine polls the DOM to capture the last chat message and triggers bot reactions for certain keywords.
-
-Files of interest
-- UI layout: EpicRPGBot.UI/MainWindow.xaml
-- UI logic / event wiring: EpicRPGBot.UI/MainWindow.xaml.cs
-- Bot automation: EpicRPGBot.UI/BotEngine.cs
-- Logging and buffers:
-  - EpicRPGBot.UI/Services/InMemoryLog.cs
-  - EpicRPGBot.UI/Services/LastMessagesBuffer.cs
-  - EpicRPGBot.UI/Models/LogEntry.cs
-  - EpicRPGBot.UI/Models/MessageItem.cs
-
-Troubleshooting
-- WebView2 init failed:
-  - Ensure “Microsoft Edge WebView2 Runtime” is installed (see command above).
-- Types into header “Search” instead of composer:
-  - Use the latest build. The engine focuses the composer using a bottom-most visible-role=“textbox” heuristic. If Discord updates break selectors, rebuild from main; the engine contains a fallback path via execCommand.
-- Discord interstitial prompts (“Open/Continue in Browser”):
-  - The app auto-clicks common interstitials after navigation. If you still see them, click manually once and they won’t reappear often.
-
-Security and compliance
-- This UI drives the Discord web client via WebView2. Only use in your own account and in allowed channels. Respect Discord’s Terms of Service and bot/game rules.
-
-Changelog (UI integration highlights)
-- Embedded WebView2 with persistent storage
-- Left sidebar with Stats (last 5 messages) and Console (events/commands)
-- Start Bot immediate “rpg cd”
-- DevTools-based input to composer; avoids header search box
-- Basic structured logging and observable buffers for data binding
+Notes:
+- `Start Bot` sends `rpg cd` immediately, then starts the timed hunt/work/farm loop.
+- `Inicialize` discovers cooldown baselines and saves them into the same local settings file.
+- The embedded browser auto-clicks common Discord “continue in browser” prompts after navigation.
