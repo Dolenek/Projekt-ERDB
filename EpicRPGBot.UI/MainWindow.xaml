@@ -102,7 +102,7 @@
                     <Separator Background="#2f3136" Margin="0,8,0,12"/>
 
                     <TextBlock Text="Bot Parameters" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <UniformGrid Columns="2" Rows="2" Margin="0,0,0,8">
+                    <UniformGrid Columns="2" Rows="3" Margin="0,0,0,8">
                         <StackPanel Margin="0,0,8,0">
                             <TextBlock Text="Area" Foreground="#aaa"/>
                             <TextBox Name="AreaBox" Text="10" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
@@ -112,6 +112,10 @@
                             <TextBox Name="HuntCdBox" Text="21000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
                         </StackPanel>
                         <StackPanel Margin="0,8,8,0">
+                            <TextBlock Text="Adventure cooldown (ms)" Foreground="#aaa"/>
+                            <TextBox Name="AdventureCdBox" Text="61000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,8,0,0">
                             <TextBlock Text="Work cooldown (ms)" Foreground="#aaa"/>
                             <TextBox Name="WorkCdBox" Text="99000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
                         </StackPanel>
@@ -119,6 +123,7 @@
                             <TextBlock Text="Farm cooldown (ms)" Foreground="#aaa"/>
                             <TextBox Name="FarmCdBox" Text="196000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
                         </StackPanel>
+                        <Border Margin="0,8,8,0" Background="Transparent"/>
                     </UniformGrid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -79,7 +80,7 @@ namespace EpicRPGBot.UI.Services
 ";
 
             var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
-            return UnquoteJson(result);
+            return DiscordScriptParsing.UnquoteJson(result);
         }
 
         public async Task<DiscordMessageSnapshot> GetLatestMessageAsync()
@@ -101,10 +102,10 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                var payload = UnquoteJson(json);
+                var payload = DiscordScriptParsing.UnquoteJson(json);
                 return new DiscordMessageSnapshot(
-                    ExtractField(payload, "id"),
-                    ExtractField(payload, "text"));
+                    DiscordScriptParsing.ExtractField(payload, "id"),
+                    DiscordScriptParsing.ExtractField(payload, "text"));
             }
             catch
             {
@@ -112,39 +113,52 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        public async Task<bool> SendMessageAsync(string message)
+        public async Task<IReadOnlyList<DiscordMessageSnapshot>> GetRecentMessagesAsync(int maxCount)
         {
             if (_web.CoreWebView2 == null)
             {
-                return false;
+                return Array.Empty<DiscordMessageSnapshot>();
             }
 
-            if (!await FocusComposerAsync())
-            {
-                return false;
-            }
-
-            var text = EscapeMessage(message);
+            var count = Math.Max(1, maxCount);
+            var script = $@"
+(() => {{
+  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
+  const recent = items.slice(-{count});
+  return JSON.stringify(recent.map(item => ({{
+    id: item.id || '',
+    text: item.innerText || ''
+  }})));
+}})();
+";
 
             try
             {
-                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync(
-                    "Input.insertText",
-                    $"{{\"text\":\"{text}\"}}");
-
-                const string keyDown = "{\"type\":\"keyDown\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
-                const string keyUp = "{\"type\":\"keyUp\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
-
-                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyDown);
-                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyUp);
-                return true;
+                var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                return DiscordScriptParsing.ParseSnapshots(DiscordScriptParsing.UnquoteJson(json));
             }
             catch
             {
-                return await SendWithExecCommandFallbackAsync(text);
+                return Array.Empty<DiscordMessageSnapshot>();
             }
         }
-
+        public async Task<bool> SendMessageAsync(string message)
+        {
+            if (_web.CoreWebView2 == null) return false;
+            var latestBeforeSend = await GetLatestMessageAsync();
+            if (!await FocusComposerAsync()) return false;
+            var text = DiscordScriptParsing.EscapeMessage(message);
+            if (await SendWithDevToolsAsync(text) && await WaitForSendCompletionAsync(latestBeforeSend?.Id, message))
+            {
+                return true;
+            }
+            await ClearComposerAsync();
+            if (!await FocusComposerAsync()) return false;
+            if (!await SendWithExecCommandFallbackAsync(text)) return false;
+            var completed = await WaitForSendCompletionAsync(latestBeforeSend?.Id, message);
+            if (!completed) await ClearComposerAsync();
+            return completed;
+        }
         public async Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId)
         {
             if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(messageId))
@@ -176,7 +190,7 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 var result = await _web.CoreWebView2.ExecuteScriptAsync(js);
-                var url = UnquoteJson(result);
+                var url = DiscordScriptParsing.UnquoteJson(result);
                 return string.IsNullOrWhiteSpace(url) ? null : url;
             }
             catch
@@ -184,7 +198,6 @@ namespace EpicRPGBot.UI.Services
                 return null;
             }
         }
-
         public async Task<byte[]> CaptureMessageImagePngAsync(string messageId)
         {
             if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(messageId))
@@ -219,17 +232,17 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(js);
-                var payload = UnquoteJson(json);
-                var ok = ExtractField(payload, "ok");
+                var payload = DiscordScriptParsing.UnquoteJson(json);
+                var ok = DiscordScriptParsing.ExtractField(payload, "ok");
                 if (string.IsNullOrEmpty(ok) || ok.IndexOf("true", StringComparison.OrdinalIgnoreCase) < 0)
                 {
                     return null;
                 }
 
-                var x = ParseDouble(ExtractField(payload, "x"));
-                var y = ParseDouble(ExtractField(payload, "y"));
-                var w = ParseDouble(ExtractField(payload, "w"));
-                var h = ParseDouble(ExtractField(payload, "h"));
+                var x = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "x"));
+                var y = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "y"));
+                var w = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "w"));
+                var h = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "h"));
                 if (w < 2 || h < 2)
                 {
                     return null;
@@ -244,7 +257,7 @@ namespace EpicRPGBot.UI.Services
                     $"\"scale\":1}}}}";
 
                 var response = await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Page.captureScreenshot", screenshotArgs);
-                var data = ExtractField(UnquoteJson(response), "data");
+                var data = DiscordScriptParsing.ExtractField(DiscordScriptParsing.UnquoteJson(response), "data");
                 return string.IsNullOrWhiteSpace(data) ? null : Convert.FromBase64String(data);
             }
             catch
@@ -252,7 +265,6 @@ namespace EpicRPGBot.UI.Services
                 return null;
             }
         }
-
         private async void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             try
@@ -261,7 +273,6 @@ namespace EpicRPGBot.UI.Services
             }
             catch { }
         }
-
         private async Task ClickInterstitialsAsync()
         {
             if (_web.CoreWebView2 == null)
@@ -295,7 +306,6 @@ namespace EpicRPGBot.UI.Services
 
             await _web.CoreWebView2.ExecuteScriptAsync(script);
         }
-
         private async Task<bool> FocusComposerAsync()
         {
             if (_web.CoreWebView2 == null)
@@ -349,7 +359,6 @@ namespace EpicRPGBot.UI.Services
 
             return false;
         }
-
         private async Task<bool> SendWithExecCommandFallbackAsync(string message)
         {
             try
@@ -371,11 +380,24 @@ namespace EpicRPGBot.UI.Services
   if (!editor) return false;
   editor.focus();
   try {{
-    document.execCommand('insertText', false, ""{message}"");
+    const selection = window.getSelection();
+    if (selection) {{
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }}
+    try {{ document.execCommand('delete', false, ''); }} catch (e) {{}}
+    editor.textContent = '';
     await sleep(50);
+    document.execCommand('insertText', false, ""{message}"");
+    editor.dispatchEvent(new InputEvent('input', {{ bubbles:true, cancelable:true, inputType:'insertText', data:""{message}"" }}));
+    await sleep(100);
     const eDown = new KeyboardEvent('keydown', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
+    const ePress = new KeyboardEvent('keypress', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
     const eUp = new KeyboardEvent('keyup', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
     editor.dispatchEvent(eDown);
+    editor.dispatchEvent(ePress);
     editor.dispatchEvent(eUp);
     return true;
   }} catch (e) {{ return false; }}
@@ -390,102 +412,85 @@ namespace EpicRPGBot.UI.Services
                 return false;
             }
         }
-
-        private static string EscapeMessage(string message)
+        private async Task<bool> SendWithDevToolsAsync(string message)
         {
-            return (message ?? string.Empty)
-                .Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\r", string.Empty)
-                .Replace("\n", "\\n");
+            try
+            {
+                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.insertText", $"{{\"text\":\"{message}\"}}");
+                const string keyDown = "{\"type\":\"keyDown\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
+                const string keyUp = "{\"type\":\"keyUp\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
+                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyDown);
+                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyUp);
+                return true;
+            }
+            catch { return false; }
         }
-
-        private static double ParseDouble(string raw)
+        private async Task<bool> WaitForSendCompletionAsync(string previousMessageId, string originalMessage)
         {
-            double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value);
-            return value;
-        }
-
-        private static string ExtractField(string json, string field)
-        {
-            if (string.IsNullOrEmpty(json))
+            for (var attempt = 0; attempt < 10; attempt++)
             {
-                return null;
-            }
-
-            var key = $"\"{field}\":";
-            var startIndex = json.IndexOf(key, StringComparison.OrdinalIgnoreCase);
-            if (startIndex < 0)
-            {
-                return null;
-            }
-
-            startIndex += key.Length;
-            while (startIndex < json.Length && json[startIndex] == ' ')
-            {
-                startIndex++;
-            }
-
-            var quoted = startIndex < json.Length && json[startIndex] == '\"';
-            if (quoted)
-            {
-                startIndex++;
-            }
-
-            var current = startIndex;
-            if (quoted)
-            {
-                while (current < json.Length)
+                await Task.Delay(150);
+                var latest = await GetLatestMessageAsync();
+                if (latest != null &&
+                    !string.IsNullOrWhiteSpace(latest.Id) &&
+                    !string.Equals(latest.Id, previousMessageId, StringComparison.Ordinal) &&
+                    !string.IsNullOrWhiteSpace(originalMessage) &&
+                    latest.Text.IndexOf(originalMessage, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    if (json[current] == '\\')
-                    {
-                        current += 2;
-                        continue;
-                    }
-
-                    if (json[current] == '\"')
-                    {
-                        break;
-                    }
-
-                    current++;
+                    return true;
                 }
 
-                return json.Substring(startIndex, Math.Max(0, current - startIndex))
-                    .Replace("\\n", "\n")
-                    .Replace("\\r", "\r")
-                    .Replace("\\t", "\t")
-                    .Replace("\\\"", "\"")
-                    .Replace("\\\\", "\\");
+                if (await IsComposerEmptyAsync()) return true;
             }
 
-            while (current < json.Length && json[current] != ',' && json[current] != '}' && !char.IsWhiteSpace(json[current]))
-            {
-                current++;
-            }
-
-            return json.Substring(startIndex, Math.Max(0, current - startIndex)).Trim();
+            return await IsComposerEmptyAsync();
         }
-
-        private static string UnquoteJson(string value)
+        private async Task<bool> IsComposerEmptyAsync()
         {
-            if (string.IsNullOrEmpty(value))
+            try
             {
-                return value;
-            }
+                const string script = @"
+(() => {
+  let candidates = Array.from(document.querySelectorAll(
+    'div[role=""textbox""][data-slate-editor=""true""], ' +
+    'div[aria-label^=""Message""][role=""textbox""], ' +
+    'div[aria-label*=""Message""][role=""textbox""]'
+  ));
+  if (candidates.length === 0) {
+    candidates = Array.from(document.querySelectorAll('div[role=""textbox""], div[contenteditable=""true""]'));
+  }
+  if (candidates.length === 0) return true;
+  candidates.sort((a,b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const editor = candidates[candidates.length - 1];
+  if (!editor) return true;
+  const text = ((editor.innerText || editor.textContent || '').replace(/\u200B/g, '').trim());
+  return text.length === 0;
+})();
+";
 
-            value = value.Trim();
-            if (value.Length >= 2 && value[0] == '\"' && value[value.Length - 1] == '\"')
-            {
-                value = value.Substring(1, value.Length - 2)
-                    .Replace("\\n", "\n")
-                    .Replace("\\r", "\r")
-                    .Replace("\\t", "\t")
-                    .Replace("\\\"", "\"")
-                    .Replace("\\\\", "\\");
+                var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                return string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
             }
+            catch { return false; }
+        }
+        private async Task ClearComposerAsync()
+        {
+            if (_web.CoreWebView2 == null) return;
 
-            return value;
+            const string script = @"
+(() => {
+  const editors = Array.from(document.querySelectorAll('div[role=""textbox""], div[contenteditable=""true""]'));
+  if (editors.length === 0) return false;
+  editors.sort((a,b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const editor = editors[editors.length - 1];
+  if (!editor) return false;
+  editor.textContent = '';
+  editor.dispatchEvent(new InputEvent('input', { bubbles:true, cancelable:true, inputType:'deleteContentBackward', data:null }));
+  return true;
+})();
+";
+
+            try { await _web.CoreWebView2.ExecuteScriptAsync(script); } catch { }
         }
     }
 }

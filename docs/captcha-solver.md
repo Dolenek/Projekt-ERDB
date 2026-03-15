@@ -7,7 +7,7 @@ Trigger:
 - The engine checks both the newest and immediately previous chat messages to support split text/image posts.
 
 Solve flow:
-1. Pause hunt/work/farm timers.
+1. Pause hunt/adventure/work/farm timers.
 2. Try to capture the captcha image from the selected Discord message through a DevTools screenshot.
 3. If no image is captured, fall back to the message image URL, then the adjacent message.
 4. Load or reuse a `CaptchaClassifier`.

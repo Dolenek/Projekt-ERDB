@@ -4,7 +4,7 @@ This repository now centers on `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` deskt
 
 What the app provides:
 - Embedded Discord browser with persistent sign-in state
-- Start/stop automation for hunt, work, and farm
+- Start/stop automation for hunt, adventure, work, and farm
 - Last-message feed, hunt counter, and structured console log
 - Cooldown discovery and visual cooldown tracking
 - Integrated captcha solver and optional offline self-test
@@ -39,6 +39,6 @@ Captcha `.env`:
   - `CAPTCHA_SELFTEST`
 
 Notes:
-- `Start Bot` sends `rpg cd` immediately, then starts the timed hunt/work/farm loop.
+- `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.
 - `Inicialize` discovers cooldown baselines and saves them into the same local settings file.
 - The embedded browser auto-clicks common Discord “continue in browser” prompts after navigation.

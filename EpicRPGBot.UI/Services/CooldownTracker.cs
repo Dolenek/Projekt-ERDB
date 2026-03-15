@@ -106,6 +106,19 @@ namespace EpicRPGBot.UI.Services
             return _entries.TryGetValue(canonical, out var entry) ? entry.Remaining : null;
         }
 
+        public void SetCooldown(string canonical, int milliseconds)
+        {
+            if (!_entries.TryGetValue(canonical, out var entry))
+            {
+                return;
+            }
+
+            entry.Remaining = milliseconds > 0
+                ? TimeSpan.FromMilliseconds(milliseconds)
+                : (TimeSpan?)null;
+            UpdateLabel(entry.Label, entry.Remaining);
+        }
+
         private void Tick()
         {
             foreach (var entry in _entries.Values.Distinct())

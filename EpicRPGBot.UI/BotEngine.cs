@@ -1,58 +1,65 @@
 using System;
-using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using Microsoft.Web.WebView2.Wpf;
-<<<<<<< Updated upstream
-=======
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
->>>>>>> Stashed changes
+using Microsoft.Web.WebView2.Wpf;
 
 namespace EpicRPGBot.UI
 {
     public sealed class BotEngine
     {
+        private const int GlobalCommandGapMs = 1000;
+
         private readonly IDiscordChatClient _chatClient;
         private readonly CaptchaSolverService _captchaSolver;
-        private readonly DispatcherTimer _huntTimer;
-        private readonly DispatcherTimer _workTimer;
-        private readonly DispatcherTimer _farmTimer;
         private readonly DispatcherTimer _checkMessageTimer;
-        private readonly Stopwatch _commandDelay = new Stopwatch();
+        private readonly TrackedCommandScheduler _scheduler;
+        private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
 
         private readonly int _area;
         private readonly int _farmCooldown;
 
         private string _hunt = "rpg hunt h";
+        private string _adventure = "rpg adv h";
         private string _work = "rpg chop";
         private string _farm = "rpg farm";
         private string _lastMessageId = string.Empty;
-<<<<<<< Updated upstream
-
-=======
         private string _previousMessageId = string.Empty;
         private string _previousMessageText = string.Empty;
-        private int _huntMarryTracker;
->>>>>>> Stashed changes
         private bool _running;
+        private bool _awaitingStartupCooldownSnapshot;
+        private DateTime _lastCommandSentUtc = DateTime.MinValue;
 
         public BotEngine(WebView2 web, int area, int huntCooldown, int workCooldown, int farmCooldown)
-            : this(new DiscordChatClient(web), area, huntCooldown, workCooldown, farmCooldown)
+            : this(new DiscordChatClient(web), area, huntCooldown, 61000, workCooldown, farmCooldown)
+        {
+        }
+
+        public BotEngine(WebView2 web, int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown)
+            : this(new DiscordChatClient(web), area, huntCooldown, adventureCooldown, workCooldown, farmCooldown)
         {
         }
 
         public BotEngine(IDiscordChatClient chatClient, int area, int huntCooldown, int workCooldown, int farmCooldown)
+            : this(chatClient, area, huntCooldown, 61000, workCooldown, farmCooldown)
+        {
+        }
+
+        public BotEngine(IDiscordChatClient chatClient, int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _captchaSolver = new CaptchaSolverService(_chatClient);
             _area = area;
             _farmCooldown = farmCooldown;
+            _scheduler = new TrackedCommandScheduler(area, huntCooldown, adventureCooldown, workCooldown, farmCooldown, OnTrackedTimerElapsedAsync);
+            _checkMessageTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
 
-            _huntTimer = CreateTimer(huntCooldown, () => SendCommandAsync(_hunt));
-            _workTimer = CreateTimer(workCooldown, () => SendCommandAsync(_work));
-            _farmTimer = CreateTimer(farmCooldown, () => SendCommandAsync(_farm));
-            _checkMessageTimer = CreateTimer(2000, CheckLastMessageForEventsAsync);
+            _checkMessageTimer.Tick += async (sender, args) => await CheckLastMessageForEventsAsync();
         }
 
         public bool IsRunning => _running;
@@ -61,47 +68,8 @@ namespace EpicRPGBot.UI
         public event Action OnEngineStopped;
         public event Action<string> OnCommandSent;
         public event Action<string> OnMessageSeen;
-<<<<<<< Updated upstream
-
-        // Tracks manual "rpg cd" to avoid duplicate opening cd when Start() runs
-        private DateTime _lastManualCdUtc = DateTime.MinValue;
-
-        public BotEngine(WebView2 web, int area, int huntCooldown, int workCooldown, int farmCooldown)
-        {
-            _web = web ?? throw new ArgumentNullException(nameof(web));
-
-            _area = area;
-            _huntCooldown = huntCooldown;
-            _workCooldown = workCooldown;
-            _farmCooldown = farmCooldown;
-
-            _huntT = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(_huntCooldown) };
-            _huntT.Tick += async (s, e) => await SendCommandAsync(_hunt);
-
-            _workT = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(_workCooldown) };
-            _workT.Tick += async (s, e) => await SendCommandAsync(_work);
-
-            _farmT = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(_farmCooldown) };
-            _farmT.Tick += async (s, e) => await SendCommandAsync(_farm);
-
-            _checkMessageT = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(2000) };
-            _checkMessageT.Tick += async (s, e) =>
-            {
-                try
-                {
-                    var msg = await CheckLastMessageAsync();
-                    if (!string.IsNullOrEmpty(msg))
-                    {
-                        EventCheck(msg);
-                    }
-                }
-                catch { }
-            };
-        }
-
-=======
+        public event Action<string> OnCaptchaDetected;
         public event Action<string> OnSolverInfo;
->>>>>>> Stashed changes
 
         public void Start()
         {
@@ -112,11 +80,9 @@ namespace EpicRPGBot.UI
 
             _running = true;
             _work = ResolveWorkCommand(_area);
-            _commandDelay.Restart();
+            _awaitingStartupCooldownSnapshot = true;
+            _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
-
-            _ = RunStartSequenceAsync(includeCd: false);
-            StartTimers();
         }
 
         public void Stop()
@@ -127,13 +93,16 @@ namespace EpicRPGBot.UI
             }
 
             _running = false;
-            StopTimers();
+            _awaitingStartupCooldownSnapshot = false;
+            _scheduler.StopAll();
+            _scheduler.ClearPending();
+            _checkMessageTimer.Stop();
             OnEngineStopped?.Invoke();
         }
 
         public async Task<bool> SendImmediateAsync(string text)
         {
-            var ok = await _chatClient.SendMessageAsync(text);
+            var ok = await SendRawWithGlobalCooldownAsync(text);
             if (ok)
             {
                 OnCommandSent?.Invoke(text);
@@ -142,58 +111,36 @@ namespace EpicRPGBot.UI
             return ok;
         }
 
-        private static DispatcherTimer CreateTimer(int intervalMs, Func<Task> action)
+        public bool TryInitializeFromCooldownSnapshot(
+            TimeSpan? huntRemaining,
+            TimeSpan? adventureRemaining,
+            TimeSpan? workRemaining,
+            TimeSpan? farmRemaining)
         {
-            var timer = new DispatcherTimer
+            if (!_running || !_awaitingStartupCooldownSnapshot)
             {
-                Interval = TimeSpan.FromMilliseconds(intervalMs)
-            };
-
-            timer.Tick += async (sender, args) => await action();
-            return timer;
-        }
-
-        private void StartTimers()
-        {
-            _huntTimer.Start();
-            _workTimer.Start();
-            if (_area >= 4)
-            {
-                _farmTimer.Start();
+                return false;
             }
 
-            _checkMessageTimer.Start();
+            _awaitingStartupCooldownSnapshot = false;
+            ScheduleFromRemaining(TrackedCommandKind.Hunt, huntRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.Adventure, adventureRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.Work, workRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.Farm, farmRemaining);
+            return true;
         }
 
-<<<<<<< Updated upstream
-=======
-        private void PauseWorkTimers()
+        private async Task OnTrackedTimerElapsedAsync(TrackedCommandKind kind)
         {
-            _huntTimer.Stop();
-            _workTimer.Stop();
-            _farmTimer.Stop();
+            await SendTrackedCommandAsync(kind, GetCommandText(kind));
         }
 
-        private void ResumeWorkTimers()
+        private void ScheduleFromRemaining(TrackedCommandKind kind, TimeSpan? remaining)
         {
-            _huntTimer.Start();
-            _workTimer.Start();
-            if (_area >= 4)
-            {
-                _farmTimer.Start();
-            }
+            _scheduler.Schedule(kind, remaining.HasValue && remaining.Value > TimeSpan.Zero ? remaining.Value : TimeSpan.Zero, _running);
         }
 
->>>>>>> Stashed changes
-        private void StopTimers()
-        {
-            _huntTimer.Stop();
-            _workTimer.Stop();
-            _farmTimer.Stop();
-            _checkMessageTimer.Stop();
-        }
-
-        private async Task SendCommandAsync(string command)
+        private async Task SendTrackedCommandAsync(TrackedCommandKind kind, string command)
         {
             if (!_running)
             {
@@ -202,49 +149,47 @@ namespace EpicRPGBot.UI
 
             try
             {
-                command = NormalizeHuntCommand(command);
-
-                if (_commandDelay.ElapsedMilliseconds <= 2000)
-                {
-                    await SafeDelay(2000);
-                }
-
-                var sent = await _chatClient.SendMessageAsync(command);
+                var sent = await SendRawWithGlobalCooldownAsync(command);
                 if (!sent)
                 {
+                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
                     return;
                 }
 
+                _scheduler.RegisterPending(kind);
                 OnCommandSent?.Invoke(command);
-                _commandDelay.Restart();
                 await SafeDelay(2001);
-
-                var message = await CheckLastMessageAsync();
-                if (!string.IsNullOrEmpty(message))
-                {
-                    EventCheck(message);
-                }
+                await ProcessIncomingMessagesAsync();
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.WriteLine("SendCommand error: " + ex.Message);
+                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
             }
         }
 
-        private string NormalizeHuntCommand(string command)
+        private async Task RespectMinimumCommandGapAsync()
         {
-            if (!string.Equals(command, "rpg hunt h", StringComparison.Ordinal))
+            var elapsed = DateTime.UtcNow - _lastCommandSentUtc;
+            if (elapsed < TimeSpan.FromMilliseconds(GlobalCommandGapMs))
             {
-                return command;
+                await SafeDelay((int)Math.Ceiling((TimeSpan.FromMilliseconds(GlobalCommandGapMs) - elapsed).TotalMilliseconds));
             }
+        }
 
-            _huntMarryTracker = _huntMarryTracker == 0 ? 1 : 0;
-            return "rpg hunt h";
+        private string GetCommandText(TrackedCommandKind kind)
+        {
+            switch (kind)
+            {
+                case TrackedCommandKind.Hunt: return _hunt;
+                case TrackedCommandKind.Adventure: return _adventure;
+                case TrackedCommandKind.Work: return _work;
+                default: return _farm;
+            }
         }
 
         private async Task<bool> SendAndEmitAsync(string text)
         {
-            var ok = await _chatClient.SendMessageAsync(text);
+            var ok = await SendRawWithGlobalCooldownAsync(text);
             if (ok)
             {
                 OnCommandSent?.Invoke(text);
@@ -253,18 +198,70 @@ namespace EpicRPGBot.UI
             return ok;
         }
 
+        private async Task<bool> SendRawWithGlobalCooldownAsync(string text)
+        {
+            await _sendGate.WaitAsync();
+            try
+            {
+                await RespectMinimumCommandGapAsync();
+                var ok = await _chatClient.SendMessageAsync(text);
+                if (ok)
+                {
+                    _lastCommandSentUtc = DateTime.UtcNow;
+                }
+
+                return ok;
+            }
+            finally
+            {
+                _sendGate.Release();
+            }
+        }
+
         private async Task CheckLastMessageForEventsAsync()
         {
             try
             {
-                var message = await CheckLastMessageAsync();
-                if (!string.IsNullOrEmpty(message))
-                {
-                    EventCheck(message);
-                }
+                await ProcessIncomingMessagesAsync();
             }
             catch
             {
+            }
+        }
+
+        private async Task ProcessIncomingMessagesAsync()
+        {
+            var snapshots = await _chatClient.GetRecentMessagesAsync(8);
+            if (snapshots == null || snapshots.Count == 0)
+            {
+                return;
+            }
+
+            var startIndex = 0;
+            if (!string.IsNullOrEmpty(_lastMessageId))
+            {
+                for (var i = 0; i < snapshots.Count; i++)
+                {
+                    if (string.Equals(snapshots[i].Id, _lastMessageId, StringComparison.Ordinal))
+                    {
+                        startIndex = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            for (var i = startIndex; i < snapshots.Count; i++)
+            {
+                var snapshot = snapshots[i];
+                if (snapshot == null || string.IsNullOrWhiteSpace(snapshot.Id) || string.Equals(snapshot.Id, _lastMessageId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                _previousMessageId = _lastMessageId;
+                _lastMessageId = snapshot.Id;
+                OnMessageSeen?.Invoke(snapshot.Text);
+                EventCheck(snapshot.Text ?? string.Empty);
             }
         }
 
@@ -273,19 +270,7 @@ namespace EpicRPGBot.UI
             DiscordMessageSnapshot snapshot;
             try
             {
-<<<<<<< Updated upstream
-                var json = await _web.CoreWebView2.ExecuteScriptAsync(js);
-                var s = UnquoteJson(json);
-                var id = ExtractField(s, "id");
-                var text = ExtractField(s, "text");
-
-                if (string.IsNullOrEmpty(id) || id == _lastMessageId) return string.Empty;
-                _lastMessageId = id;
-                OnMessageSeen?.Invoke(text);
-                return text ?? string.Empty;
-=======
                 snapshot = await _chatClient.GetLatestMessageAsync();
->>>>>>> Stashed changes
             }
             catch
             {
@@ -307,24 +292,28 @@ namespace EpicRPGBot.UI
         {
             var msg = message ?? string.Empty;
             const string guardAlt = "EPIC GUARD: stop there,";
-            var inCurrent = msg.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0;
-            var inPrevious = !string.IsNullOrEmpty(_previousMessageText)
-                && _previousMessageText.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0;
+            const string guardClassic = "Select the item of the image above or respond with the item name";
 
-<<<<<<< Updated upstream
-            if (msg.IndexOf("Select the item of the image above or respond with the item name", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (msg.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                msg.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                (!string.IsNullOrEmpty(_previousMessageText) &&
+                 (_previousMessageText.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                  _previousMessageText.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0)))
             {
-                Debug.WriteLine("Guard seen");
-=======
-            if (inCurrent || inPrevious)
-            {
-                Debug.WriteLine("Guard seen (alt phrase)");
-                ReportSolverInfo("Captcha detected (alt phrase).");
-                var targetId = inCurrent ? _lastMessageId : _previousMessageId;
-                _ = SolveCaptchaAsync(targetId);
->>>>>>> Stashed changes
+                var detectionInfo = msg.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    msg.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0
+                    ? "Captcha detected in latest message."
+                    : "Captcha detected in previous message.";
+                OnCaptchaDetected?.Invoke(detectionInfo);
+                ReportSolverInfo(detectionInfo);
+                _ = SolveCaptchaAsync(detectionInfo.StartsWith("Captcha detected in latest", StringComparison.Ordinal)
+                    ? _lastMessageId
+                    : _previousMessageId);
             }
-            else if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
+
+            _scheduler.HandleResponse(msg, _running);
+
+            if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _ = SendAndEmitAsync("I hear you: " + DateTime.Now);
             }
@@ -336,15 +325,14 @@ namespace EpicRPGBot.UI
             }
             else if (msg.IndexOf("STOP", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                StopTimers();
+                _scheduler.StopAll();
+                _scheduler.ClearPending();
             }
             else if (msg.IndexOf("START", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = RunStartSequenceAsync(includeCd: true);
-                StartTimers();
-            }
-            else if (msg.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
+                _awaitingStartupCooldownSnapshot = true;
+                _ = SendAndEmitAsync("rpg cd");
+                _checkMessageTimer.Start();
             }
             else if (msg.IndexOf("CHANGE WORK", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -357,59 +345,39 @@ namespace EpicRPGBot.UI
             else if (msg.IndexOf("BOT FARMING", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _ = SendAndEmitAsync("I am farming");
-                if (!_farmTimer.IsEnabled)
-                {
-                    _farmTimer.Interval = TimeSpan.FromMilliseconds(_farmCooldown);
-                    _farmTimer.Start();
-                }
+                _scheduler.Schedule(TrackedCommandKind.Farm, TimeSpan.FromMilliseconds(_farmCooldown), _running);
             }
             else if (msg.IndexOf("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = _chatClient.SendMessageAsync("RUN");
+                _ = SendRawWithGlobalCooldownAsync("RUN");
             }
             else if (msg.IndexOf("megarace boost", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = _chatClient.SendMessageAsync("yes");
+                _ = SendRawWithGlobalCooldownAsync("yes");
             }
             else if (msg.IndexOf("AN EPIC TREE HAS JUST GROWN", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = _chatClient.SendMessageAsync("CUT");
+                _ = SendRawWithGlobalCooldownAsync("CUT");
             }
             else if (msg.IndexOf("A MEGALODON HAS SPAWNED IN THE RIVER", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = _chatClient.SendMessageAsync("LURE");
+                _ = SendRawWithGlobalCooldownAsync("LURE");
             }
             else if (msg.IndexOf("IT'S RAINING COINS", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = _chatClient.SendMessageAsync("CATCH");
+                _ = SendRawWithGlobalCooldownAsync("CATCH");
             }
             else if (msg.IndexOf("God accidentally dropped an EPIC coin", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                RespondFirstPresent(msg,
-                    "I SHALL BRING THE EPIC TO THE COIN",
-                    "MY PRECIOUS",
-                    "WHAT IS EPIC? THIS COIN",
-                    "YES! AN EPIC COIN",
-                    "OPERATION: EPIC COIN");
+                RespondFirstPresent(msg, "I SHALL BRING THE EPIC TO THE COIN", "MY PRECIOUS", "WHAT IS EPIC? THIS COIN", "YES! AN EPIC COIN", "OPERATION: EPIC COIN");
             }
             else if (msg.IndexOf("OOPS! God accidentally dropped", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                RespondFirstPresent(msg,
-                    "BACK OFF THIS IS MINE!!",
-                    "HACOINA MATATA",
-                    "THIS IS MINE",
-                    "ALL THE COINS BELONG TO ME",
-                    "GIMME DA MONEY",
-                    "OPERATION: COINS");
+                RespondFirstPresent(msg, "BACK OFF THIS IS MINE!!", "HACOINA MATATA", "THIS IS MINE", "ALL THE COINS BELONG TO ME", "GIMME DA MONEY", "OPERATION: COINS");
             }
             else if (msg.IndexOf("EPIC NPC: I have a special trade today!", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                RespondFirstPresent(msg,
-                    "YUP I WILL DO THAT",
-                    "I WANT THAT",
-                    "HEY EPIC NPC! I WANT TO TRADE WITH YOU",
-                    "THAT SOUNDS LIKE AN OP BUSINESS",
-                    "OWO ME!!!");
+                RespondFirstPresent(msg, "YUP I WILL DO THAT", "I WANT THAT", "HEY EPIC NPC! I WANT TO TRADE WITH YOU", "THAT SOUNDS LIKE AN OP BUSINESS", "OWO ME!!!");
             }
             else if (msg.IndexOf("A LOOTBOX SUMMONING HAS", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -419,11 +387,8 @@ namespace EpicRPGBot.UI
             {
                 _ = SendAndEmitAsync("TIME TO FIGHT");
             }
-<<<<<<< Updated upstream
-=======
 
             _previousMessageText = msg;
->>>>>>> Stashed changes
         }
 
         private void HandleChangeWork(string message)
@@ -433,12 +398,6 @@ namespace EpicRPGBot.UI
                 _work = "rpg chop";
                 _ = SendAndEmitAsync("I am chopping treez");
             }
-<<<<<<< Updated upstream
-            catch { }
-        }
-
-        private static Task SafeDelay(int ms)
-=======
             else if (message.IndexOf("AXE", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _work = "rpg axe";
@@ -494,28 +453,8 @@ namespace EpicRPGBot.UI
                     continue;
                 }
 
-                _ = _chatClient.SendMessageAsync(option);
+                _ = SendRawWithGlobalCooldownAsync(option);
                 return;
-            }
-        }
-
-        private async Task RunStartSequenceAsync(bool includeCd)
->>>>>>> Stashed changes
-        {
-            if (includeCd)
-            {
-                await SendAndEmitAsync("rpg cd");
-                await SafeDelay(2001);
-            }
-
-            await SendAndEmitAsync(_hunt);
-            await SafeDelay(2001);
-            await SendAndEmitAsync(_work);
-            await SafeDelay(2001);
-
-            if (_area >= 4)
-            {
-                await SendAndEmitAsync(_farm);
             }
         }
 
@@ -526,8 +465,8 @@ namespace EpicRPGBot.UI
                 _lastMessageId,
                 _previousMessageId,
                 SendAndEmitAsync,
-                PauseWorkTimers,
-                ResumeWorkTimers,
+                _scheduler.PauseAll,
+                () => _scheduler.ResumeAll(_running),
                 ReportSolverInfo);
         }
 

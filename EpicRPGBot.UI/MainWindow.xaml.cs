@@ -2,10 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-<<<<<<< Updated upstream
-=======
 using EpicRPGBot.UI.Services;
->>>>>>> Stashed changes
 
 namespace EpicRPGBot.UI
 {
@@ -18,6 +15,7 @@ namespace EpicRPGBot.UI
         private readonly CooldownTracker _cooldownTracker;
         private readonly CooldownInitializationWorkflow _cooldownWorkflow;
         private readonly CaptchaSelfTestRunner _captchaSelfTestRunner;
+        private readonly DesktopAlertService _alertService;
         private readonly ChatMessagePoller _messagePoller;
 
         private BotEngine _engine;
@@ -35,10 +33,12 @@ namespace EpicRPGBot.UI
             _cooldownTracker = new CooldownTracker(this);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_chatClient, _cooldownTracker, _settingsStore);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
+            _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_chatClient);
             _messagePoller.MessageDetected += OnPolledMessage;
 
             Loaded += MainWindow_Loaded;
+            Closed += MainWindow_Closed;
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -56,20 +56,6 @@ namespace EpicRPGBot.UI
             _messagePoller.Start();
         }
 
-        private void LoadStoredSettings()
-        {
-            _loadingSettings = true;
-
-            ChannelUrlBox.Text = _settingsStore.GetString("channel_url", "https://discord.com/channels/@me");
-            UseAtMeFallback.IsChecked = _settingsStore.GetBool("use_at_me_fallback", true);
-            AreaBox.Text = _settingsStore.GetString("area", AreaBox.Text);
-            HuntCdBox.Text = _settingsStore.GetString("hunt_ms", "61000");
-            WorkCdBox.Text = _settingsStore.GetString("work_ms", "99000");
-            FarmCdBox.Text = _settingsStore.GetString("farm_ms", "196000");
-
-            _loadingSettings = false;
-        }
-
         private void BindUiState()
         {
             StatsList.ItemsSource = _last.Items;
@@ -78,22 +64,31 @@ namespace EpicRPGBot.UI
             _huntCountText = (TextBlock)FindName("HuntCountText");
         }
 
-<<<<<<< Updated upstream
-            // Cache named elements for tabs/stats to avoid compile-time field generation issues
-            _lastMessagesPanel = (System.Windows.Controls.Grid)FindName("LastMessagesPanel");
-            _huntCountText = (System.Windows.Controls.TextBlock)FindName("HuntCountText");
-
-            // Load persisted initialization ms (defaults if missing)
-=======
         private void RegisterSettingsPersistence()
         {
             ChannelUrlBox.TextChanged += OnSettingsChanged;
             AreaBox.TextChanged += OnSettingsChanged;
             HuntCdBox.TextChanged += OnSettingsChanged;
+            AdventureCdBox.TextChanged += OnSettingsChanged;
             WorkCdBox.TextChanged += OnSettingsChanged;
             FarmCdBox.TextChanged += OnSettingsChanged;
             UseAtMeFallback.Checked += OnFallbackChanged;
             UseAtMeFallback.Unchecked += OnFallbackChanged;
+        }
+
+        private void LoadStoredSettings()
+        {
+            _loadingSettings = true;
+
+            ChannelUrlBox.Text = _settingsStore.GetString("channel_url", "https://discord.com/channels/@me");
+            UseAtMeFallback.IsChecked = _settingsStore.GetBool("use_at_me_fallback", true);
+            AreaBox.Text = _settingsStore.GetString("area", AreaBox.Text);
+            HuntCdBox.Text = _settingsStore.GetString("hunt_ms", "61000");
+            AdventureCdBox.Text = _settingsStore.GetString("adventure_ms", "61000");
+            WorkCdBox.Text = _settingsStore.GetString("work_ms", "99000");
+            FarmCdBox.Text = _settingsStore.GetString("farm_ms", "196000");
+
+            _loadingSettings = false;
         }
 
         private async Task RunCaptchaSelfTestIfRequestedAsync()
@@ -112,7 +107,6 @@ namespace EpicRPGBot.UI
 
         private async Task InitializeBrowserAsync()
         {
->>>>>>> Stashed changes
             try
             {
                 SetInitHint("Initializing WebView2...");
@@ -154,6 +148,7 @@ namespace EpicRPGBot.UI
             {
                 _last.Add(message);
                 _cooldownTracker.ApplyMessage(message);
+                TryInitializeEngineFromCooldownSnapshot(message);
             });
         }
 
@@ -184,8 +179,10 @@ namespace EpicRPGBot.UI
             await _cooldownWorkflow.RunAsync(
                 _log.Info,
                 ms => HuntCdBox.Text = ms.ToString(),
+                ms => AdventureCdBox.Text = ms.ToString(),
                 ms => WorkCdBox.Text = ms.ToString(),
                 ms => FarmCdBox.Text = ms.ToString(),
+                SafeInt(AdventureCdBox.Text, 61000),
                 SafeInt(WorkCdBox.Text, 99000),
                 SafeInt(FarmCdBox.Text, 196000));
         }
@@ -204,6 +201,7 @@ namespace EpicRPGBot.UI
                 _chatClient,
                 SafeInt(AreaBox.Text, 10),
                 SafeInt(HuntCdBox.Text, 21000),
+                SafeInt(AdventureCdBox.Text, 61000),
                 SafeInt(WorkCdBox.Text, 99000),
                 SafeInt(FarmCdBox.Text, 196000));
 
@@ -213,7 +211,7 @@ namespace EpicRPGBot.UI
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
 
             _engine.Start();
-            _log.Engine("Engine started (timers running; hunt/work[/farm] scheduled)");
+            _log.Engine("Engine started (waiting for cooldown snapshot before scheduling commands)");
         }
 
         private void WireEngineEvents(BotEngine engine)
@@ -223,6 +221,7 @@ namespace EpicRPGBot.UI
                 UiDispatcher.OnUI(() =>
                 {
                     _log.Command($"Message ({command}) sent");
+                    ApplySentCommandCooldown(command);
                     if (!string.IsNullOrWhiteSpace(command) &&
                         command.Trim().StartsWith("rpg hunt", StringComparison.OrdinalIgnoreCase))
                     {
@@ -235,20 +234,33 @@ namespace EpicRPGBot.UI
                 });
             };
 
-<<<<<<< Updated upstream
-            // Immediately send "rpg cd" before starting timers
-            var sent = await _engine.SendImmediateAsync("rpg cd");
-            _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
+            engine.OnCaptchaDetected += info =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    _log.Warning("[guard] " + info);
+                    _alertService.ShowCaptchaAlert(this);
+                });
+            };
 
-            // Then start engine timers and opening sequence (hunt/work[/farm])
-            _engine.Start();
-            _log.Engine("Engine started (timers running; hunt/work[/farm] scheduled)");
-=======
+            engine.OnMessageSeen += message =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    _cooldownTracker.ApplyMessage(message);
+                    TryInitializeEngineFromCooldownSnapshot(message);
+                });
+            };
+
             engine.OnSolverInfo += info =>
             {
                 UiDispatcher.OnUI(() => _log.Info("[solver] " + info));
             };
->>>>>>> Stashed changes
+        }
+
+        private void MainWindow_Closed(object sender, EventArgs e)
+        {
+            _alertService.Dispose();
         }
 
         private void StopBtn_Click(object sender, RoutedEventArgs e)
@@ -289,8 +301,6 @@ namespace EpicRPGBot.UI
             StatsPanel.Visibility = Visibility.Collapsed;
             ConsolePanel.Visibility = Visibility.Visible;
         }
-<<<<<<< Updated upstream
-=======
 
         private void SetInitHint(string text)
         {
@@ -324,9 +334,62 @@ namespace EpicRPGBot.UI
             _settingsStore.SetBool("use_at_me_fallback", UseAtMeFallback.IsChecked == true);
             _settingsStore.SetString("area", AreaBox.Text?.Trim() ?? string.Empty);
             _settingsStore.SetString("hunt_ms", HuntCdBox.Text?.Trim() ?? string.Empty);
+            _settingsStore.SetString("adventure_ms", AdventureCdBox.Text?.Trim() ?? string.Empty);
             _settingsStore.SetString("work_ms", WorkCdBox.Text?.Trim() ?? string.Empty);
             _settingsStore.SetString("farm_ms", FarmCdBox.Text?.Trim() ?? string.Empty);
         }
->>>>>>> Stashed changes
+
+        private void ApplySentCommandCooldown(string command)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                return;
+            }
+
+            var normalized = command.Trim().ToLowerInvariant();
+            if (normalized.StartsWith("rpg hunt", StringComparison.Ordinal))
+            {
+                _cooldownTracker.SetCooldown("hunt", SafeInt(HuntCdBox.Text, 61000));
+            }
+            else if (normalized.StartsWith("rpg adv", StringComparison.Ordinal))
+            {
+                _cooldownTracker.SetCooldown("adventure", SafeInt(AdventureCdBox.Text, 61000));
+            }
+            else if (normalized.StartsWith("rpg farm", StringComparison.Ordinal))
+            {
+                _cooldownTracker.SetCooldown("farm", SafeInt(FarmCdBox.Text, 196000));
+            }
+            else if (normalized.StartsWith("rpg chop", StringComparison.Ordinal) ||
+                     normalized.StartsWith("rpg axe", StringComparison.Ordinal) ||
+                     normalized.StartsWith("rpg bowsaw", StringComparison.Ordinal) ||
+                     normalized.StartsWith("rpg chainsaw", StringComparison.Ordinal))
+            {
+                _cooldownTracker.SetCooldown("work", SafeInt(WorkCdBox.Text, 99000));
+            }
+        }
+
+        private void TryInitializeEngineFromCooldownSnapshot(string message)
+        {
+            if (_engine == null || !_engine.IsRunning || string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            if (message.IndexOf("cooldowns", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return;
+            }
+
+            var initialized = _engine.TryInitializeFromCooldownSnapshot(
+                _cooldownTracker.GetRemaining("hunt"),
+                _cooldownTracker.GetRemaining("adventure"),
+                _cooldownTracker.GetRemaining("work"),
+                _cooldownTracker.GetRemaining("farm"));
+
+            if (initialized)
+            {
+                _log.Engine("Cooldown snapshot received; command scheduling initialized");
+            }
+        }
     }
 }
