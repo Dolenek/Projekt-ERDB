@@ -7,6 +7,7 @@ Canonical pages:
 - [Automation engine](docs/automation-engine.md)
 - [Cooldown management](docs/cooldown-management.md)
 - [Captcha solver](docs/captcha-solver.md)
+- [Testing automation](docs/testing-automation.md)
 
 Supporting references:
 - [Root README](README.md)

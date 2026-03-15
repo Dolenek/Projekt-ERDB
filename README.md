@@ -8,6 +8,7 @@ What the app provides:
 - Last-message feed, hunt counter, and structured console log
 - Cooldown discovery and visual cooldown tracking
 - Integrated captcha solver and optional offline self-test
+- A Windows MCP sidecar for launching the app, driving the WPF shell, and inspecting the Discord WebView
 
 Docs:
 - [Documentation index](documentation.md)
@@ -15,6 +16,7 @@ Docs:
 - [Automation engine](docs/automation-engine.md)
 - [Cooldown management](docs/cooldown-management.md)
 - [Captcha solver](docs/captcha-solver.md)
+- [Testing automation](docs/testing-automation.md)
 
 Requirements:
 - Windows 10/11 x64
@@ -25,6 +27,12 @@ Build and run:
 ```bash
 dotnet build EpicRPGBotCSharp.sln -c Debug
 dotnet run --project EpicRPGBot.UI -c Debug
+```
+
+Build and run the MCP server:
+```bash
+dotnet build EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Debug
+dotnet run --project EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Debug
 ```
 
 Local settings:
@@ -42,3 +50,4 @@ Notes:
 - `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.
 - `Inicialize` discovers cooldown baselines and saves them into the same local settings file.
 - The embedded browser auto-clicks common Discord “continue in browser” prompts after navigation.
+- The MCP server launches the UI in explicit automation mode with a WebView2 DevTools port for screenshots and WebView inspection.

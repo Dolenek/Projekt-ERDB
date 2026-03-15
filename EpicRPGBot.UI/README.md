@@ -8,3 +8,4 @@ Start with:
 - [docs/automation-engine.md](../docs/automation-engine.md)
 - [docs/cooldown-management.md](../docs/cooldown-management.md)
 - [docs/captcha-solver.md](../docs/captcha-solver.md)
+- [docs/testing-automation.md](../docs/testing-automation.md)

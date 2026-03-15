@@ -27,7 +27,7 @@ namespace EpicRPGBot.UI.Services
             {
                 var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EpicRPGBot.UI", "WebView2");
                 Directory.CreateDirectory(dataDir);
-                var env = await CoreWebView2Environment.CreateAsync(null, dataDir);
+                var env = await WebViewEnvironmentFactory.CreateAsync(dataDir);
                 await _web.EnsureCoreWebView2Async(env);
             }
 

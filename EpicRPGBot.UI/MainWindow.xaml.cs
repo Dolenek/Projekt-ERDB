@@ -27,6 +27,7 @@ namespace EpicRPGBot.UI
         public MainWindow()
         {
             InitializeComponent();
+            ApplyAutomationSurface();
 
             _chatClient = new DiscordChatClient(Web);
             _settingsStore = new LocalSettingsStore();
