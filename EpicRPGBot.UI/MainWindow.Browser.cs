@@ -1,0 +1,117 @@
+using System;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Threading;
+
+namespace EpicRPGBot.UI
+{
+    public partial class MainWindow
+    {
+        private async Task InitializeBrowsersAsync()
+        {
+            try
+            {
+                SetInitHint("Initializing Discord tabs...");
+                await WarmUpBrowserTabsAsync();
+                await _botChatClient.EnsureInitializedAsync();
+                await _playerChatClient.EnsureInitializedAsync();
+                InitHint.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                SetInitHint("WebView2 init failed: " + ex.Message);
+            }
+        }
+
+        private async Task WarmUpBrowserTabsAsync()
+        {
+            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null)
+            {
+                return;
+            }
+
+            var originalSelection = BrowserTabs.SelectedItem;
+            await ShowTabAsync(BotBrowserTab);
+            await ShowTabAsync(PlayerBrowserTab);
+            BrowserTabs.SelectedItem = originalSelection ?? BotBrowserTab;
+            BrowserTabs.UpdateLayout();
+        }
+
+        private async Task ShowTabAsync(TabItem tab)
+        {
+            BrowserTabs.SelectedItem = tab;
+            BrowserTabs.UpdateLayout();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded);
+        }
+
+        private async Task NavigateStartupTabsAsync()
+        {
+            try
+            {
+                var channelUrl = GetChannelUrl();
+                await _botChatClient.NavigateToChannelAsync(channelUrl);
+                await _playerChatClient.NavigateToChannelAsync(channelUrl);
+            }
+            catch (Exception ex)
+            {
+                SetInitHint("Navigate failed: " + ex.Message);
+            }
+        }
+
+        private async Task NavigateBotTabAsync()
+        {
+            try
+            {
+                await _botChatClient.NavigateToChannelAsync(GetChannelUrl());
+            }
+            catch (Exception ex)
+            {
+                SetInitHint("Navigate failed: " + ex.Message);
+            }
+        }
+
+        private string GetChannelUrl()
+        {
+            var url = ChannelUrlBox.Text?.Trim();
+            if (string.IsNullOrEmpty(url) && UseAtMeFallback.IsChecked == true)
+            {
+                return "https://discord.com/channels/@me";
+            }
+
+            return string.IsNullOrEmpty(url) ? "https://discord.com/channels/@me" : url;
+        }
+
+        private void ReloadBtn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _botChatClient.Reload();
+            }
+            catch
+            {
+            }
+        }
+
+        private async void GoChannelBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await NavigateBotTabAsync();
+        }
+
+        private void SelectBotTab()
+        {
+            if (BrowserTabs == null || BotBrowserTab == null)
+            {
+                return;
+            }
+
+            BrowserTabs.SelectedItem = BotBrowserTab;
+        }
+
+        private void SetInitHint(string text)
+        {
+            InitHint.Visibility = Visibility.Visible;
+            InitHint.Text = text;
+        }
+    }
+}

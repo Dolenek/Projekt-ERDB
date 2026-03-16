@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -11,10 +10,11 @@ namespace EpicRPGBot.UI.Services
         Hunt,
         Adventure,
         Work,
-        Farm
+        Farm,
+        Lootbox
     }
 
-    public sealed class TrackedCommandScheduler
+    public sealed partial class TrackedCommandScheduler
     {
         private const int MinimumDelayMs = 500;
         private const int RetryBufferMs = 1500;
@@ -36,22 +36,26 @@ namespace EpicRPGBot.UI.Services
         private readonly int _adventureCooldown;
         private readonly int _workCooldown;
         private readonly int _farmCooldown;
+        private readonly int _lootboxCooldown;
         private readonly DispatcherTimer _huntTimer;
         private readonly DispatcherTimer _adventureTimer;
         private readonly DispatcherTimer _workTimer;
         private readonly DispatcherTimer _farmTimer;
+        private readonly DispatcherTimer _lootboxTimer;
         private readonly List<PendingCommand> _pendingCommands = new List<PendingCommand>();
 
         private DateTime? _huntDueUtc;
         private DateTime? _adventureDueUtc;
         private DateTime? _workDueUtc;
         private DateTime? _farmDueUtc;
+        private DateTime? _lootboxDueUtc;
         private TimeSpan? _pausedHuntDelay;
         private TimeSpan? _pausedAdventureDelay;
         private TimeSpan? _pausedWorkDelay;
         private TimeSpan? _pausedFarmDelay;
+        private TimeSpan? _pausedLootboxDelay;
 
-        public TrackedCommandScheduler(int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
+        public TrackedCommandScheduler(int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
         {
             if (onTimerElapsed == null) throw new ArgumentNullException(nameof(onTimerElapsed));
 
@@ -60,10 +64,12 @@ namespace EpicRPGBot.UI.Services
             _adventureCooldown = adventureCooldown;
             _workCooldown = workCooldown;
             _farmCooldown = farmCooldown;
+            _lootboxCooldown = lootboxCooldown;
             _huntTimer = CreateCommandTimer(huntCooldown, () => onTimerElapsed(TrackedCommandKind.Hunt));
             _adventureTimer = CreateCommandTimer(adventureCooldown, () => onTimerElapsed(TrackedCommandKind.Adventure));
             _workTimer = CreateCommandTimer(workCooldown, () => onTimerElapsed(TrackedCommandKind.Work));
             _farmTimer = CreateCommandTimer(farmCooldown, () => onTimerElapsed(TrackedCommandKind.Farm));
+            _lootboxTimer = CreateCommandTimer(lootboxCooldown, () => onTimerElapsed(TrackedCommandKind.Lootbox));
         }
 
         public void RegisterPending(TrackedCommandKind kind)
@@ -97,6 +103,7 @@ namespace EpicRPGBot.UI.Services
             Stop(TrackedCommandKind.Adventure);
             Stop(TrackedCommandKind.Work);
             Stop(TrackedCommandKind.Farm);
+            Stop(TrackedCommandKind.Lootbox);
         }
 
         public void ClearPending()
@@ -110,6 +117,7 @@ namespace EpicRPGBot.UI.Services
             Pause(TrackedCommandKind.Adventure);
             Pause(TrackedCommandKind.Work);
             Pause(TrackedCommandKind.Farm);
+            Pause(TrackedCommandKind.Lootbox);
         }
 
         public void ResumeAll(bool isRunning)
@@ -118,6 +126,7 @@ namespace EpicRPGBot.UI.Services
             Resume(TrackedCommandKind.Adventure, isRunning);
             Resume(TrackedCommandKind.Work, isRunning);
             Resume(TrackedCommandKind.Farm, isRunning);
+            Resume(TrackedCommandKind.Lootbox, isRunning);
         }
 
         public void HandleResponse(string message, bool isRunning)
@@ -233,7 +242,8 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: return _huntTimer;
                 case TrackedCommandKind.Adventure: return _adventureTimer;
                 case TrackedCommandKind.Work: return _workTimer;
-                default: return _farmTimer;
+                case TrackedCommandKind.Farm: return _farmTimer;
+                default: return _lootboxTimer;
             }
         }
 
@@ -244,7 +254,8 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: return _huntCooldown;
                 case TrackedCommandKind.Adventure: return _adventureCooldown;
                 case TrackedCommandKind.Work: return _workCooldown;
-                default: return _farmCooldown;
+                case TrackedCommandKind.Farm: return _farmCooldown;
+                default: return _lootboxCooldown;
             }
         }
 
@@ -255,7 +266,8 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: return _huntDueUtc;
                 case TrackedCommandKind.Adventure: return _adventureDueUtc;
                 case TrackedCommandKind.Work: return _workDueUtc;
-                default: return _farmDueUtc;
+                case TrackedCommandKind.Farm: return _farmDueUtc;
+                default: return _lootboxDueUtc;
             }
         }
 
@@ -266,7 +278,8 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: _huntDueUtc = value; break;
                 case TrackedCommandKind.Adventure: _adventureDueUtc = value; break;
                 case TrackedCommandKind.Work: _workDueUtc = value; break;
-                default: _farmDueUtc = value; break;
+                case TrackedCommandKind.Farm: _farmDueUtc = value; break;
+                default: _lootboxDueUtc = value; break;
             }
         }
 
@@ -277,7 +290,8 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: return _pausedHuntDelay;
                 case TrackedCommandKind.Adventure: return _pausedAdventureDelay;
                 case TrackedCommandKind.Work: return _pausedWorkDelay;
-                default: return _pausedFarmDelay;
+                case TrackedCommandKind.Farm: return _pausedFarmDelay;
+                default: return _pausedLootboxDelay;
             }
         }
 
@@ -288,109 +302,10 @@ namespace EpicRPGBot.UI.Services
                 case TrackedCommandKind.Hunt: _pausedHuntDelay = value; break;
                 case TrackedCommandKind.Adventure: _pausedAdventureDelay = value; break;
                 case TrackedCommandKind.Work: _pausedWorkDelay = value; break;
-                default: _pausedFarmDelay = value; break;
+                case TrackedCommandKind.Farm: _pausedFarmDelay = value; break;
+                default: _pausedLootboxDelay = value; break;
             }
         }
 
-        private static bool LooksLikeTrackedCommandResponse(string message)
-        {
-            if (string.IsNullOrWhiteSpace(message) || message.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                return false;
-            }
-
-            return message.IndexOf("EPIC GUARD", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("A LOOTBOX SUMMONING HAS", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("A LEGENDARY BOSS JUST SPAWNED", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("AN EPIC TREE HAS JUST GROWN", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("A MEGALODON HAS SPAWNED IN THE RIVER", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("IT'S RAINING COINS", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("God accidentally dropped", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("OOPS! God accidentally dropped", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("EPIC NPC: I have a special trade today!", StringComparison.OrdinalIgnoreCase) < 0 &&
-                   message.IndexOf("rpg ", StringComparison.OrdinalIgnoreCase) < 0;
-        }
-
-        private static bool TryInferKind(string message, out TrackedCommandKind kind)
-        {
-            var msg = (message ?? string.Empty).ToLowerInvariant();
-
-            if (msg.Contains("looked around") ||
-                msg.Contains("found and killed") ||
-                msg.Contains("defenseless monster") ||
-                msg.Contains("zombie horde"))
-            {
-                kind = TrackedCommandKind.Hunt;
-                return true;
-            }
-
-            if (msg.Contains("adventure") ||
-                msg.Contains("you went") ||
-                msg.Contains("went exploring") ||
-                msg.Contains("found a cave") ||
-                msg.Contains("got lost") ||
-                msg.Contains("adv h"))
-            {
-                kind = TrackedCommandKind.Adventure;
-                return true;
-            }
-
-            if (msg.Contains("is chopping") ||
-                msg.Contains("is fishing") ||
-                msg.Contains("is picking up") ||
-                msg.Contains("is mining") ||
-                msg.Contains("chainsaw") ||
-                msg.Contains("bowsaw") ||
-                msg.Contains("axe") ||
-                msg.Contains("wooden log") ||
-                msg.Contains("normie fish") ||
-                msg.Contains("lootbox summoning") ||
-                msg.Contains("mermaid hair"))
-            {
-                kind = TrackedCommandKind.Work;
-                return true;
-            }
-
-            if (msg.Contains("farm") ||
-                msg.Contains("working on the fields") ||
-                msg.Contains("carrot") ||
-                msg.Contains("potato") ||
-                msg.Contains("bread"))
-            {
-                kind = TrackedCommandKind.Farm;
-                return true;
-            }
-
-            kind = TrackedCommandKind.Hunt;
-            return false;
-        }
-
-        private static bool TryParseWaitAtLeast(string message, out TimeSpan delay)
-        {
-            delay = TimeSpan.Zero;
-
-            var match = Regex.Match(message ?? string.Empty, @"wait at least\s+((?:\d+\s*[dhms]\s*)+)", RegexOptions.IgnoreCase);
-            if (!match.Success)
-            {
-                return false;
-            }
-
-            var total = TimeSpan.Zero;
-            var units = Regex.Matches(match.Groups[1].Value, @"(\d+)\s*([dhms])", RegexOptions.IgnoreCase);
-            foreach (Match unit in units)
-            {
-                var value = int.Parse(unit.Groups[1].Value);
-                switch (unit.Groups[2].Value.ToLowerInvariant())
-                {
-                    case "d": total += TimeSpan.FromDays(value); break;
-                    case "h": total += TimeSpan.FromHours(value); break;
-                    case "m": total += TimeSpan.FromMinutes(value); break;
-                    case "s": total += TimeSpan.FromSeconds(value); break;
-                }
-            }
-
-            delay = total <= TimeSpan.Zero ? TimeSpan.FromSeconds(1) : total;
-            return true;
-        }
     }
 }

@@ -14,7 +14,11 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(ConsoleList, "ConsoleList");
             SetAutomationIdentity(ReloadBtn, "ReloadButton");
             SetAutomationIdentity(GoChannelBtn, "GoChannelButton");
+            SetAutomationIdentity(BrowserTabs, "BrowserTabs");
+            SetAutomationIdentity(BotBrowserTab, "BotBrowserTab");
+            SetAutomationIdentity(PlayerBrowserTab, "PlayerBrowserTab");
             SetAutomationIdentity(Web, "DiscordWebView");
+            SetAutomationIdentity(PlayerWeb, "PlayerDiscordWebView");
             SetAutomationIdentity(InitHint, "InitHint");
             SetAutomationIdentity(ChannelUrlBox, "ChannelUrlInput");
             SetAutomationIdentity(UseAtMeFallback, "UseAtMeFallback");
@@ -23,9 +27,11 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(AdventureCdBox, "AdventureCooldownInput");
             SetAutomationIdentity(WorkCdBox, "WorkCooldownInput");
             SetAutomationIdentity(FarmCdBox, "FarmCooldownInput");
+            SetAutomationIdentity(LootboxCdBox, "LootboxCooldownInput");
             SetAutomationIdentity(StartBtn, "StartButton");
             SetAutomationIdentity(StopBtn, "StopButton");
             SetAutomationIdentity(InitBtn, "InitializeButton");
+            SetAutomationIdentity(RpgCdBtn, "RpgCdButton");
             SetAutomationIdentity(CooldownsPanel, "CooldownsPanel");
 
             if (!Automation.AutomationRuntime.Current.IsEnabled)

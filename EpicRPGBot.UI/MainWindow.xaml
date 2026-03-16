@@ -83,7 +83,22 @@
             </DockPanel>
 
             <Grid Grid.Row="1" Background="#1e1f22">
-                <wv2:WebView2 Name="Web" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <TabControl Name="BrowserTabs"
+                            Background="#1e1f22"
+                            BorderBrush="#2f3136"
+                            Foreground="#ddd"
+                            SelectedIndex="0">
+                    <TabItem Name="BotBrowserTab" Header="Bot tab">
+                        <Grid Background="#1e1f22">
+                            <wv2:WebView2 Name="Web" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Name="PlayerBrowserTab" Header="Player tab">
+                        <Grid Background="#1e1f22">
+                            <wv2:WebView2 Name="PlayerWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
                 <TextBlock Name="InitHint" Text="Loading WebView2..." Foreground="#bbb" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
             </Grid>
         </Grid>
@@ -123,13 +138,17 @@
                             <TextBlock Text="Farm cooldown (ms)" Foreground="#aaa"/>
                             <TextBox Name="FarmCdBox" Text="196000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
                         </StackPanel>
-                        <Border Margin="0,8,8,0" Background="Transparent"/>
+                        <StackPanel Margin="0,8,8,0">
+                            <TextBlock Text="Lootbox cooldown (ms)" Foreground="#aaa"/>
+                            <TextBox Name="LootboxCdBox" Text="21600000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
+                        </StackPanel>
                     </UniformGrid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Button Name="StartBtn" Content="Start Bot" Margin="0,0,8,0" Padding="12,4" Click="StartBtn_Click"/>
                         <Button Name="StopBtn" Content="Stop Bot" Padding="12,4" Click="StopBtn_Click"/>
                         <Button Name="InitBtn" Content="Inicialize" Margin="8,0,0,0" Padding="12,4" Click="InitBtn_Click"/>
+                        <Button Name="RpgCdBtn" Content="rpg cd" Margin="8,0,0,0" Padding="12,4" Click="RpgCdBtn_Click"/>
                     </StackPanel>
 
                     <Separator Background="#2f3136" Margin="0,12,0,8"/>

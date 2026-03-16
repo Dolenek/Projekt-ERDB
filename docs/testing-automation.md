@@ -19,17 +19,19 @@ Native app tools:
 - `read_last_messages` reads the Last messages tab list.
 
 WebView tools:
-- `webview_eval` evaluates JavaScript in the Discord WebView through the WebView2 DevTools endpoint.
-- `webview_capture` saves a DevTools screenshot of the Discord page and returns the image path.
+- `webview_eval` evaluates JavaScript in the bot Discord WebView through the WebView2 DevTools endpoint.
+- `webview_capture` saves a DevTools screenshot of the bot Discord page and returns the image path.
 
 Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
 - `ChannelUrlInput`, `UseAtMeFallback`, `AreaInput`
 - `HuntCooldownInput`, `AdventureCooldownInput`, `WorkCooldownInput`, `FarmCooldownInput`
-- `ReloadButton`, `GoChannelButton`, `DiscordWebView`
+- `ReloadButton`, `GoChannelButton`, `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
+- `DiscordWebView`, `PlayerDiscordWebView`
 - `ConsoleList`, `LastMessagesList`, `CooldownsPanel`
 
 Current assumptions:
 - The first version is for an interactive Windows desktop session only.
 - Discord authentication is still manual; the MCP server automates the already-logged-in embedded session.
 - Live Discord actions are allowed; there is no dedicated safe-mode channel restriction in the current implementation.
+- When two Discord tabs are open, MCP DevTools selection resolves the bot page via an injected tab-role marker instead of assuming the first Discord target is correct.

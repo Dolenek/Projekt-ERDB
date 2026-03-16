@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -8,7 +9,7 @@ namespace EpicRPGBot.UI.Services
     {
         private readonly IDiscordChatClient _chatClient;
         private readonly DispatcherTimer _timer;
-        private string _previousMessage = string.Empty;
+        private string _previousMessageId = string.Empty;
 
         public ChatMessagePoller(IDiscordChatClient chatClient, TimeSpan? interval = null)
         {
@@ -21,7 +22,7 @@ namespace EpicRPGBot.UI.Services
             _timer.Tick += async (sender, args) => await OnTickAsync();
         }
 
-        public event Action<string> MessageDetected;
+        public event Action<DiscordMessageSnapshot> MessageDetected;
 
         public void Start()
         {
@@ -37,14 +38,16 @@ namespace EpicRPGBot.UI.Services
         {
             try
             {
-                var message = await _chatClient.GetLastMessageTextAsync();
-                if (string.IsNullOrWhiteSpace(message) || string.Equals(message, _previousMessage, StringComparison.Ordinal))
+                var snapshot = await _chatClient.GetLatestMessageAsync();
+                if (snapshot == null ||
+                    string.IsNullOrWhiteSpace(snapshot.Id) ||
+                    string.Equals(snapshot.Id, _previousMessageId, StringComparison.Ordinal))
                 {
                     return;
                 }
 
-                _previousMessage = message;
-                MessageDetected?.Invoke(message);
+                _previousMessageId = snapshot.Id;
+                MessageDetected?.Invoke(snapshot);
             }
             catch
             {

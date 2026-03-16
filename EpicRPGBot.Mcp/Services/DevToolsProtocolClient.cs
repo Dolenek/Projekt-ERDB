@@ -74,13 +74,59 @@ public sealed class DevToolsProtocolClient
         var json = await _httpClient.GetStringAsync($"http://127.0.0.1:{status.DebugPort}/json/list");
         var targets = JsonSerializer.Deserialize<List<DebugTarget>>(json, JsonOptions) ?? new List<DebugTarget>();
 
-        var target = targets
+        var candidates = targets
             .Where(item => !string.IsNullOrWhiteSpace(item.WebSocketDebuggerUrl))
             .OrderBy(item => item.Type?.Equals("page", StringComparison.OrdinalIgnoreCase) == true ? 0 : 1)
             .ThenBy(item => item.Url?.Contains("discord.com", StringComparison.OrdinalIgnoreCase) == true ? 0 : 1)
-            .FirstOrDefault();
+            .ToArray();
+
+        foreach (var candidate in candidates)
+        {
+            if (!string.Equals(candidate.Type, "page", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var tabRole = await TryGetTabRoleAsync(candidate);
+            if (string.Equals(tabRole, "bot", StringComparison.OrdinalIgnoreCase))
+            {
+                return candidate;
+            }
+        }
+
+        var target = candidates.FirstOrDefault();
 
         return target ?? throw new InvalidOperationException("Could not find a WebView2 DevTools target.");
+    }
+
+    private static async Task<string> TryGetTabRoleAsync(DebugTarget target)
+    {
+        try
+        {
+            using var response = await SendCommandAsync(
+                target.WebSocketDebuggerUrl!,
+                "Runtime.evaluate",
+                new Dictionary<string, object?>
+                {
+                    ["expression"] = "window.__epicRpGBotTabRole || document.documentElement.getAttribute('data-epicrpg-tab-role') || ''",
+                    ["returnByValue"] = true,
+                    ["awaitPromise"] = true
+                });
+
+            if (response.RootElement.TryGetProperty("error", out _))
+            {
+                return string.Empty;
+            }
+
+            var result = response.RootElement.GetProperty("result").GetProperty("result");
+            return result.TryGetProperty("value", out var value)
+                ? value.GetString() ?? string.Empty
+                : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private static void ThrowIfError(JsonElement root)

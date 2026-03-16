@@ -25,7 +25,17 @@ namespace EpicRPGBot.UI.Services
             _store = store ?? throw new ArgumentNullException(nameof(store));
         }
 
-        public async Task RunAsync(Action<string> logInfo, Action<int> setHunt, Action<int> setAdventure, Action<int> setWork, Action<int> setFarm, int adventureDefaultMs, int workDefaultMs, int farmDefaultMs)
+        public async Task RunAsync(
+            Action<string> logInfo,
+            Action<int> setHunt,
+            Action<int> setAdventure,
+            Action<int> setWork,
+            Action<int> setFarm,
+            Action<int> setLootbox,
+            int adventureDefaultMs,
+            int workDefaultMs,
+            int farmDefaultMs,
+            int lootboxDefaultMs)
         {
             logInfo?.Invoke("Inicialize sequence started");
 
@@ -39,6 +49,9 @@ namespace EpicRPGBot.UI.Services
             await Task.Delay(BetweenCommandsMs);
 
             await InitializeOneAsync("work", "rpg chainsaw", workDefaultMs, setWork, logInfo);
+            await Task.Delay(BetweenCommandsMs);
+
+            await InitializeOneAsync("lootbox", "rpg buy ed lb", lootboxDefaultMs, setLootbox, logInfo);
 
             logInfo?.Invoke("Inicialize sequence finished");
         }
