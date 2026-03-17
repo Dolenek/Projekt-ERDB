@@ -1,35 +1,54 @@
 using System.Windows;
-using System.Windows.Controls;
+using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.Settings;
 
 namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private void OnSettingsChanged(object sender, TextChangedEventArgs e)
+        private AppSettingsSnapshot GetCurrentSettings()
         {
-            PersistSettings();
+            return _settingsService.Current;
         }
 
-        private void OnFallbackChanged(object sender, RoutedEventArgs e)
+        private int GetConfiguredArea()
         {
-            PersistSettings();
+            return GetCurrentSettings().GetAreaOrDefault(10);
         }
 
-        private void PersistSettings()
+        private int GetConfiguredHuntMs()
         {
-            if (_loadingSettings)
+            return GetCurrentSettings().GetHuntMsOrDefault(61000);
+        }
+
+        private int GetConfiguredAdventureMs()
+        {
+            return GetCurrentSettings().GetAdventureMsOrDefault(61000);
+        }
+
+        private int GetConfiguredWorkMs()
+        {
+            return GetCurrentSettings().GetWorkMsOrDefault(99000);
+        }
+
+        private int GetConfiguredFarmMs()
+        {
+            return GetCurrentSettings().GetFarmMsOrDefault(196000);
+        }
+
+        private int GetConfiguredLootboxMs()
+        {
+            return GetCurrentSettings().GetLootboxMsOrDefault(21600000);
+        }
+
+        private void SettingsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new SettingsWindow(_settingsService)
             {
-                return;
-            }
+                Owner = this
+            };
 
-            _settingsStore.SetString("channel_url", ChannelUrlBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetBool("use_at_me_fallback", UseAtMeFallback.IsChecked == true);
-            _settingsStore.SetString("area", AreaBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetString("hunt_ms", HuntCdBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetString("adventure_ms", AdventureCdBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetString("work_ms", WorkCdBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetString("farm_ms", FarmCdBox.Text?.Trim() ?? string.Empty);
-            _settingsStore.SetString("lootbox_ms", LootboxCdBox.Text?.Trim() ?? string.Empty);
+            settingsWindow.ShowDialog();
         }
     }
 }

@@ -43,11 +43,16 @@ Recommended debugging flow:
 
 Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
-- `ChannelUrlInput`, `UseAtMeFallback`, `AreaInput`
-- `HuntCooldownInput`, `AdventureCooldownInput`, `WorkCooldownInput`, `FarmCooldownInput`
-- `ReloadButton`, `GoChannelButton`, `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
+- `SettingsButton`, `ReloadButton`, `GoChannelButton`
+- `HuntCountStat`, `AdventureCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
+- `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
+- `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
 - `DiscordWebView`, `PlayerDiscordWebView`
 - `ConsoleList`, `LastMessagesList`, `CooldownsPanel`
+- `SettingsWindow`, `SettingsCloseButton`
+- `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
+- `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
+- `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 
 Current assumptions:
 - The first version is for an interactive Windows desktop session only.

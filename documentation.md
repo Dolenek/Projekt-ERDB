@@ -4,6 +4,7 @@ This repository is documented from the `.UI` application outward. The legacy Sel
 
 Canonical pages:
 - [UI shell](docs/ui-shell.md)
+- [Settings window](docs/settings-window.md)
 - [Automation engine](docs/automation-engine.md)
 - [Command send confirmation](docs/command-send-confirmation.md)
 - [Cooldown management](docs/cooldown-management.md)

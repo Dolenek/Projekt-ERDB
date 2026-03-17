@@ -15,26 +15,21 @@ namespace EpicRPGBot.UI.Services
         private readonly IDiscordChatClient _chatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly CooldownTracker _tracker;
-        private readonly LocalSettingsStore _store;
+        private readonly AppSettingsService _settingsService;
 
         public CooldownInitializationWorkflow(
             IDiscordChatClient chatClient,
             CooldownTracker tracker,
-            LocalSettingsStore store)
+            AppSettingsService settingsService)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
             _tracker = tracker ?? throw new ArgumentNullException(nameof(tracker));
-            _store = store ?? throw new ArgumentNullException(nameof(store));
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         }
 
         public async Task RunAsync(
             Action<string> logInfo,
-            Action<int> setHunt,
-            Action<int> setAdventure,
-            Action<int> setWork,
-            Action<int> setFarm,
-            Action<int> setLootbox,
             int adventureDefaultMs,
             int workDefaultMs,
             int farmDefaultMs,
@@ -51,11 +46,11 @@ namespace EpicRPGBot.UI.Services
 
             var steps = new[]
             {
-                new InitializationStep("hunt", "rpg hunt h", 61000, setHunt),
-                new InitializationStep("adventure", "rpg adv h", adventureDefaultMs, setAdventure),
-                new InitializationStep("farm", "rpg farm", farmDefaultMs, setFarm),
-                new InitializationStep("work", "rpg chainsaw", workDefaultMs, setWork),
-                new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs, setLootbox)
+                new InitializationStep("hunt", "rpg hunt h", 61000),
+                new InitializationStep("adventure", "rpg adv h", adventureDefaultMs),
+                new InitializationStep("farm", "rpg farm", farmDefaultMs),
+                new InitializationStep("work", "rpg chainsaw", workDefaultMs),
+                new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs)
             };
 
             for (var i = 0; i < steps.Length; i++)
@@ -67,7 +62,7 @@ namespace EpicRPGBot.UI.Services
                     continue;
                 }
 
-                var initialized = await InitializeOneAsync(step.Canonical, step.Action, step.DefaultMs, step.ApplyValue, logInfo);
+                var initialized = await InitializeOneAsync(step.Canonical, step.Action, step.DefaultMs, logInfo);
                 if (initialized && i < steps.Length - 1)
                 {
                     await Task.Delay(BetweenCommandsMs);
@@ -89,7 +84,7 @@ namespace EpicRPGBot.UI.Services
             return _tracker.GetTrackedSnapshot();
         }
 
-        private async Task<bool> InitializeOneAsync(string canonical, string action, int defaultMs, Action<int> applyValue, Action<string> logInfo)
+        private async Task<bool> InitializeOneAsync(string canonical, string action, int defaultMs, Action<string> logInfo)
         {
             logInfo?.Invoke($"Inicialize: {canonical} via '{action}'");
 
@@ -127,10 +122,43 @@ namespace EpicRPGBot.UI.Services
                 baseMs = (int)Math.Max(0, remaining.Value.TotalMilliseconds) + OverheadMs;
             }
 
-            _store.SetString($"{canonical}_ms", baseMs.ToString());
-            applyValue?.Invoke(baseMs);
+            SaveCooldownSetting(canonical, baseMs);
             logInfo?.Invoke($"Inicialize: {canonical} cooldown set to {baseMs} ms (saved)");
             return true;
+        }
+
+        private void SaveCooldownSetting(string canonical, int milliseconds)
+        {
+            var value = milliseconds.ToString();
+            var current = _settingsService.Current;
+            if (canonical == "hunt")
+            {
+                _settingsService.Save(current.WithHuntMs(value));
+                return;
+            }
+
+            if (canonical == "adventure")
+            {
+                _settingsService.Save(current.WithAdventureMs(value));
+                return;
+            }
+
+            if (canonical == "work")
+            {
+                _settingsService.Save(current.WithWorkMs(value));
+                return;
+            }
+
+            if (canonical == "farm")
+            {
+                _settingsService.Save(current.WithFarmMs(value));
+                return;
+            }
+
+            if (canonical == "lootbox")
+            {
+                _settingsService.Save(current.WithLootboxMs(value));
+            }
         }
 
         private static bool HasRemainingCooldown(TrackedCooldownSnapshot snapshot, string canonical)
@@ -153,18 +181,16 @@ namespace EpicRPGBot.UI.Services
 
         private sealed class InitializationStep
         {
-            public InitializationStep(string canonical, string action, int defaultMs, Action<int> applyValue)
+            public InitializationStep(string canonical, string action, int defaultMs)
             {
                 Canonical = canonical;
                 Action = action;
                 DefaultMs = defaultMs;
-                ApplyValue = applyValue;
             }
 
             public string Canonical { get; }
             public string Action { get; }
             public int DefaultMs { get; }
-            public Action<int> ApplyValue { get; }
         }
     }
 }

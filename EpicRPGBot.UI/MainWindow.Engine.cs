@@ -14,17 +14,13 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            var settings = GetCurrentSettings();
             await _cooldownWorkflow.RunAsync(
                 _log.Info,
-                ms => HuntCdBox.Text = ms.ToString(),
-                ms => AdventureCdBox.Text = ms.ToString(),
-                ms => WorkCdBox.Text = ms.ToString(),
-                ms => FarmCdBox.Text = ms.ToString(),
-                ms => LootboxCdBox.Text = ms.ToString(),
-                SafeInt(AdventureCdBox.Text, 61000),
-                SafeInt(WorkCdBox.Text, 99000),
-                SafeInt(FarmCdBox.Text, 196000),
-                SafeInt(LootboxCdBox.Text, 21600000));
+                settings.GetAdventureMsOrDefault(61000),
+                settings.GetWorkMsOrDefault(99000),
+                settings.GetFarmMsOrDefault(196000),
+                settings.GetLootboxMsOrDefault(21600000));
         }
 
         private async void StartBtn_Click(object sender, RoutedEventArgs e)
@@ -39,12 +35,12 @@ namespace EpicRPGBot.UI
 
             _engine = new BotEngine(
                 _botChatClient,
-                SafeInt(AreaBox.Text, 10),
-                SafeInt(HuntCdBox.Text, 21000),
-                SafeInt(AdventureCdBox.Text, 61000),
-                SafeInt(WorkCdBox.Text, 99000),
-                SafeInt(FarmCdBox.Text, 196000),
-                SafeInt(LootboxCdBox.Text, 21600000));
+                GetConfiguredArea(),
+                GetConfiguredHuntMs(),
+                GetConfiguredAdventureMs(),
+                GetConfiguredWorkMs(),
+                GetConfiguredFarmMs(),
+                GetConfiguredLootboxMs());
 
             WireEngineEvents(_engine);
 
@@ -63,15 +59,7 @@ namespace EpicRPGBot.UI
                 {
                     _log.Command($"Message ({command}) sent");
                     ApplySentCommandCooldown(command);
-                    if (!string.IsNullOrWhiteSpace(command) &&
-                        command.Trim().StartsWith("rpg hunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _huntCount++;
-                        if (_huntCountText != null)
-                        {
-                            _huntCountText.Text = $"Hunt sent: {_huntCount}";
-                        }
-                    }
+                    TrackSentCommandStats(command);
                 });
             };
 
@@ -117,34 +105,23 @@ namespace EpicRPGBot.UI
 
         private void ApplySentCommandCooldown(string command)
         {
-            if (string.IsNullOrWhiteSpace(command))
+            switch (GetTrackedCommandKey(command))
             {
-                return;
-            }
-
-            var normalized = command.Trim().ToLowerInvariant();
-            if (normalized.StartsWith("rpg hunt", StringComparison.Ordinal))
-            {
-                _cooldownTracker.SetCooldown("hunt", SafeInt(HuntCdBox.Text, 61000));
-            }
-            else if (normalized.StartsWith("rpg adv", StringComparison.Ordinal))
-            {
-                _cooldownTracker.SetCooldown("adventure", SafeInt(AdventureCdBox.Text, 61000));
-            }
-            else if (normalized.StartsWith("rpg farm", StringComparison.Ordinal))
-            {
-                _cooldownTracker.SetCooldown("farm", SafeInt(FarmCdBox.Text, 196000));
-            }
-            else if (normalized.StartsWith("rpg chop", StringComparison.Ordinal) ||
-                     normalized.StartsWith("rpg axe", StringComparison.Ordinal) ||
-                     normalized.StartsWith("rpg bowsaw", StringComparison.Ordinal) ||
-                     normalized.StartsWith("rpg chainsaw", StringComparison.Ordinal))
-            {
-                _cooldownTracker.SetCooldown("work", SafeInt(WorkCdBox.Text, 99000));
-            }
-            else if (normalized.StartsWith("rpg buy ed lb", StringComparison.Ordinal))
-            {
-                _cooldownTracker.SetCooldown("lootbox", SafeInt(LootboxCdBox.Text, 21600000));
+                case "hunt":
+                    _cooldownTracker.SetCooldown("hunt", GetConfiguredHuntMs());
+                    break;
+                case "adventure":
+                    _cooldownTracker.SetCooldown("adventure", GetConfiguredAdventureMs());
+                    break;
+                case "farm":
+                    _cooldownTracker.SetCooldown("farm", GetConfiguredFarmMs());
+                    break;
+                case "work":
+                    _cooldownTracker.SetCooldown("work", GetConfiguredWorkMs());
+                    break;
+                case "lootbox":
+                    _cooldownTracker.SetCooldown("lootbox", GetConfiguredLootboxMs());
+                    break;
             }
         }
 

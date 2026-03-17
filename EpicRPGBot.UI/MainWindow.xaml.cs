@@ -15,7 +15,7 @@ namespace EpicRPGBot.UI
         private readonly IDiscordChatClient _botChatClient;
         private readonly IDiscordChatClient _playerChatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
-        private readonly LocalSettingsStore _settingsStore;
+        private readonly AppSettingsService _settingsService;
         private readonly CooldownTracker _cooldownTracker;
         private readonly CooldownInitializationWorkflow _cooldownWorkflow;
         private readonly CaptchaSelfTestRunner _captchaSelfTestRunner;
@@ -26,9 +26,6 @@ namespace EpicRPGBot.UI
 
         private BotEngine _engine;
         private Grid _lastMessagesPanel;
-        private TextBlock _huntCountText;
-        private int _huntCount;
-        private bool _loadingSettings;
 
         public MainWindow()
         {
@@ -38,9 +35,9 @@ namespace EpicRPGBot.UI
             _botChatClient = new DiscordChatClient(Web, "bot");
             _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
-            _settingsStore = new LocalSettingsStore();
+            _settingsService = new AppSettingsService(new LocalSettingsStore());
             _cooldownTracker = new CooldownTracker(this);
-            _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsStore);
+            _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);
@@ -54,8 +51,6 @@ namespace EpicRPGBot.UI
         {
             Env.Load();
             BindUiState();
-            RegisterSettingsPersistence();
-            LoadStoredSettings();
             _cooldownTracker.Start();
 
             _log.Engine("UI loaded");
@@ -70,36 +65,7 @@ namespace EpicRPGBot.UI
             StatsList.ItemsSource = _last.Items;
             ConsoleList.ItemsSource = _log.Items;
             _lastMessagesPanel = (Grid)FindName("LastMessagesPanel");
-            _huntCountText = (TextBlock)FindName("HuntCountText");
-        }
-
-        private void RegisterSettingsPersistence()
-        {
-            ChannelUrlBox.TextChanged += OnSettingsChanged;
-            AreaBox.TextChanged += OnSettingsChanged;
-            HuntCdBox.TextChanged += OnSettingsChanged;
-            AdventureCdBox.TextChanged += OnSettingsChanged;
-            WorkCdBox.TextChanged += OnSettingsChanged;
-            FarmCdBox.TextChanged += OnSettingsChanged;
-            LootboxCdBox.TextChanged += OnSettingsChanged;
-            UseAtMeFallback.Checked += OnFallbackChanged;
-            UseAtMeFallback.Unchecked += OnFallbackChanged;
-        }
-
-        private void LoadStoredSettings()
-        {
-            _loadingSettings = true;
-
-            ChannelUrlBox.Text = _settingsStore.GetString("channel_url", "https://discord.com/channels/@me");
-            UseAtMeFallback.IsChecked = _settingsStore.GetBool("use_at_me_fallback", true);
-            AreaBox.Text = _settingsStore.GetString("area", AreaBox.Text);
-            HuntCdBox.Text = _settingsStore.GetString("hunt_ms", "61000");
-            AdventureCdBox.Text = _settingsStore.GetString("adventure_ms", "61000");
-            WorkCdBox.Text = _settingsStore.GetString("work_ms", "99000");
-            FarmCdBox.Text = _settingsStore.GetString("farm_ms", "196000");
-            LootboxCdBox.Text = _settingsStore.GetString("lootbox_ms", "21600000");
-
-            _loadingSettings = false;
+            BindStatsUi();
         }
 
         private async Task RunCaptchaSelfTestIfRequestedAsync()
@@ -120,12 +86,9 @@ namespace EpicRPGBot.UI
         {
             _messagePoller.Stop();
             _engine?.Stop();
+            _cooldownTracker.Stop();
+            ReleaseStatsUi();
             _alertService.Dispose();
-        }
-
-        private static int SafeInt(string value, int defaultValue)
-        {
-            return int.TryParse(value, out var parsed) ? parsed : defaultValue;
         }
     }
 }

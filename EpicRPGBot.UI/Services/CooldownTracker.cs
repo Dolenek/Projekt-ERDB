@@ -17,26 +17,29 @@ namespace EpicRPGBot.UI.Services
         private static readonly string[] TrackedKeys = { "hunt", "adventure", "work", "farm", "lootbox" };
         private static readonly CooldownDefinition[] Definitions =
         {
-            new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", "daily"),
-            new CooldownDefinition("weekly", "WeeklyCdRow", "WeeklyCdText", "weekly"),
-            new CooldownDefinition("lootbox", "LootboxCdRow", "LootboxCdText", "lootbox"),
-            new CooldownDefinition("card_hand", "CardHandCdRow", "CardHandCdText", "card hand"),
-            new CooldownDefinition("vote", "VoteCdRow", "VoteCdText", "vote"),
-            new CooldownDefinition("hunt", "HuntCdRow", "HuntCdText", "hunt"),
-            new CooldownDefinition("adventure", "AdventureCdRow", "AdventureCdText", "adventure"),
-            new CooldownDefinition("training", "TrainingCdRow", "TrainingCdText", "training"),
-            new CooldownDefinition("duel", "DuelCdRow", "DuelCdText", "duel"),
-            new CooldownDefinition("quest", "QuestCdRow", "QuestCdText", "quest", "epic quest"),
-            new CooldownDefinition("work", "WorkCdRow", "WorkCdText", "chop", "fish", "pickup", "mine"),
-            new CooldownDefinition("farm", "FarmCdRow", "FarmCdText", "farm"),
-            new CooldownDefinition("horse", "HorseCdRow", "HorseCdText", "horse breeding", "horse race"),
-            new CooldownDefinition("arena", "ArenaCdRow", "ArenaCdText", "arena"),
-            new CooldownDefinition("dungeon", "DungeonCdRow", "DungeonCdText", "dungeon", "miniboss")
+            new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", CooldownCategory.Rewards, "daily"),
+            new CooldownDefinition("weekly", "WeeklyCdRow", "WeeklyCdText", CooldownCategory.Rewards, "weekly"),
+            new CooldownDefinition("lootbox", "LootboxCdRow", "LootboxCdText", CooldownCategory.Rewards, "lootbox"),
+            new CooldownDefinition("card_hand", "CardHandCdRow", "CardHandCdText", CooldownCategory.Rewards, "card hand"),
+            new CooldownDefinition("vote", "VoteCdRow", "VoteCdText", CooldownCategory.Rewards, "vote"),
+            new CooldownDefinition("hunt", "HuntCdRow", "HuntCdText", CooldownCategory.Experience, "hunt"),
+            new CooldownDefinition("adventure", "AdventureCdRow", "AdventureCdText", CooldownCategory.Experience, "adventure"),
+            new CooldownDefinition("training", "TrainingCdRow", "TrainingCdText", CooldownCategory.Experience, "training"),
+            new CooldownDefinition("duel", "DuelCdRow", "DuelCdText", CooldownCategory.Experience, "duel"),
+            new CooldownDefinition("quest", "QuestCdRow", "QuestCdText", CooldownCategory.Experience, "quest", "epic quest"),
+            new CooldownDefinition("work", "WorkCdRow", "WorkCdText", CooldownCategory.Progress, "chop", "fish", "pickup", "mine"),
+            new CooldownDefinition("farm", "FarmCdRow", "FarmCdText", CooldownCategory.Progress, "farm"),
+            new CooldownDefinition("horse", "HorseCdRow", "HorseCdText", CooldownCategory.Progress, "horse breeding", "horse race"),
+            new CooldownDefinition("arena", "ArenaCdRow", "ArenaCdText", CooldownCategory.Progress, "arena"),
+            new CooldownDefinition("dungeon", "DungeonCdRow", "DungeonCdText", CooldownCategory.Progress, "dungeon", "miniboss")
         };
 
         private readonly Dictionary<string, CooldownEntry> _entries = new Dictionary<string, CooldownEntry>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _aliasMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly DispatcherTimer _timer;
+        private CooldownStatsSnapshot _lastStats;
+
+        public event Action<CooldownStatsSnapshot> StatsChanged;
 
         public CooldownTracker(FrameworkElement root)
         {
@@ -58,6 +61,7 @@ namespace EpicRPGBot.UI.Services
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (sender, args) => Tick();
+            _lastStats = BuildStatsSnapshot();
         }
 
         public void Start()
@@ -108,6 +112,11 @@ namespace EpicRPGBot.UI.Services
                 }
             }
 
+            if (changed)
+            {
+                PublishStatsIfChanged();
+            }
+
             return changed;
         }
 
@@ -126,6 +135,11 @@ namespace EpicRPGBot.UI.Services
                 GetRemaining("lootbox"));
         }
 
+        public CooldownStatsSnapshot GetStatsSnapshot()
+        {
+            return BuildStatsSnapshot();
+        }
+
         public void SetCooldown(string canonical, int milliseconds)
         {
             if (!_entries.TryGetValue(canonical, out var entry))
@@ -137,6 +151,7 @@ namespace EpicRPGBot.UI.Services
                 ? TimeSpan.FromMilliseconds(milliseconds)
                 : (TimeSpan?)null;
             UpdateEntryVisual(entry);
+            PublishStatsIfChanged();
         }
 
         public bool ApplyTimeCookieReduction(TimeSpan reduction)
@@ -160,6 +175,11 @@ namespace EpicRPGBot.UI.Services
                 changed = true;
             }
 
+            if (changed)
+            {
+                PublishStatsIfChanged();
+            }
+
             return changed;
         }
 
@@ -176,6 +196,8 @@ namespace EpicRPGBot.UI.Services
                 entry.Remaining = next > TimeSpan.Zero ? next : (TimeSpan?)null;
                 UpdateEntryVisual(entry);
             }
+
+            PublishStatsIfChanged();
         }
 
         private static bool ShouldSkipLine(string line)
@@ -318,6 +340,25 @@ namespace EpicRPGBot.UI.Services
             if (duration.Days > 0 || duration.Hours > 0 || duration.Minutes > 0) parts.Add($"{duration.Minutes}m");
             parts.Add($"{duration.Seconds}s");
             return string.Join(" ", parts);
+        }
+
+        private CooldownStatsSnapshot BuildStatsSnapshot()
+        {
+            return CooldownStatsCalculator.BuildSnapshot(
+                Definitions,
+                canonical => _entries.TryGetValue(canonical, out var entry) && entry.Remaining.HasValue);
+        }
+
+        private void PublishStatsIfChanged()
+        {
+            var snapshot = BuildStatsSnapshot();
+            if (_lastStats != null && _lastStats.HasSameCounts(snapshot))
+            {
+                return;
+            }
+
+            _lastStats = snapshot;
+            StatsChanged?.Invoke(snapshot);
         }
 
         private sealed class CooldownEntry

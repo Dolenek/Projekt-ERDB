@@ -53,6 +53,14 @@
                         <StackPanel Background="#1e1f22" Margin="4">
                             <TextBlock Text="Stats" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBlock Name="HuntCountText" Text="Hunt sent: 0" Foreground="#ddd"/>
+                            <TextBlock Name="AdventureCountText" Text="Adventure sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="WorkCountText" Text="Work sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="FarmCountText" Text="Farm sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="LootboxCountText" Text="Lootbox sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="RunningCooldownsText" Text="Running cooldowns: 0 / 15" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="RunningRewardsText" Text="Rewards running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="RunningExperienceText" Text="Experience running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="RunningProgressText" Text="Progress running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Grid>
 
@@ -85,6 +93,7 @@
             <DockPanel Grid.Row="0" Background="#2b2d31" LastChildFill="False">
                 <TextBlock Text="Discord" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#ddd" FontWeight="SemiBold"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
+                    <Button Name="SettingsBtn" Content="Settings" Margin="8,6" Padding="12,4" Click="SettingsBtn_Click"/>
                     <Button Name="ReloadBtn" Content="Reload" Margin="8,6" Padding="12,4" Click="ReloadBtn_Click"/>
                     <Button Name="GoChannelBtn" Content="Go To Channel" Margin="8,6" Padding="12,4" Click="GoChannelBtn_Click"/>
                 </StackPanel>
@@ -111,50 +120,16 @@
             </Grid>
         </Grid>
 
-        <!-- Right: Settings -->
+        <!-- Right: Controls / Cooldowns -->
         <Border Grid.Column="2" Background="#242529" BorderBrush="#2f3136" BorderThickness="1,0,0,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Settings" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Discord Channel URL" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <CheckBox Name="UseAtMeFallback" Grid.Column="1" Content="Fallback to @me if empty" Foreground="#ddd" IsChecked="True" VerticalAlignment="Center"/>
-                    </Grid>
-                    <TextBox Name="ChannelUrlBox" Margin="0,4,0,6" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                    <Separator Background="#2f3136" Margin="0,8,0,10"/>
-
-                    <TextBlock Text="Bot Parameters" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <UniformGrid Columns="2" Rows="3" Margin="0,0,0,8">
-                        <StackPanel Margin="0,0,8,0">
-                            <TextBlock Text="Area" Foreground="#aaa"/>
-                            <TextBox Name="AreaBox" Text="10" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="Hunt cooldown (ms)" Foreground="#aaa"/>
-                            <TextBox Name="HuntCdBox" Text="21000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                        <StackPanel Margin="0,8,8,0">
-                            <TextBlock Text="Adventure cooldown (ms)" Foreground="#aaa"/>
-                            <TextBox Name="AdventureCdBox" Text="61000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                        <StackPanel Margin="0,8,0,0">
-                            <TextBlock Text="Work cooldown (ms)" Foreground="#aaa"/>
-                            <TextBox Name="WorkCdBox" Text="99000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                        <StackPanel Margin="0,8,0,0">
-                            <TextBlock Text="Farm cooldown (ms)" Foreground="#aaa"/>
-                            <TextBox Name="FarmCdBox" Text="196000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                        <StackPanel Margin="0,8,8,0">
-                            <TextBlock Text="Lootbox cooldown (ms)" Foreground="#aaa"/>
-                            <TextBox Name="LootboxCdBox" Text="21600000" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42" Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </UniformGrid>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Bot Controls" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
                     <Grid Margin="0,8,0,0">
                         <Grid.RowDefinitions>
@@ -171,12 +146,16 @@
                         <Button Name="InitBtn" Grid.Row="0" Grid.Column="2" Content="Inicialize" Margin="0,0,0,8" MinHeight="30" Padding="12,4" Click="InitBtn_Click"/>
                         <Button Name="RpgCdBtn" Grid.Row="1" Grid.Column="0" Content="rpg cd" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="RpgCdBtn_Click"/>
                     </Grid>
+                </StackPanel>
 
-                    <Separator Background="#2f3136" Margin="0,12,0,8"/>
-
-                    <TextBlock Text="Cooldowns (visual)" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,6"/>
-
-                    <StackPanel Name="CooldownsPanel" Margin="0,0,0,8">
+                <ScrollViewer Grid.Row="1"
+                              Margin="0,12,0,0"
+                              VerticalAlignment="Bottom"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Separator Background="#2f3136" Margin="0,0,0,8"/>
+                        <TextBlock Text="Cooldowns (visual)" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel Name="CooldownsPanel" Margin="0,0,0,8">
 
                         <!-- Rewards -->
                         <TextBlock Text="Rewards" Foreground="#ccc" Margin="0,6,0,2"/>
@@ -352,10 +331,10 @@
                             </Grid>
                         </Border>
 
+                        </StackPanel>
                     </StackPanel>
-                    
-                </StackPanel>
-            </ScrollViewer>
+                </ScrollViewer>
+            </Grid>
         </Border>
     </Grid>
 </Window>

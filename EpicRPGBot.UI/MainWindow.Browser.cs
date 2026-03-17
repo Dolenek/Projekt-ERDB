@@ -73,13 +73,7 @@ namespace EpicRPGBot.UI
 
         private string GetChannelUrl()
         {
-            var url = ChannelUrlBox.Text?.Trim();
-            if (string.IsNullOrEmpty(url) && UseAtMeFallback.IsChecked == true)
-            {
-                return "https://discord.com/channels/@me";
-            }
-
-            return string.IsNullOrEmpty(url) ? "https://discord.com/channels/@me" : url;
+            return GetCurrentSettings().ResolveChannelUrl();
         }
 
         private void ReloadBtn_Click(object sender, RoutedEventArgs e)

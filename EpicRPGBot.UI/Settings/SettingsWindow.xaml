@@ -1,0 +1,109 @@
+<Window x:Class="EpicRPGBot.UI.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings"
+        Width="430"
+        Height="540"
+        MinWidth="430"
+        MinHeight="540"
+        Background="#1e1f22"
+        Foreground="#ddd"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock Text="Changes save automatically." Foreground="#aaa" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Background="#242529" BorderBrush="#2f3136" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Discord" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Channel URL" Foreground="#aaa" Margin="0,12,0,0"/>
+                        <TextBox Name="ChannelUrlBox"
+                                 Margin="0,4,0,0"
+                                 Background="#1e1f22"
+                                 Foreground="#ddd"
+                                 BorderBrush="#3a3c42"/>
+                        <CheckBox Name="UseAtMeFallback"
+                                  Content="Fallback to @me if empty"
+                                  Foreground="#ddd"
+                                  Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#242529" BorderBrush="#2f3136" BorderThickness="1" CornerRadius="6" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="Bot Parameters" FontSize="16" FontWeight="SemiBold"/>
+                        <UniformGrid Columns="2" Margin="0,12,0,0">
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Area" Foreground="#aaa"/>
+                                <TextBox Name="AreaBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Hunt cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="HuntCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Adventure cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="AdventureCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Work cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="WorkCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Farm cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="FarmCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Lootbox cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="LootboxCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Grid.Row="2"
+                Name="CloseBtn"
+                Content="Close"
+                Width="88"
+                Height="30"
+                Margin="0,12,0,0"
+                HorizontalAlignment="Right"
+                Click="CloseBtn_Click"/>
+    </Grid>
+</Window>
