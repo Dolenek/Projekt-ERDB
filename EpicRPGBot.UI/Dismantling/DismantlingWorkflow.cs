@@ -9,6 +9,7 @@ namespace EpicRPGBot.UI.Dismantling
 {
     public sealed class DismantlingWorkflow
     {
+        private const int CooldownRetryDelayMs = 1000;
         private readonly CraftItemCatalog _catalog;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly CraftReplyParser _replyParser;
@@ -51,6 +52,25 @@ namespace EpicRPGBot.UI.Dismantling
                 }
 
                 var command = $"rpg dismantle {step.Definition.CommandName} {step.CommandAmount}";
+                var stepResult = await ExecuteStepAsync(step, request, command, report, cancellationToken);
+                if (stepResult != null)
+                {
+                    return stepResult;
+                }
+            }
+
+            return CraftJobResult.CompletedResult("Dismantling completed.");
+        }
+
+        private async Task<CraftJobResult> ExecuteStepAsync(
+            DismantlePlanStep step,
+            DismantleRequest request,
+            string command,
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            while (true)
+            {
                 report?.Invoke($"Sending {command}");
 
                 var result = await _confirmedCommandSender.SendAsync(command);
@@ -63,6 +83,13 @@ namespace EpicRPGBot.UI.Dismantling
                 if (reply.Kind == CraftReplyKind.Success)
                 {
                     report?.Invoke(FormatSuccess(step));
+                    return null;
+                }
+
+                if (reply.Kind == CraftReplyKind.Wait)
+                {
+                    report?.Invoke($"Dismantle cooldown hit for {step.Definition.DisplayName}. Waiting 1 second and retrying.");
+                    await Task.Delay(CooldownRetryDelayMs, cancellationToken);
                     continue;
                 }
 
@@ -71,7 +98,7 @@ namespace EpicRPGBot.UI.Dismantling
                     if (request.UseAll)
                     {
                         report?.Invoke($"No {step.Definition.DisplayName} to dismantle. Continuing downward.");
-                        continue;
+                        return null;
                     }
 
                     return CraftJobResult.FailedResult($"Dismantling stopped: not enough {step.Definition.DisplayName} to continue.");
@@ -79,8 +106,6 @@ namespace EpicRPGBot.UI.Dismantling
 
                 return CraftJobResult.FailedResult($"Dismantling stopped: unrecognized reply for {step.Definition.DisplayName}.");
             }
-
-            return CraftJobResult.CompletedResult("Dismantling completed.");
         }
 
         private static string FormatSuccess(DismantlePlanStep step)

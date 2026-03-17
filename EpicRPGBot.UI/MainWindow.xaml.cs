@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using EpicRPGBot.UI.AreaTrading;
 using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
 using EpicRPGBot.UI.Models;
@@ -25,10 +26,12 @@ namespace EpicRPGBot.UI
         private readonly ChatMessagePoller _messagePoller;
         private readonly LogCraftingWorkflow _logCraftingWorkflow;
         private readonly DismantlingWorkflow _dismantlingWorkflow;
+        private readonly AreaTradeWorkflow _areaTradeWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedMessageOrder = new Queue<string>();
 
         private BotEngine _engine;
+        private bool _isAreaTradeRunning;
         private Grid _lastMessagesPanel;
 
         public MainWindow()
@@ -44,6 +47,7 @@ namespace EpicRPGBot.UI
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
             _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
             _dismantlingWorkflow = new DismantlingWorkflow(_confirmedCommandSender);
+            _areaTradeWorkflow = new AreaTradeWorkflow(_confirmedCommandSender, _dismantlingWorkflow, _settingsService, GetCurrentSettings);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);

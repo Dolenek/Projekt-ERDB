@@ -21,6 +21,7 @@ Planning behavior:
 
 Runtime behavior:
 - Every craft command is sent as `rpg craft <item> <amount>` through the existing confirmed-command lane
+- If EPIC RPG replies with the standard `wait at least 1s` cooldown warning, the workflow waits 1 second and resends the same craft command
 - If normal automation is running, the app pauses the engine, waits for the current send/reply cycle to finish, runs the craft job, then starts the engine again and refreshes scheduling with `rpg cd`
 - Only one craft job can run at a time
 - Status lines are appended in the dialog and mirrored to the main Console log with a `[craft]` prefix

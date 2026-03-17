@@ -28,6 +28,11 @@ namespace EpicRPGBot.UI.Crafting
         {
             var text = replyText ?? string.Empty;
 
+            if (text.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return new CraftReply(CraftReplyKind.Wait, text);
+            }
+
             if (_successRegex.IsMatch(text))
             {
                 return new CraftReply(CraftReplyKind.Success, text);

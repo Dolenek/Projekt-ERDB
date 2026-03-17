@@ -22,6 +22,7 @@ Workflow behavior:
 - Numeric dismantles compute the full cascade before sending commands.
 - `all` dismantles use `rpg dismantle <item> all` on every tier in the chain.
 - In `all` mode, if a tier has no items to dismantle, the workflow skips that tier and keeps going downward.
+- If EPIC RPG replies with the standard `wait at least 1s` cooldown warning, the workflow waits 1 second and resends the same dismantle command.
 - Dismantling always runs down to the base material family for the selected item.
 - If the engine is running, the app pauses it, waits for the send lane to go idle, runs dismantling exclusively, then resumes the engine and refreshes with `rpg cd`.
 

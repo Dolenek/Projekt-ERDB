@@ -4,6 +4,7 @@ namespace EpicRPGBot.UI.Crafting
     {
         Success,
         MissingItems,
+        Wait,
         Unknown
     }
 

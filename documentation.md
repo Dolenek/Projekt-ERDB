@@ -6,6 +6,7 @@ Canonical pages:
 - [UI shell](docs/ui-shell.md)
 - [Crafting](docs/crafting.md)
 - [Dismantling](docs/dismantling.md)
+- [Area trading](docs/area-trading.md)
 - [Settings window](docs/settings-window.md)
 - [Automation engine](docs/automation-engine.md)
 - [Command send confirmation](docs/command-send-confirmation.md)

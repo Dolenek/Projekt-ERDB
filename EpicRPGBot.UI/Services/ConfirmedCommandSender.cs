@@ -7,6 +7,7 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed class ConfirmedCommandSender
     {
+        private const int PostOutgoingRegistrationDelayMs = 500;
         private const int ReplyTimeoutMs = 10000;
         private const int ReplyPollDelayMs = 250;
         private const int RetryDelayMs = 1000;
@@ -40,6 +41,7 @@ namespace EpicRPGBot.UI.Services
                 }
 
                 onOutgoingRegistered?.Invoke(lastOutgoing);
+                await Task.Delay(PostOutgoingRegistrationDelayMs);
 
                 var reply = await WaitForEpicReplyAsync(anchorMessageId, lastOutgoing.Id, command);
                 if (reply != null)
@@ -170,6 +172,11 @@ namespace EpicRPGBot.UI.Services
             var text = snapshot?.Text ?? string.Empty;
             return author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("Area:", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("successfully traded", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("you traded", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("you don't have enough items to trade this", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("don't have enough", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("successfully crafted", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("You don't have enough items to craft this", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;

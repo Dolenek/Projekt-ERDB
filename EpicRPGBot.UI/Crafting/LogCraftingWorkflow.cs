@@ -7,6 +7,7 @@ namespace EpicRPGBot.UI.Crafting
 {
     public sealed class LogCraftingWorkflow
     {
+        private const int CooldownRetryDelayMs = 1000;
         private readonly CraftPlanBuilder _planBuilder;
         private readonly CraftReplyParser _replyParser;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
@@ -52,6 +53,24 @@ namespace EpicRPGBot.UI.Crafting
                 }
 
                 var command = $"rpg craft {step.Definition.CommandName} {step.Amount}";
+                var stepResult = await ExecuteStepAsync(step, command, report, cancellationToken);
+                if (stepResult != null)
+                {
+                    return stepResult;
+                }
+            }
+
+            return CraftJobResult.CompletedResult("Crafting completed.");
+        }
+
+        private async Task<CraftJobResult> ExecuteStepAsync(
+            CraftPlanStep step,
+            string command,
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            while (true)
+            {
                 report?.Invoke($"Sending {command}");
 
                 var result = await _confirmedCommandSender.SendAsync(command);
@@ -64,6 +83,13 @@ namespace EpicRPGBot.UI.Crafting
                 if (reply.Kind == CraftReplyKind.Success)
                 {
                     report?.Invoke($"Crafted {step.Amount} {step.Definition.DisplayName}.");
+                    return null;
+                }
+
+                if (reply.Kind == CraftReplyKind.Wait)
+                {
+                    report?.Invoke($"Craft cooldown hit for {step.Definition.DisplayName}. Waiting 1 second and retrying.");
+                    await Task.Delay(CooldownRetryDelayMs, cancellationToken);
                     continue;
                 }
 
@@ -74,8 +100,6 @@ namespace EpicRPGBot.UI.Crafting
 
                 return CraftJobResult.FailedResult($"Crafting stopped: unrecognized reply for {step.Definition.DisplayName}.");
             }
-
-            return CraftJobResult.CompletedResult("Crafting completed.");
         }
 
         private static CraftJobResult CreateMissingItemsResult(CraftPlanStep step, CraftReply reply)

@@ -27,9 +27,11 @@ User-visible behaviors:
 - `Stop Bot` stops engine timers but keeps both tabs open.
 - `Inicialize` starts with one opening `rpg cd` snapshot, skips tracked commands that are already on cooldown in that snapshot, and only saves refreshed baselines for commands that were ready to initialize.
 - `rpg cd` queues one cooldown refresh at the next legal bot send slot while the engine is running, or sends immediately through the bot tab when the engine is stopped.
-- The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd` directly below `Start Bot` and two reserved slots beside it for future buttons.
+- `Trade area` starts a one-click live-area dismantle/trade sweep and logs progress to the Console.
+- The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd` below `Start Bot`, `Trade area` beside it, and one remaining slot unused.
 - If the engine is running when crafting starts, the UI pauses the engine, waits for the current send lane to go idle, runs the craft job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when dismantling starts, the UI pauses the engine, waits for the current send lane to go idle, runs the dismantle job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
+- If the engine is running when area trading starts, the UI pauses the engine, waits for the current send lane to go idle, runs the area-trade sweep exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - Any change in the settings window is saved immediately to local settings.
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - If the bot detects the EPIC GUARD captcha while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.

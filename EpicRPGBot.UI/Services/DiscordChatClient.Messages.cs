@@ -156,6 +156,11 @@ namespace EpicRPGBot.UI.Services
     const normalizedText = (text || '').toLowerCase();
     return normalizedAuthor.includes('epic rpg') ||
       normalizedText.includes('epic rpg') ||
+      normalizedText.includes('area:') ||
+      normalizedText.includes('successfully traded') ||
+      normalizedText.includes('you traded') ||
+      normalizedText.includes(""you don't have enough items to trade this"") ||
+      normalizedText.includes(""don't have enough"") ||
       normalizedText.includes(""you don't have enough items to craft this"") ||
       normalizedText.includes('successfully crafted') ||
       normalizedText.includes('wait at least');

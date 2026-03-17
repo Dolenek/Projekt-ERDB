@@ -15,6 +15,7 @@ Scope:
 
 Retries and timing:
 - Outgoing registration is polled for up to about 4 seconds.
+- After the outgoing `rpg ...` message becomes visible, the sender waits 500 ms before it starts looking for the EPIC RPG reply.
 - EPIC RPG reply confirmation is polled for up to 10 seconds after each registered send.
 - The bot retries a failed or unconfirmed `rpg ...` command up to 3 total attempts.
 - Retries wait 1 second between attempts.
@@ -24,4 +25,5 @@ Runtime effects:
 - Tracked command timers still re-arm from the EPIC RPG confirmation message, not from the local send timestamp.
 - For tracked hunt/adventure/work/farm/lootbox sends, the scheduler marks the command as pending as soon as the outgoing `rpg ...` message is visible.
 - If all confirmation attempts fail, the caller keeps its existing failure handling, such as retry scheduling for tracked commands.
-- Confirmed send results now retain the full EPIC RPG reply snapshot text, which higher-level workflows such as crafting and dismantling use for reply parsing.
+- Confirmed send results now retain the full EPIC RPG reply snapshot text, which higher-level workflows such as crafting, dismantling, and area trading use for reply parsing.
+- The fallback EPIC RPG reply detector recognizes profile, craft, dismantle, and trade-style replies when Discord does not expose the author or exact outgoing message id cleanly enough.

@@ -43,6 +43,7 @@ Recommended debugging flow:
 
 Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
+- `RpgCdButton`, `TradeAreaButton`
 - `DismantleButton`, `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
 - `HuntCountStat`, `AdventureCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
