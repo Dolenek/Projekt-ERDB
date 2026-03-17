@@ -79,6 +79,11 @@ namespace EpicRPGBot.UI.Services
             SetDueUtc(kind, null);
         }
 
+        public void ClearPending(TrackedCommandKind kind)
+        {
+            _pendingCommands.RemoveAll(item => item.Kind == kind);
+        }
+
         public void Schedule(TrackedCommandKind kind, TimeSpan delay, bool isRunning)
         {
             if (!isRunning || (kind == TrackedCommandKind.Farm && _area < 4))
@@ -129,13 +134,14 @@ namespace EpicRPGBot.UI.Services
             Resume(TrackedCommandKind.Lootbox, isRunning);
         }
 
-        public void HandleResponse(string message, bool isRunning)
+        public void HandleResponse(Models.DiscordMessageSnapshot snapshot, bool isRunning)
         {
-            if (!LooksLikeTrackedCommandResponse(message))
+            if (!LooksLikeTrackedCommandResponse(snapshot))
             {
                 return;
             }
 
+            var message = snapshot.Text ?? string.Empty;
             var pending = TryMatchPending(message) ?? GetOldestPending();
             if (pending == null)
             {

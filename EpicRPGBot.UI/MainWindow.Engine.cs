@@ -111,7 +111,7 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            var sent = await _botChatClient.SendMessageAsync("rpg cd");
+            var sent = (await _confirmedCommandSender.SendAsync("rpg cd")).IsConfirmed;
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
         }
 

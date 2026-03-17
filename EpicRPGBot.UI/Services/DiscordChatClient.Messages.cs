@@ -32,15 +32,33 @@ namespace EpicRPGBot.UI.Services
         {
             if (_web.CoreWebView2 == null)
             {
-                return new DiscordMessageSnapshot(string.Empty, string.Empty);
+                return new DiscordMessageSnapshot(string.Empty, string.Empty, string.Empty);
             }
 
             const string script = @"
 (() => {
+  const getAuthor = (item) => {
+    const selectors = [
+      '[id^=""message-username-""]',
+      'h3 span[role=""button""]',
+      'h3 span[class*=""username""]',
+      'span[class*=""username""]'
+    ];
+    for (const selector of selectors) {
+      const node = item.querySelector(selector);
+      const text = (node?.textContent || '').trim();
+      if (text) return text;
+    }
+    return '';
+  };
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
-  if (items.length === 0) return JSON.stringify({ id: '', text: '' });
+  if (items.length === 0) return JSON.stringify({ id: '', text: '', author: '' });
   const last = items[items.length - 1];
-  return JSON.stringify({ id: (last.id || ''), text: (last.innerText || '') });
+  return JSON.stringify({
+    id: (last.id || ''),
+    text: (last.innerText || ''),
+    author: getAuthor(last)
+  });
 })();
 ";
 
@@ -50,11 +68,12 @@ namespace EpicRPGBot.UI.Services
                 var payload = DiscordScriptParsing.UnquoteJson(json);
                 return new DiscordMessageSnapshot(
                     DiscordScriptParsing.ExtractField(payload, "id"),
-                    DiscordScriptParsing.ExtractField(payload, "text"));
+                    DiscordScriptParsing.ExtractField(payload, "text"),
+                    DiscordScriptParsing.ExtractField(payload, "author"));
             }
             catch
             {
-                return new DiscordMessageSnapshot(string.Empty, string.Empty);
+                return new DiscordMessageSnapshot(string.Empty, string.Empty, string.Empty);
             }
         }
 
@@ -68,11 +87,26 @@ namespace EpicRPGBot.UI.Services
             var count = Math.Max(1, maxCount);
             var script = $@"
 (() => {{
+  const getAuthor = (item) => {{
+    const selectors = [
+      '[id^=""message-username-""]',
+      'h3 span[role=""button""]',
+      'h3 span[class*=""username""]',
+      'span[class*=""username""]'
+    ];
+    for (const selector of selectors) {{
+      const node = item.querySelector(selector);
+      const text = (node?.textContent || '').trim();
+      if (text) return text;
+    }}
+    return '';
+  }};
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
   const recent = items.slice(-{count});
   return JSON.stringify(recent.map(item => ({{
     id: item.id || '',
-    text: item.innerText || ''
+    text: item.innerText || '',
+    author: getAuthor(item)
   }})));
 }})();
 ";
@@ -85,6 +119,70 @@ namespace EpicRPGBot.UI.Services
             catch
             {
                 return Array.Empty<DiscordMessageSnapshot>();
+            }
+        }
+
+        public async Task<bool> HasEpicReplyForCommandAfterMessageAsync(string anchorMessageId, string command)
+        {
+            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(command))
+            {
+                return false;
+            }
+
+            var script = $@"
+(() => {{
+  const getAuthor = (item) => {{
+    const selectors = [
+      '[id^=""message-username-""]',
+      'h3 span[role=""button""]',
+      'h3 span[class*=""username""]',
+      'span[class*=""username""]'
+    ];
+    for (const selector of selectors) {{
+      const node = item.querySelector(selector);
+      const text = (node?.textContent || '').trim();
+      if (text) return text;
+    }}
+    return '';
+  }};
+  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
+  const anchorId = '{(anchorMessageId ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'")}';
+  const target = '{command.Replace("\\", "\\\\").Replace("'", "\\'")}'.toLowerCase();
+  let startIndex = 0;
+  if (anchorId) {{
+    const foundIndex = items.findIndex(item => (item.id || '') === anchorId);
+    if (foundIndex >= 0) startIndex = foundIndex + 1;
+  }}
+  let outgoingIndex = -1;
+  for (let i = items.length - 1; i >= startIndex; i--) {{
+    const author = getAuthor(items[i]);
+    const text = items[i].innerText || '';
+    if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) continue;
+    if (text.toLowerCase().includes(target)) {{
+      outgoingIndex = i;
+      break;
+    }}
+  }}
+  if (outgoingIndex < 0) return false;
+  for (let j = outgoingIndex + 1; j < items.length; j++) {{
+      const author = getAuthor(items[j]);
+      const text = items[j].innerText || '';
+      if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) {{
+        return true;
+      }}
+  }}
+  return false;
+}})();
+";
+
+            try
+            {
+                var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                return string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
             }
         }
 

@@ -174,7 +174,8 @@ namespace EpicRPGBot.UI.Services
                 var item = payload.Substring(start, end - start + 1);
                 snapshots.Add(new DiscordMessageSnapshot(
                     ExtractField(item, "id"),
-                    ExtractField(item, "text")));
+                    ExtractField(item, "text"),
+                    ExtractField(item, "author")));
                 index = end + 1;
             }
 

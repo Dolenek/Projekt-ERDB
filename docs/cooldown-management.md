@@ -12,6 +12,7 @@ Tracked cooldown state:
 - The right panel shows parsed cooldowns for rewards, experience, and progress commands.
 - When a message contains `cooldowns`, the tracker parses entries such as `quest | epic quest (1m 2s)` and maps aliases to canonical labels.
 - A 1-second UI timer decrements active labels until they reach `Ready`.
+- Rows that are `Ready` get a stable green/light-green background based on fixed row order; active cooldown rows keep the default dark background.
 - For hunt, adventure, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
 
 Time-cookie handling:
@@ -32,10 +33,11 @@ Alias mapping preserved in the current app:
 - `dungeon` and `miniboss` map to the dungeon label.
 
 `Inicialize` workflow:
-1. Send `rpg hunt h`, wait 2 seconds, send `rpg cd`, wait 2 more seconds, parse cooldowns, then persist `hunt_ms`.
-2. Repeat the same pattern for `rpg adv h`, `rpg farm`, `rpg chainsaw`, and `rpg buy ed lb`.
-3. Add a fixed 4-second safety overhead to the parsed remaining time before saving.
-4. Update the Hunt, Adventure, Work, Farm, and Lootbox textboxes with the saved milliseconds.
+1. Send one opening `rpg cd` and parse it before any command-specific initialization starts.
+2. If hunt, adventure, work, farm, or lootbox already has remaining time in that opening snapshot, skip that command and leave its textbox and saved setting unchanged.
+3. For commands that were ready in the opening snapshot, send the command, wait 2 seconds, send `rpg cd`, parse the refreshed remaining time, and persist the corresponding `*_ms` value.
+4. Add a fixed 4-second safety overhead to the parsed remaining time before saving.
+5. Update the Hunt, Adventure, Work, Farm, and Lootbox textboxes with the saved milliseconds only for commands that were actually initialized.
 
 Defaults used when no persisted value exists:
 - Hunt: `61000`

@@ -14,6 +14,7 @@ namespace EpicRPGBot.UI
 
         private readonly IDiscordChatClient _chatClient;
         private readonly CaptchaSolverService _captchaSolver;
+        private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly DispatcherTimer _checkMessageTimer;
         private readonly TrackedCommandScheduler _scheduler;
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
@@ -53,6 +54,7 @@ namespace EpicRPGBot.UI
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _captchaSolver = new CaptchaSolverService(_chatClient);
+            _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
             _area = area;
             _farmCooldown = farmCooldown;
             _scheduler = new TrackedCommandScheduler(area, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
@@ -103,17 +105,6 @@ namespace EpicRPGBot.UI
             OnEngineStopped?.Invoke();
         }
 
-        public async Task<bool> SendImmediateAsync(string text)
-        {
-            var ok = await SendRawWithGlobalCooldownAsync(text);
-            if (ok)
-            {
-                OnCommandSent?.Invoke(text);
-            }
-
-            return ok;
-        }
-
         public bool QueueCooldownSnapshotRequest()
         {
             if (!_running || Interlocked.Exchange(ref _queuedCooldownSnapshot, 1) == 1)
@@ -157,11 +148,6 @@ namespace EpicRPGBot.UI
             ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, workRemaining, farmRemaining, lootboxRemaining);
         }
 
-        private async Task OnTrackedTimerElapsedAsync(TrackedCommandKind kind)
-        {
-            await SendTrackedCommandAsync(kind, GetCommandText(kind));
-        }
-
         private void ApplyTrackedCooldownSnapshot(
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
@@ -180,121 +166,6 @@ namespace EpicRPGBot.UI
         private void ScheduleFromRemaining(TrackedCommandKind kind, TimeSpan? remaining)
         {
             _scheduler.Schedule(kind, remaining.HasValue && remaining.Value > TimeSpan.Zero ? remaining.Value : TimeSpan.Zero, _running);
-        }
-
-        private async Task SendTrackedCommandAsync(TrackedCommandKind kind, string command)
-        {
-            if (!_running)
-            {
-                return;
-            }
-
-            try
-            {
-                var sent = await SendRawWithGlobalCooldownAsync(command);
-                if (!sent)
-                {
-                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
-                    return;
-                }
-
-                _scheduler.RegisterPending(kind);
-                OnCommandSent?.Invoke(command);
-                await SafeDelay(2001);
-                await ProcessIncomingMessagesAsync();
-            }
-            catch
-            {
-                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
-            }
-        }
-
-        private async Task SendQueuedCooldownSnapshotAsync()
-        {
-            try
-            {
-                await _sendGate.WaitAsync();
-                try
-                {
-                    if (!_running || Interlocked.CompareExchange(ref _queuedCooldownSnapshot, 1, 1) != 1)
-                    {
-                        return;
-                    }
-
-                    await RespectMinimumCommandGapAsync();
-                    if (!_running)
-                    {
-                        return;
-                    }
-
-                    var ok = await _chatClient.SendMessageAsync("rpg cd");
-                    if (ok)
-                    {
-                        _lastCommandSentUtc = DateTime.UtcNow;
-                        OnCommandSent?.Invoke("rpg cd");
-                    }
-                }
-                finally
-                {
-                    _sendGate.Release();
-                }
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _queuedCooldownSnapshot, 0);
-            }
-        }
-
-        private async Task RespectMinimumCommandGapAsync()
-        {
-            var elapsed = DateTime.UtcNow - _lastCommandSentUtc;
-            if (elapsed < TimeSpan.FromMilliseconds(GlobalCommandGapMs))
-            {
-                await SafeDelay((int)Math.Ceiling((TimeSpan.FromMilliseconds(GlobalCommandGapMs) - elapsed).TotalMilliseconds));
-            }
-        }
-
-        private string GetCommandText(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Hunt: return _hunt;
-                case TrackedCommandKind.Adventure: return _adventure;
-                case TrackedCommandKind.Work: return _work;
-                case TrackedCommandKind.Farm: return _farm;
-                default: return _lootbox;
-            }
-        }
-
-        private async Task<bool> SendAndEmitAsync(string text)
-        {
-            var ok = await SendRawWithGlobalCooldownAsync(text);
-            if (ok)
-            {
-                OnCommandSent?.Invoke(text);
-            }
-
-            return ok;
-        }
-
-        private async Task<bool> SendRawWithGlobalCooldownAsync(string text)
-        {
-            await _sendGate.WaitAsync();
-            try
-            {
-                await RespectMinimumCommandGapAsync();
-                var ok = await _chatClient.SendMessageAsync(text);
-                if (ok)
-                {
-                    _lastCommandSentUtc = DateTime.UtcNow;
-                }
-
-                return ok;
-            }
-            finally
-            {
-                _sendGate.Release();
-            }
         }
 
         private async Task CheckLastMessageForEventsAsync()
@@ -340,6 +211,7 @@ namespace EpicRPGBot.UI
                 _previousMessageId = _lastMessageId;
                 _lastMessageId = snapshot.Id;
                 OnMessageSeen?.Invoke(snapshot);
+                _scheduler.HandleResponse(snapshot, _running);
                 EventCheck(snapshot.Text ?? string.Empty);
             }
         }

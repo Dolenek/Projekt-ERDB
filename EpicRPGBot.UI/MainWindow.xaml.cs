@@ -14,6 +14,7 @@ namespace EpicRPGBot.UI
         private readonly LastMessagesBuffer _last = new LastMessagesBuffer(5);
         private readonly IDiscordChatClient _botChatClient;
         private readonly IDiscordChatClient _playerChatClient;
+        private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly LocalSettingsStore _settingsStore;
         private readonly CooldownTracker _cooldownTracker;
         private readonly CooldownInitializationWorkflow _cooldownWorkflow;
@@ -36,6 +37,7 @@ namespace EpicRPGBot.UI
 
             _botChatClient = new DiscordChatClient(Web, "bot");
             _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
+            _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _settingsStore = new LocalSettingsStore();
             _cooldownTracker = new CooldownTracker(this);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsStore);

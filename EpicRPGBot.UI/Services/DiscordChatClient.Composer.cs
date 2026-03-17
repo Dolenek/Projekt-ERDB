@@ -1,47 +1,61 @@
 using System;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
 {
     public sealed partial class DiscordChatClient
     {
+        private const int OutgoingMessagePollAttempts = 20;
+        private const int OutgoingMessagePollDelayMs = 200;
+        private const int OutgoingMessageScanCount = 12;
+
         public async Task<bool> SendMessageAsync(string message)
+        {
+            return await SendMessageAndWaitForOutgoingAsync(message) != null;
+        }
+
+        public async Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message)
         {
             if (_web.CoreWebView2 == null)
             {
-                return false;
+                return null;
             }
 
             var latestBeforeSend = await GetLatestMessageAsync();
             if (!await FocusComposerAsync())
             {
-                return false;
+                return null;
             }
 
             var text = DiscordScriptParsing.EscapeMessage(message);
-            if (await SendWithDevToolsAsync(text) && await WaitForSendCompletionAsync(latestBeforeSend?.Id, message))
+            if (await SendWithDevToolsAsync(text))
             {
-                return true;
+                var registered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message);
+                if (registered != null)
+                {
+                    return registered;
+                }
             }
 
             await ClearComposerAsync();
             if (!await FocusComposerAsync())
             {
-                return false;
+                return null;
             }
 
             if (!await SendWithExecCommandFallbackAsync(text))
             {
-                return false;
+                return null;
             }
 
-            var completed = await WaitForSendCompletionAsync(latestBeforeSend?.Id, message);
-            if (!completed)
+            var fallbackRegistered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message);
+            if (fallbackRegistered == null)
             {
                 await ClearComposerAsync();
             }
 
-            return completed;
+            return fallbackRegistered;
         }
 
         private async Task<bool> FocusComposerAsync()
@@ -169,59 +183,93 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private async Task<bool> WaitForSendCompletionAsync(string previousMessageId, string originalMessage)
+        private async Task<DiscordMessageSnapshot> WaitForOutgoingMessageAsync(string previousMessageId, string originalMessage)
         {
-            for (var attempt = 0; attempt < 10; attempt++)
+            for (var attempt = 0; attempt < OutgoingMessagePollAttempts; attempt++)
             {
-                await Task.Delay(150);
-                var latest = await GetLatestMessageAsync();
-                if (latest != null &&
-                    !string.IsNullOrWhiteSpace(latest.Id) &&
-                    !string.Equals(latest.Id, previousMessageId, StringComparison.Ordinal) &&
-                    !string.IsNullOrWhiteSpace(originalMessage) &&
-                    latest.Text.IndexOf(originalMessage, StringComparison.OrdinalIgnoreCase) >= 0)
+                await Task.Delay(OutgoingMessagePollDelayMs);
+                var registered = await FindOutgoingMessageAfterAsync(previousMessageId, originalMessage);
+                if (registered != null)
                 {
-                    return true;
-                }
-
-                if (await IsComposerEmptyAsync())
-                {
-                    return true;
+                    return registered;
                 }
             }
 
-            return await IsComposerEmptyAsync();
+            return null;
         }
 
-        private async Task<bool> IsComposerEmptyAsync()
+        private async Task<DiscordMessageSnapshot> FindOutgoingMessageAfterAsync(
+            string previousMessageId,
+            string originalMessage)
         {
-            try
+            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(originalMessage))
             {
-                const string script = @"
-(() => {
-  let candidates = Array.from(document.querySelectorAll(
-    'div[role=""textbox""][data-slate-editor=""true""], ' +
-    'div[aria-label^=""Message""][role=""textbox""], ' +
-    'div[aria-label*=""Message""][role=""textbox""]'
-  ));
-  if (candidates.length === 0) {
-    candidates = Array.from(document.querySelectorAll('div[role=""textbox""], div[contenteditable=""true""]'));
-  }
-  if (candidates.length === 0) return true;
-  candidates.sort((a,b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-  const editor = candidates[candidates.length - 1];
-  if (!editor) return true;
-  const text = ((editor.innerText || editor.textContent || '').replace(/\u200B/g, '').trim());
-  return text.length === 0;
-})();
+                return null;
+            }
+
+            var escapedPreviousId = (previousMessageId ?? string.Empty)
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'");
+            var escapedMessage = originalMessage
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'");
+            var script = $@"
+(() => {{
+  const getAuthor = (item) => {{
+    const selectors = [
+      '[id^=""message-username-""]',
+      'h3 span[role=""button""]',
+      'h3 span[class*=""username""]',
+      'span[class*=""username""]'
+    ];
+    for (const selector of selectors) {{
+      const node = item.querySelector(selector);
+      const text = (node?.textContent || '').trim();
+      if (text) return text;
+    }}
+    return '';
+  }};
+  const previousId = '{escapedPreviousId}';
+  const target = '{escapedMessage}'.toLowerCase();
+  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]')).slice(-{OutgoingMessageScanCount});
+  let startIndex = 0;
+  if (previousId) {{
+    const foundIndex = items.findIndex(item => (item.id || '') === previousId);
+    if (foundIndex >= 0) startIndex = foundIndex + 1;
+  }}
+  for (let i = items.length - 1; i >= startIndex; i--) {{
+    const item = items[i];
+    const id = item.id || '';
+    if (!id || id === previousId) continue;
+    const author = getAuthor(item);
+    const text = item.innerText || '';
+    if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) continue;
+    if (text.toLowerCase().includes(target)) {{
+      return JSON.stringify({{ id, text, author }});
+    }}
+  }}
+  return JSON.stringify({{ id: '', text: '', author: '' }});
+}})();
 ";
 
-                var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                return string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                var payload = DiscordScriptParsing.UnquoteJson(json);
+                var id = DiscordScriptParsing.ExtractField(payload, "id");
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return null;
+                }
+
+                return new DiscordMessageSnapshot(
+                    id,
+                    DiscordScriptParsing.ExtractField(payload, "text"),
+                    DiscordScriptParsing.ExtractField(payload, "author"));
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 

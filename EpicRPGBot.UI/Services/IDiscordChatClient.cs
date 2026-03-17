@@ -14,6 +14,8 @@ namespace EpicRPGBot.UI.Services
         Task<string> GetLastMessageTextAsync();
         Task<DiscordMessageSnapshot> GetLatestMessageAsync();
         Task<IReadOnlyList<DiscordMessageSnapshot>> GetRecentMessagesAsync(int maxCount);
+        Task<bool> HasEpicReplyForCommandAfterMessageAsync(string anchorMessageId, string command);
+        Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message);
         Task<bool> SendMessageAsync(string message);
         Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId);
         Task<byte[]> CaptureMessageImagePngAsync(string messageId);

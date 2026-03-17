@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Threading;
 using EpicRPGBot.UI.Models;
 
@@ -11,24 +12,26 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed class CooldownTracker
     {
+        private static readonly Brush ReadyBrush = CreateBrush(0x24, 0x63, 0x3C);
+        private static readonly Brush AlternateReadyBrush = CreateBrush(0x2F, 0x7A, 0x4A);
         private static readonly string[] TrackedKeys = { "hunt", "adventure", "work", "farm", "lootbox" };
         private static readonly CooldownDefinition[] Definitions =
         {
-            new CooldownDefinition("daily", "DailyCdText", "daily"),
-            new CooldownDefinition("weekly", "WeeklyCdText", "weekly"),
-            new CooldownDefinition("lootbox", "LootboxCdText", "lootbox"),
-            new CooldownDefinition("card_hand", "CardHandCdText", "card hand"),
-            new CooldownDefinition("vote", "VoteCdText", "vote"),
-            new CooldownDefinition("hunt", "HuntCdText", "hunt"),
-            new CooldownDefinition("adventure", "AdventureCdText", "adventure"),
-            new CooldownDefinition("training", "TrainingCdText", "training"),
-            new CooldownDefinition("duel", "DuelCdText", "duel"),
-            new CooldownDefinition("quest", "QuestCdText", "quest", "epic quest"),
-            new CooldownDefinition("work", "WorkCdText", "chop", "fish", "pickup", "mine"),
-            new CooldownDefinition("farm", "FarmCdText", "farm"),
-            new CooldownDefinition("horse", "HorseCdText", "horse breeding", "horse race"),
-            new CooldownDefinition("arena", "ArenaCdText", "arena"),
-            new CooldownDefinition("dungeon", "DungeonCdText", "dungeon", "miniboss")
+            new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", "daily"),
+            new CooldownDefinition("weekly", "WeeklyCdRow", "WeeklyCdText", "weekly"),
+            new CooldownDefinition("lootbox", "LootboxCdRow", "LootboxCdText", "lootbox"),
+            new CooldownDefinition("card_hand", "CardHandCdRow", "CardHandCdText", "card hand"),
+            new CooldownDefinition("vote", "VoteCdRow", "VoteCdText", "vote"),
+            new CooldownDefinition("hunt", "HuntCdRow", "HuntCdText", "hunt"),
+            new CooldownDefinition("adventure", "AdventureCdRow", "AdventureCdText", "adventure"),
+            new CooldownDefinition("training", "TrainingCdRow", "TrainingCdText", "training"),
+            new CooldownDefinition("duel", "DuelCdRow", "DuelCdText", "duel"),
+            new CooldownDefinition("quest", "QuestCdRow", "QuestCdText", "quest", "epic quest"),
+            new CooldownDefinition("work", "WorkCdRow", "WorkCdText", "chop", "fish", "pickup", "mine"),
+            new CooldownDefinition("farm", "FarmCdRow", "FarmCdText", "farm"),
+            new CooldownDefinition("horse", "HorseCdRow", "HorseCdText", "horse breeding", "horse race"),
+            new CooldownDefinition("arena", "ArenaCdRow", "ArenaCdText", "arena"),
+            new CooldownDefinition("dungeon", "DungeonCdRow", "DungeonCdText", "dungeon", "miniboss")
         };
 
         private readonly Dictionary<string, CooldownEntry> _entries = new Dictionary<string, CooldownEntry>(StringComparer.OrdinalIgnoreCase);
@@ -39,10 +42,13 @@ namespace EpicRPGBot.UI.Services
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
 
-            foreach (var definition in Definitions)
+            for (var index = 0; index < Definitions.Length; index++)
             {
+                var definition = Definitions[index];
                 var label = root.FindName(definition.LabelName) as TextBlock;
-                _entries[definition.CanonicalKey] = new CooldownEntry(label);
+                var row = root.FindName(definition.RowName) as Border;
+                var readyBackground = index % 2 == 0 ? ReadyBrush : AlternateReadyBrush;
+                _entries[definition.CanonicalKey] = new CooldownEntry(label, row, readyBackground);
 
                 foreach (var alias in definition.Aliases)
                 {
@@ -96,7 +102,7 @@ namespace EpicRPGBot.UI.Services
                     if (_aliasMap.TryGetValue(normalized, out var canonical) && _entries.TryGetValue(canonical, out var entry))
                     {
                         entry.Remaining = duration.HasValue && duration.Value > TimeSpan.Zero ? duration : null;
-                        UpdateLabel(entry.Label, entry.Remaining);
+                        UpdateEntryVisual(entry);
                         changed = true;
                     }
                 }
@@ -130,7 +136,7 @@ namespace EpicRPGBot.UI.Services
             entry.Remaining = milliseconds > 0
                 ? TimeSpan.FromMilliseconds(milliseconds)
                 : (TimeSpan?)null;
-            UpdateLabel(entry.Label, entry.Remaining);
+            UpdateEntryVisual(entry);
         }
 
         public bool ApplyTimeCookieReduction(TimeSpan reduction)
@@ -150,7 +156,7 @@ namespace EpicRPGBot.UI.Services
 
                 var next = entry.Remaining.Value - reduction;
                 entry.Remaining = next > TimeSpan.Zero ? next : (TimeSpan?)null;
-                UpdateLabel(entry.Label, entry.Remaining);
+                UpdateEntryVisual(entry);
                 changed = true;
             }
 
@@ -168,7 +174,7 @@ namespace EpicRPGBot.UI.Services
 
                 var next = entry.Remaining.Value - TimeSpan.FromSeconds(1);
                 entry.Remaining = next > TimeSpan.Zero ? next : (TimeSpan?)null;
-                UpdateLabel(entry.Label, entry.Remaining);
+                UpdateEntryVisual(entry);
             }
         }
 
@@ -279,14 +285,29 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private static void UpdateLabel(TextBlock label, TimeSpan? remaining)
+        private static Brush CreateBrush(byte red, byte green, byte blue)
         {
-            if (label == null)
+            var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+            brush.Freeze();
+            return brush;
+        }
+
+        private static void UpdateEntryVisual(CooldownEntry entry)
+        {
+            if (entry == null)
             {
                 return;
             }
 
-            label.Text = remaining.HasValue ? FormatDuration(remaining.Value) : "Ready";
+            if (entry.Label != null)
+            {
+                entry.Label.Text = entry.Remaining.HasValue ? FormatDuration(entry.Remaining.Value) : "Ready";
+            }
+
+            if (entry.Row != null)
+            {
+                entry.Row.Background = entry.Remaining.HasValue ? Brushes.Transparent : entry.ReadyBackground;
+            }
         }
 
         private static string FormatDuration(TimeSpan duration)
@@ -301,12 +322,16 @@ namespace EpicRPGBot.UI.Services
 
         private sealed class CooldownEntry
         {
-            public CooldownEntry(TextBlock label)
+            public CooldownEntry(TextBlock label, Border row, Brush readyBackground)
             {
                 Label = label;
+                Row = row;
+                ReadyBackground = readyBackground;
             }
 
             public TextBlock Label { get; }
+            public Border Row { get; }
+            public Brush ReadyBackground { get; }
             public TimeSpan? Remaining { get; set; }
         }
     }

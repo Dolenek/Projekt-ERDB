@@ -1,15 +1,20 @@
 using System;
 using System.Text.RegularExpressions;
+using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
 {
     public sealed partial class TrackedCommandScheduler
     {
-        private static bool LooksLikeTrackedCommandResponse(string message)
+        private static bool LooksLikeTrackedCommandResponse(DiscordMessageSnapshot snapshot)
         {
+            var message = snapshot?.Text ?? string.Empty;
             if (string.IsNullOrWhiteSpace(message) || message.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                return false;
+                if (snapshot == null || snapshot.Author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    return false;
+                }
             }
 
             return message.IndexOf("EPIC GUARD", StringComparison.OrdinalIgnoreCase) < 0 &&

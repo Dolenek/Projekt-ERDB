@@ -23,7 +23,9 @@ Timer behavior:
 Command send behavior:
 - Commands are sent through the bot tab chat client.
 - All bot-originated sends share one global send lane with a 1-second gap between commands.
-- The chat client waits for Discord to submit or clear the composer before the next queued command can be sent.
+- `rpg ...` commands are not considered complete when the composer clears; the bot waits for the outgoing command to appear in chat and then for a newer reply authored by `EPIC RPG` before the next command can enter the lane.
+- Real command sends retry up to 3 times when outgoing registration or the EPIC RPG reply is missing, and later `rpg ...` commands stay blocked behind that retry loop.
+- Quick-time/event prompt answers and bot status/help text still use the fast path and do not wait for an EPIC RPG follow-up reply.
 - The right-side cooldown panel is also updated immediately when the bot sends hunt/adventure/work/farm/lootbox, without waiting for the next `rpg cd`.
 - When the UI parses a fresh `rpg cd` snapshot or a time-cookie reduction, the engine resyncs hunt/adventure/work/farm/lootbox timers from the tracked cooldown panel and clears stale pending replies.
 - Successful sends raise `OnCommandSent`, which is what drives the Console view and the hunt counter.

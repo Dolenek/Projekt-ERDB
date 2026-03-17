@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -12,6 +13,7 @@ namespace EpicRPGBot.UI.Services
         private const int BetweenCommandsMs = 3000;
 
         private readonly IDiscordChatClient _chatClient;
+        private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly CooldownTracker _tracker;
         private readonly LocalSettingsStore _store;
 
@@ -21,6 +23,7 @@ namespace EpicRPGBot.UI.Services
             LocalSettingsStore store)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
+            _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
             _tracker = tracker ?? throw new ArgumentNullException(nameof(tracker));
             _store = store ?? throw new ArgumentNullException(nameof(store));
         }
@@ -39,47 +42,82 @@ namespace EpicRPGBot.UI.Services
         {
             logInfo?.Invoke("Inicialize sequence started");
 
-            await InitializeOneAsync("hunt", "rpg hunt h", 61000, setHunt, logInfo);
-            await Task.Delay(BetweenCommandsMs);
+            var openingSnapshot = await CaptureOpeningSnapshotAsync(logInfo);
+            if (openingSnapshot == null)
+            {
+                logInfo?.Invoke("Inicialize aborted: failed to parse the opening 'rpg cd' snapshot.");
+                return;
+            }
 
-            await InitializeOneAsync("adventure", "rpg adv h", adventureDefaultMs, setAdventure, logInfo);
-            await Task.Delay(BetweenCommandsMs);
+            var steps = new[]
+            {
+                new InitializationStep("hunt", "rpg hunt h", 61000, setHunt),
+                new InitializationStep("adventure", "rpg adv h", adventureDefaultMs, setAdventure),
+                new InitializationStep("farm", "rpg farm", farmDefaultMs, setFarm),
+                new InitializationStep("work", "rpg chainsaw", workDefaultMs, setWork),
+                new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs, setLootbox)
+            };
 
-            await InitializeOneAsync("farm", "rpg farm", farmDefaultMs, setFarm, logInfo);
-            await Task.Delay(BetweenCommandsMs);
+            for (var i = 0; i < steps.Length; i++)
+            {
+                var step = steps[i];
+                if (HasRemainingCooldown(openingSnapshot, step.Canonical))
+                {
+                    logInfo?.Invoke($"Inicialize: {step.Canonical} skipped (already on cooldown in opening snapshot)");
+                    continue;
+                }
 
-            await InitializeOneAsync("work", "rpg chainsaw", workDefaultMs, setWork, logInfo);
-            await Task.Delay(BetweenCommandsMs);
-
-            await InitializeOneAsync("lootbox", "rpg buy ed lb", lootboxDefaultMs, setLootbox, logInfo);
+                var initialized = await InitializeOneAsync(step.Canonical, step.Action, step.DefaultMs, step.ApplyValue, logInfo);
+                if (initialized && i < steps.Length - 1)
+                {
+                    await Task.Delay(BetweenCommandsMs);
+                }
+            }
 
             logInfo?.Invoke("Inicialize sequence finished");
         }
 
-        private async Task InitializeOneAsync(string canonical, string action, int defaultMs, Action<int> applyValue, Action<string> logInfo)
+        private async Task<TrackedCooldownSnapshot> CaptureOpeningSnapshotAsync(Action<string> logInfo)
+        {
+            var result = await _confirmedCommandSender.SendAsync("rpg cd");
+            if (!result.IsConfirmed || !_tracker.ApplyMessage(result.ReplyMessage?.Text))
+            {
+                logInfo?.Invoke("Inicialize: opening 'rpg cd' snapshot was not usable.");
+                return null;
+            }
+
+            return _tracker.GetTrackedSnapshot();
+        }
+
+        private async Task<bool> InitializeOneAsync(string canonical, string action, int defaultMs, Action<int> applyValue, Action<string> logInfo)
         {
             logInfo?.Invoke($"Inicialize: {canonical} via '{action}'");
 
-            var actionSent = await _chatClient.SendMessageAsync(action);
-            if (!actionSent)
+            var actionResult = await _confirmedCommandSender.SendAsync(action);
+            if (!actionResult.IsConfirmed)
             {
-                logInfo?.Invoke($"Failed to send '{action}'");
+                logInfo?.Invoke($"Inicialize: failed to send '{action}'");
+                return false;
+            }
+
+            if (LooksLikeCooldownReply(actionResult.ReplyMessage?.Text))
+            {
+                logInfo?.Invoke($"Inicialize: {canonical} skipped (command reply reported an active cooldown)");
+                return false;
             }
 
             await Task.Delay(ActionDelayMs);
 
-            var cdSent = await _chatClient.SendMessageAsync("rpg cd");
-            if (!cdSent)
+            var cdResult = await _confirmedCommandSender.SendAsync("rpg cd");
+            if (!cdResult.IsConfirmed)
             {
-                logInfo?.Invoke("Failed to send 'rpg cd'");
+                logInfo?.Invoke("Inicialize: failed to refresh 'rpg cd' after action.");
+                return false;
             }
 
-            await Task.Delay(AfterCdDelayMs + ExtraLagMs);
-
-            var lastMessage = await _chatClient.GetLastMessageTextAsync();
-            if (!string.IsNullOrWhiteSpace(lastMessage))
+            if (!string.IsNullOrWhiteSpace(cdResult.ReplyMessage?.Text))
             {
-                _tracker.ApplyMessage(lastMessage);
+                _tracker.ApplyMessage(cdResult.ReplyMessage.Text);
             }
 
             var baseMs = defaultMs;
@@ -92,6 +130,41 @@ namespace EpicRPGBot.UI.Services
             _store.SetString($"{canonical}_ms", baseMs.ToString());
             applyValue?.Invoke(baseMs);
             logInfo?.Invoke($"Inicialize: {canonical} cooldown set to {baseMs} ms (saved)");
+            return true;
+        }
+
+        private static bool HasRemainingCooldown(TrackedCooldownSnapshot snapshot, string canonical)
+        {
+            var remaining = canonical == "hunt" ? snapshot.Hunt :
+                canonical == "adventure" ? snapshot.Adventure :
+                canonical == "work" ? snapshot.Work :
+                canonical == "farm" ? snapshot.Farm :
+                canonical == "lootbox" ? snapshot.Lootbox :
+                null;
+
+            return remaining.HasValue && remaining.Value > TimeSpan.Zero;
+        }
+
+        private static bool LooksLikeCooldownReply(string message)
+        {
+            return !string.IsNullOrWhiteSpace(message) &&
+                   message.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private sealed class InitializationStep
+        {
+            public InitializationStep(string canonical, string action, int defaultMs, Action<int> applyValue)
+            {
+                Canonical = canonical;
+                Action = action;
+                DefaultMs = defaultMs;
+                ApplyValue = applyValue;
+            }
+
+            public string Canonical { get; }
+            public string Action { get; }
+            public int DefaultMs { get; }
+            public Action<int> ApplyValue { get; }
         }
     }
 }

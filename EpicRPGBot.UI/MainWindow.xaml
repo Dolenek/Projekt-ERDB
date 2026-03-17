@@ -7,6 +7,14 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="EpicRPG Bot UI" Height="800" Width="1300" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style x:Key="CooldownRowBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="0,1,0,1"/>
+        </Style>
+    </Window.Resources>
     <Grid Background="#1e1f22">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260"/>
@@ -107,14 +115,18 @@
         <Border Grid.Column="2" Background="#242529" BorderBrush="#2f3136" BorderThickness="1,0,0,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="12">
-                    <TextBlock Text="Settings" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <StackPanel Orientation="Vertical" Margin="0,4,0,0">
-                        <TextBlock Text="Discord Channel URL" Foreground="#aaa"/>
-                        <TextBox Name="ChannelUrlBox" Margin="0,4,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
-                        <CheckBox Name="UseAtMeFallback" Content="Fallback to @me if empty" Foreground="#ddd" IsChecked="True" Margin="0,0,0,12"/>
-                    </StackPanel>
+                    <TextBlock Text="Settings" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Discord Channel URL" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <CheckBox Name="UseAtMeFallback" Grid.Column="1" Content="Fallback to @me if empty" Foreground="#ddd" IsChecked="True" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBox Name="ChannelUrlBox" Margin="0,4,0,6" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
 
-                    <Separator Background="#2f3136" Margin="0,8,0,12"/>
+                    <Separator Background="#2f3136" Margin="0,8,0,10"/>
 
                     <TextBlock Text="Bot Parameters" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
                     <UniformGrid Columns="2" Rows="3" Margin="0,0,0,8">
@@ -144,12 +156,21 @@
                         </StackPanel>
                     </UniformGrid>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Name="StartBtn" Content="Start Bot" Margin="0,0,8,0" Padding="12,4" Click="StartBtn_Click"/>
-                        <Button Name="StopBtn" Content="Stop Bot" Padding="12,4" Click="StopBtn_Click"/>
-                        <Button Name="InitBtn" Content="Inicialize" Margin="8,0,0,0" Padding="12,4" Click="InitBtn_Click"/>
-                        <Button Name="RpgCdBtn" Content="rpg cd" Margin="8,0,0,0" Padding="12,4" Click="RpgCdBtn_Click"/>
-                    </StackPanel>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Name="StartBtn" Grid.Row="0" Grid.Column="0" Content="Start Bot" Margin="0,0,8,8" MinHeight="30" Padding="12,4" Click="StartBtn_Click"/>
+                        <Button Name="StopBtn" Grid.Row="0" Grid.Column="1" Content="Stop Bot" Margin="0,0,8,8" MinHeight="30" Padding="12,4" Click="StopBtn_Click"/>
+                        <Button Name="InitBtn" Grid.Row="0" Grid.Column="2" Content="Inicialize" Margin="0,0,0,8" MinHeight="30" Padding="12,4" Click="InitBtn_Click"/>
+                        <Button Name="RpgCdBtn" Grid.Row="1" Grid.Column="0" Content="rpg cd" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="RpgCdBtn_Click"/>
+                    </Grid>
 
                     <Separator Background="#2f3136" Margin="0,12,0,8"/>
 
@@ -160,146 +181,176 @@
                         <!-- Rewards -->
                         <TextBlock Text="Rewards" Foreground="#ccc" Margin="0,6,0,2"/>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="daily" Foreground="#ddd"/>
-                            <TextBlock Name="DailyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="DailyCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="daily" Foreground="#ddd"/>
+                                <TextBlock Name="DailyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="weekly" Foreground="#ddd"/>
-                            <TextBlock Name="WeeklyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="WeeklyCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="weekly" Foreground="#ddd"/>
+                                <TextBlock Name="WeeklyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="lootbox" Foreground="#ddd"/>
-                            <TextBlock Name="LootboxCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="LootboxCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="lootbox" Foreground="#ddd"/>
+                                <TextBlock Name="LootboxCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="card hand" Foreground="#ddd"/>
-                            <TextBlock Name="CardHandCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="CardHandCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="card hand" Foreground="#ddd"/>
+                                <TextBlock Name="CardHandCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="vote" Foreground="#ddd"/>
-                            <TextBlock Name="VoteCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="VoteCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="vote" Foreground="#ddd"/>
+                                <TextBlock Name="VoteCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
                         <!-- Experience -->
                         <TextBlock Text="Experience" Foreground="#ccc" Margin="0,6,0,2"/>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="hunt" Foreground="#ddd"/>
-                            <TextBlock Name="HuntCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="HuntCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="hunt" Foreground="#ddd"/>
+                                <TextBlock Name="HuntCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="adventure" Foreground="#ddd"/>
-                            <TextBlock Name="AdventureCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="AdventureCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="adventure" Foreground="#ddd"/>
+                                <TextBlock Name="AdventureCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="training" Foreground="#ddd"/>
-                            <TextBlock Name="TrainingCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="TrainingCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="training" Foreground="#ddd"/>
+                                <TextBlock Name="TrainingCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="duel" Foreground="#ddd"/>
-                            <TextBlock Name="DuelCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="DuelCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="duel" Foreground="#ddd"/>
+                                <TextBlock Name="DuelCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="quest | epic quest" Foreground="#ddd"/>
-                            <TextBlock Name="QuestCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="QuestCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="quest | epic quest" Foreground="#ddd"/>
+                                <TextBlock Name="QuestCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
                         <!-- Progress -->
                         <TextBlock Text="Progress" Foreground="#ccc" Margin="0,6,0,2"/>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="chop | fish | pickup | mine" Foreground="#ddd"/>
-                            <TextBlock Name="WorkCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="WorkCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="chop | fish | pickup | mine" Foreground="#ddd"/>
+                                <TextBlock Name="WorkCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="farm" Foreground="#ddd"/>
-                            <TextBlock Name="FarmCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="FarmCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="farm" Foreground="#ddd"/>
+                                <TextBlock Name="FarmCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="horse breeding | horse race" Foreground="#ddd"/>
-                            <TextBlock Name="HorseCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="HorseCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="horse breeding | horse race" Foreground="#ddd"/>
+                                <TextBlock Name="HorseCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="arena" Foreground="#ddd"/>
-                            <TextBlock Name="ArenaCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="ArenaCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="arena" Foreground="#ddd"/>
+                                <TextBlock Name="ArenaCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
-                        <Grid Margin="0,2,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="dungeon | miniboss" Foreground="#ddd"/>
-                            <TextBlock Name="DungeonCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Border Name="DungeonCdRow" Style="{StaticResource CooldownRowBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="dungeon | miniboss" Foreground="#ddd"/>
+                                <TextBlock Name="DungeonCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
 
                     </StackPanel>
                     

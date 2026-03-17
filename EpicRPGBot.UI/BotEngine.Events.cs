@@ -29,8 +29,6 @@ namespace EpicRPGBot.UI
                     : _previousMessageId);
             }
 
-            _scheduler.HandleResponse(msg, _running);
-
             if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _ = SendAndEmitAsync("I hear you: " + DateTime.Now);
