@@ -104,6 +104,12 @@ namespace EpicRPGBot.UI
             return ok;
         }
 
+        internal async Task WaitForSendLaneIdleAsync()
+        {
+            await _sendGate.WaitAsync();
+            _sendGate.Release();
+        }
+
         private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(string text, Action onOutgoingRegistered)
         {
             await _sendGate.WaitAsync();

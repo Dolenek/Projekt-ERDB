@@ -105,6 +105,12 @@ namespace EpicRPGBot.UI
             OnEngineStopped?.Invoke();
         }
 
+        public async Task StopAsync()
+        {
+            Stop();
+            await WaitForSendLaneIdleAsync();
+        }
+
         public bool QueueCooldownSnapshotRequest()
         {
             if (!_running || Interlocked.Exchange(ref _queuedCooldownSnapshot, 1) == 1)

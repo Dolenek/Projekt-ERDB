@@ -43,7 +43,7 @@ Recommended debugging flow:
 
 Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
-- `SettingsButton`, `ReloadButton`, `GoChannelButton`
+- `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
 - `HuntCountStat`, `AdventureCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
 - `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
@@ -53,6 +53,9 @@ Stable control IDs exposed by the UI:
 - `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
 - `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
 - `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
+- `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
+- `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`
+- `CraftStatusText`, `CraftStartButton`, `CraftCancelButton`
 
 Current assumptions:
 - The first version is for an interactive Windows desktop session only.

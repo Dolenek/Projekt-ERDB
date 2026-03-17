@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Threading.Tasks;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
@@ -33,22 +34,7 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            _engine = new BotEngine(
-                _botChatClient,
-                GetConfiguredArea(),
-                GetConfiguredHuntMs(),
-                GetConfiguredAdventureMs(),
-                GetConfiguredWorkMs(),
-                GetConfiguredFarmMs(),
-                GetConfiguredLootboxMs());
-
-            WireEngineEvents(_engine);
-
-            _engine.Start();
-            _log.Engine("Engine started (waiting for cooldown snapshot before scheduling commands)");
-
-            var sent = await _engine.SendImmediateAsync("rpg cd");
-            _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
+            await StartEngineAndRequestCooldownSnapshotAsync("Engine started (waiting for cooldown snapshot before scheduling commands)");
         }
 
         private void WireEngineEvents(BotEngine engine)
@@ -84,9 +70,13 @@ namespace EpicRPGBot.UI
             };
         }
 
-        private void StopBtn_Click(object sender, RoutedEventArgs e)
+        private async void StopBtn_Click(object sender, RoutedEventArgs e)
         {
-            _engine?.Stop();
+            if (_engine != null)
+            {
+                await _engine.StopAsync();
+            }
+
             _log.Engine("Engine stopped");
         }
 
@@ -123,6 +113,30 @@ namespace EpicRPGBot.UI
                     _cooldownTracker.SetCooldown("lootbox", GetConfiguredLootboxMs());
                     break;
             }
+        }
+
+        private async Task<bool> StartEngineAndRequestCooldownSnapshotAsync(string engineMessage)
+        {
+            _engine = CreateEngine();
+            WireEngineEvents(_engine);
+            _engine.Start();
+            _log.Engine(engineMessage);
+
+            var sent = await _engine.SendImmediateAsync("rpg cd");
+            _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
+            return sent;
+        }
+
+        private BotEngine CreateEngine()
+        {
+            return new BotEngine(
+                _botChatClient,
+                GetConfiguredArea(),
+                GetConfiguredHuntMs(),
+                GetConfiguredAdventureMs(),
+                GetConfiguredWorkMs(),
+                GetConfiguredFarmMs(),
+                GetConfiguredLootboxMs());
         }
 
     }

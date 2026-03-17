@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
@@ -21,6 +22,7 @@ namespace EpicRPGBot.UI
         private readonly CaptchaSelfTestRunner _captchaSelfTestRunner;
         private readonly DesktopAlertService _alertService;
         private readonly ChatMessagePoller _messagePoller;
+        private readonly LogCraftingWorkflow _logCraftingWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedMessageOrder = new Queue<string>();
 
@@ -38,6 +40,7 @@ namespace EpicRPGBot.UI
             _settingsService = new AppSettingsService(new LocalSettingsStore());
             _cooldownTracker = new CooldownTracker(this);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
+            _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);

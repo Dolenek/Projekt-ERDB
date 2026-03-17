@@ -24,3 +24,4 @@ Runtime effects:
 - Tracked command timers still re-arm from the EPIC RPG confirmation message, not from the local send timestamp.
 - For tracked hunt/adventure/work/farm/lootbox sends, the scheduler marks the command as pending as soon as the outgoing `rpg ...` message is visible.
 - If all confirmation attempts fail, the caller keeps its existing failure handling, such as retry scheduling for tracked commands.
+- Confirmed send results now retain the full EPIC RPG reply snapshot text, which higher-level workflows such as crafting use for reply parsing.

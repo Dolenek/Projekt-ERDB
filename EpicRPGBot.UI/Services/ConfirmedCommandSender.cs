@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 
@@ -24,7 +25,6 @@ namespace EpicRPGBot.UI.Services
         {
             DiscordMessageSnapshot lastOutgoing = null;
             var anchorMessageId = string.Empty;
-
             for (var attempt = 1; attempt <= MaxAttempts; attempt++)
             {
                 anchorMessageId = (await _chatClient.GetLatestMessageAsync())?.Id ?? string.Empty;
@@ -41,7 +41,7 @@ namespace EpicRPGBot.UI.Services
 
                 onOutgoingRegistered?.Invoke(lastOutgoing);
 
-                var reply = await WaitForEpicReplyAsync(anchorMessageId, command);
+                var reply = await WaitForEpicReplyAsync(anchorMessageId, lastOutgoing.Id, command);
                 if (reply != null)
                 {
                     return new ConfirmedCommandSendResult(lastOutgoing, reply, attempt);
@@ -62,7 +62,7 @@ namespace EpicRPGBot.UI.Services
                    message.TrimStart().StartsWith("rpg ", StringComparison.OrdinalIgnoreCase);
         }
 
-        private async Task<DiscordMessageSnapshot> WaitForEpicReplyAsync(string anchorMessageId, string command)
+        private async Task<DiscordMessageSnapshot> WaitForEpicReplyAsync(string anchorMessageId, string outgoingMessageId, string command)
         {
             var waitedMs = 0;
             while (waitedMs < ReplyTimeoutMs)
@@ -70,13 +70,109 @@ namespace EpicRPGBot.UI.Services
                 await Task.Delay(ReplyPollDelayMs);
                 waitedMs += ReplyPollDelayMs;
 
-                if (await _chatClient.HasEpicReplyForCommandAfterMessageAsync(anchorMessageId, command))
+                var reply = await _chatClient.GetEpicReplyAfterMessageAsync(outgoingMessageId);
+                if (reply != null)
                 {
-                    return new DiscordMessageSnapshot(string.Empty, string.Empty, "EPIC RPG");
+                    return reply;
+                }
+
+                reply = await FindReplyFromRecentMessagesAsync(anchorMessageId, outgoingMessageId, command);
+                if (reply != null)
+                {
+                    return reply;
                 }
             }
 
             return null;
+        }
+
+        private async Task<DiscordMessageSnapshot> FindReplyFromRecentMessagesAsync(
+            string anchorMessageId,
+            string outgoingMessageId,
+            string command)
+        {
+            var snapshots = await _chatClient.GetRecentMessagesAsync(20);
+            if (snapshots == null || snapshots.Count == 0)
+            {
+                return null;
+            }
+
+            var startIndex = 0;
+            if (!string.IsNullOrWhiteSpace(anchorMessageId))
+            {
+                var anchorIndex = snapshots.ToList().FindIndex(snapshot => string.Equals(snapshot.Id, anchorMessageId, StringComparison.Ordinal));
+                if (anchorIndex >= 0)
+                {
+                    startIndex = anchorIndex + 1;
+                }
+            }
+
+            var outgoingIndex = -1;
+            for (var i = startIndex; i < snapshots.Count; i++)
+            {
+                var snapshot = snapshots[i];
+                if (snapshot == null)
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(outgoingMessageId) &&
+                    string.Equals(snapshot.Id, outgoingMessageId, StringComparison.Ordinal))
+                {
+                    outgoingIndex = i;
+                    break;
+                }
+
+                if (LooksLikeOutgoingCommand(snapshot, command))
+                {
+                    outgoingIndex = i;
+                }
+            }
+
+            if (outgoingIndex < 0)
+            {
+                return null;
+            }
+
+            DiscordMessageSnapshot fallback = null;
+            for (var i = outgoingIndex + 1; i < snapshots.Count; i++)
+            {
+                var snapshot = snapshots[i];
+                if (snapshot == null || string.IsNullOrWhiteSpace(snapshot.Id))
+                {
+                    continue;
+                }
+
+                if (LooksLikeEpicReply(snapshot))
+                {
+                    return snapshot;
+                }
+
+                fallback ??= snapshot;
+            }
+
+            return fallback;
+        }
+
+        private static bool LooksLikeOutgoingCommand(DiscordMessageSnapshot snapshot, string command)
+        {
+            if (snapshot == null || string.IsNullOrWhiteSpace(command))
+            {
+                return false;
+            }
+
+            return (snapshot.Text ?? string.Empty).IndexOf(command, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool LooksLikeEpicReply(DiscordMessageSnapshot snapshot)
+        {
+            var author = snapshot?.Author ?? string.Empty;
+            var text = snapshot?.Text ?? string.Empty;
+            return author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("successfully crafted", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("You don't have enough items to craft this", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

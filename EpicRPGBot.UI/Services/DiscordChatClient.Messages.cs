@@ -122,11 +122,11 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        public async Task<bool> HasEpicReplyForCommandAfterMessageAsync(string anchorMessageId, string command)
+        public async Task<DiscordMessageSnapshot> GetEpicReplyAfterMessageAsync(string outgoingMessageId)
         {
-            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(command))
+            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(outgoingMessageId))
             {
-                return false;
+                return null;
             }
 
             var script = $@"
@@ -146,43 +146,62 @@ namespace EpicRPGBot.UI.Services
     return '';
   }};
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
-  const anchorId = '{(anchorMessageId ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'")}';
-  const target = '{command.Replace("\\", "\\\\").Replace("'", "\\'")}'.toLowerCase();
-  let startIndex = 0;
-  if (anchorId) {{
-    const foundIndex = items.findIndex(item => (item.id || '') === anchorId);
-    if (foundIndex >= 0) startIndex = foundIndex + 1;
+  const outgoingId = '{(outgoingMessageId ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'")}';
+  const outgoingIndex = items.findIndex(item => (item.id || '') === outgoingId);
+  if (outgoingIndex < 0) {{
+    return JSON.stringify({{ id: '', text: '', author: '' }});
   }}
-  let outgoingIndex = -1;
-  for (let i = items.length - 1; i >= startIndex; i--) {{
-    const author = getAuthor(items[i]);
-    const text = items[i].innerText || '';
-    if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) continue;
-    if (text.toLowerCase().includes(target)) {{
-      outgoingIndex = i;
-      break;
+  const looksLikeEpicReply = (author, text) => {{
+    const normalizedAuthor = (author || '').toLowerCase();
+    const normalizedText = (text || '').toLowerCase();
+    return normalizedAuthor.includes('epic rpg') ||
+      normalizedText.includes('epic rpg') ||
+      normalizedText.includes(""you don't have enough items to craft this"") ||
+      normalizedText.includes('successfully crafted') ||
+      normalizedText.includes('wait at least');
+  }};
+  let fallback = null;
+  for (let j = outgoingIndex + 1; j < items.length; j++) {{
+    const item = items[j];
+    const author = getAuthor(item);
+    const text = item.innerText || '';
+    if (looksLikeEpicReply(author, text)) {{
+      return JSON.stringify({{
+        id: item.id || '',
+        text,
+        author
+      }});
+    }}
+    if (!fallback) {{
+      fallback = JSON.stringify({{
+        id: item.id || '',
+        text,
+        author
+      }});
     }}
   }}
-  if (outgoingIndex < 0) return false;
-  for (let j = outgoingIndex + 1; j < items.length; j++) {{
-      const author = getAuthor(items[j]);
-      const text = items[j].innerText || '';
-      if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) {{
-        return true;
-      }}
-  }}
-  return false;
+  return fallback || JSON.stringify({{ id: '', text: '', author: '' }});
 }})();
 ";
 
             try
             {
-                var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                return string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+                var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                var payload = DiscordScriptParsing.UnquoteJson(json);
+                var id = DiscordScriptParsing.ExtractField(payload, "id");
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return null;
+                }
+
+                return new DiscordMessageSnapshot(
+                    id,
+                    DiscordScriptParsing.ExtractField(payload, "text"),
+                    DiscordScriptParsing.ExtractField(payload, "author"));
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 
