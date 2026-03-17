@@ -40,6 +40,8 @@ namespace EpicRPGBot.UI
                 _log.Info($"Time cookie detected: reduced tracked cooldowns by {(int)reduction.TotalMinutes} minute(s).");
                 SyncEngineFromTrackedCooldowns("Tracked cooldowns reduced from time cookie");
             }
+
+            TryUpdateConfiguredAreaFromProfile(snapshot.Text);
         }
 
         private bool TryRememberProcessedMessage(string messageId)
@@ -74,6 +76,24 @@ namespace EpicRPGBot.UI
 
             _engine.SyncTrackedCooldowns(snapshot.Hunt, snapshot.Adventure, snapshot.Work, snapshot.Farm, snapshot.Lootbox);
             _log.Engine(source + "; scheduling resynced from tracked cooldowns");
+        }
+
+        private void TryUpdateConfiguredAreaFromProfile(string message)
+        {
+            if (!ProfileMessageParser.TryParseMaxArea(message, out var maxArea))
+            {
+                return;
+            }
+
+            var currentSettings = GetCurrentSettings();
+            var currentArea = currentSettings.GetAreaOrDefault(10);
+            if (currentArea == maxArea)
+            {
+                return;
+            }
+
+            _settingsService.Save(currentSettings.WithArea(maxArea.ToString()));
+            _log.Info($"Profile detected: updated configured area to {maxArea} from profile max area.");
         }
     }
 }

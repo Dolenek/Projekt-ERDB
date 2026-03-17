@@ -1,0 +1,104 @@
+<Window x:Class="EpicRPGBot.UI.Dismantling.DismantleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dismantle"
+        Width="460"
+        Height="670"
+        MinWidth="460"
+        MinHeight="670"
+        Background="#1e1f22"
+        Foreground="#ddd"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Dismantle" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock Text="Enter a number or `all` in exactly one row. Dismantling cascades down to the base material." Foreground="#aaa" Margin="0,4,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Background="#242529"
+                BorderBrush="#2f3136"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12"
+                Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="140"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="ultra log" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Name="UltraAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="1" Text="hyper log" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Name="HyperAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="2" Text="mega log" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Name="MegaAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="3" Text="super log" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Name="SuperAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="4" Text="epic log" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Name="EpicAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="5" Text="epic fish" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Name="EpicFishAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="6" Text="golden fish" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Name="GoldenFishAmountBox" Margin="0,0,0,8" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+
+                <TextBlock Grid.Row="7" Text="banana" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBox Grid.Row="7" Grid.Column="1" Name="BananaAmountBox" Background="#1e1f22" Foreground="#ddd" BorderBrush="#3a3c42"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Background="#242529"
+                BorderBrush="#2f3136"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Status" FontSize="16" FontWeight="SemiBold"/>
+                <TextBox Grid.Row="1"
+                         Name="StatusBox"
+                         Margin="0,12,0,0"
+                         Background="#1e1f22"
+                         Foreground="#ddd"
+                         BorderBrush="#3a3c42"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         IsReadOnly="True"/>
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Name="DismantleBtn" Content="Dismantle" Width="88" Height="30" Margin="0,0,8,0" Click="DismantleBtn_Click"/>
+            <Button Name="CancelBtn" Content="Cancel" Width="88" Height="30" Click="CancelBtn_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

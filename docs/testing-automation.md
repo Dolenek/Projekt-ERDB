@@ -43,7 +43,7 @@ Recommended debugging flow:
 
 Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
-- `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
+- `DismantleButton`, `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
 - `HuntCountStat`, `AdventureCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
 - `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
@@ -56,6 +56,9 @@ Stable control IDs exposed by the UI:
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
 - `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`
 - `CraftStatusText`, `CraftStartButton`, `CraftCancelButton`
+- `DismantleWindow`, `DismantleUltraAmountInput`, `DismantleHyperAmountInput`, `DismantleMegaAmountInput`, `DismantleSuperAmountInput`, `DismantleEpicAmountInput`
+- `DismantleEpicFishAmountInput`, `DismantleGoldenFishAmountInput`, `DismantleBananaAmountInput`
+- `DismantleStatusText`, `DismantleStartButton`, `DismantleCancelButton`
 
 Current assumptions:
 - The first version is for an interactive Windows desktop session only.

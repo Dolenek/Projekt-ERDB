@@ -93,6 +93,7 @@
             <DockPanel Grid.Row="0" Background="#2b2d31" LastChildFill="False">
                 <TextBlock Text="Discord" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#ddd" FontWeight="SemiBold"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
+                    <Button Name="DismantleBtn" Content="Dismantle" Margin="8,6" Padding="12,4" Click="DismantleBtn_Click"/>
                     <Button Name="CraftingBtn" Content="Crafting" Margin="8,6" Padding="12,4" Click="CraftingBtn_Click"/>
                     <Button Name="SettingsBtn" Content="Settings" Margin="8,6" Padding="12,4" Click="SettingsBtn_Click"/>
                     <Button Name="ReloadBtn" Content="Reload" Margin="8,6" Padding="12,4" Click="ReloadBtn_Click"/>

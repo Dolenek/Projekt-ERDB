@@ -27,16 +27,16 @@ namespace EpicRPGBot.UI.Crafting
         public static CraftItemCatalog Default { get; } = new CraftItemCatalog(new[]
         {
             new CraftItemDefinition(CraftItemKey.WoodenLog, "wooden log", "wooden log", 0, null, 0),
-            new CraftItemDefinition(CraftItemKey.EpicLog, "epic log", "epic log", 1, CraftItemKey.WoodenLog, 25),
-            new CraftItemDefinition(CraftItemKey.SuperLog, "super log", "super log", 2, CraftItemKey.EpicLog, 10),
-            new CraftItemDefinition(CraftItemKey.MegaLog, "mega log", "mega log", 3, CraftItemKey.SuperLog, 10),
-            new CraftItemDefinition(CraftItemKey.HyperLog, "hyper log", "hyper log", 4, CraftItemKey.MegaLog, 10),
-            new CraftItemDefinition(CraftItemKey.UltraLog, "ultra log", "ultra log", 5, CraftItemKey.HyperLog, 10),
+            new CraftItemDefinition(CraftItemKey.EpicLog, "epic log", "epic log", 1, CraftItemKey.WoodenLog, 25, CraftItemKey.WoodenLog, 20),
+            new CraftItemDefinition(CraftItemKey.SuperLog, "super log", "super log", 2, CraftItemKey.EpicLog, 10, CraftItemKey.EpicLog, 8),
+            new CraftItemDefinition(CraftItemKey.MegaLog, "mega log", "mega log", 3, CraftItemKey.SuperLog, 10, CraftItemKey.SuperLog, 8),
+            new CraftItemDefinition(CraftItemKey.HyperLog, "hyper log", "hyper log", 4, CraftItemKey.MegaLog, 10, CraftItemKey.MegaLog, 8),
+            new CraftItemDefinition(CraftItemKey.UltraLog, "ultra log", "ultra log", 5, CraftItemKey.HyperLog, 10, CraftItemKey.HyperLog, 8),
             new CraftItemDefinition(CraftItemKey.Apple, "apple", "apple", 0, null, 0),
-            new CraftItemDefinition(CraftItemKey.Banana, "banana", "banana", 1, CraftItemKey.Apple, 15),
+            new CraftItemDefinition(CraftItemKey.Banana, "banana", "banana", 1, CraftItemKey.Apple, 15, CraftItemKey.Apple, 12),
             new CraftItemDefinition(CraftItemKey.NormieFish, "normie fish", "normie fish", 0, null, 0),
-            new CraftItemDefinition(CraftItemKey.GoldenFish, "golden fish", "golden fish", 1, CraftItemKey.NormieFish, 15),
-            new CraftItemDefinition(CraftItemKey.EpicFish, "epic fish", "epic fish", 2, CraftItemKey.GoldenFish, 100)
+            new CraftItemDefinition(CraftItemKey.GoldenFish, "golden fish", "golden fish", 1, CraftItemKey.NormieFish, 15, CraftItemKey.NormieFish, 12),
+            new CraftItemDefinition(CraftItemKey.EpicFish, "epic fish", "epic fish", 2, CraftItemKey.GoldenFish, 100, CraftItemKey.GoldenFish, 80)
         });
 
         public static CraftItemCatalog LogChain => Default;
@@ -48,6 +48,11 @@ namespace EpicRPGBot.UI.Crafting
         public CraftItemDefinition Get(CraftItemKey key)
         {
             return _definitions[key];
+        }
+
+        public bool TryGet(CraftItemKey key, out CraftItemDefinition definition)
+        {
+            return _definitions.TryGetValue(key, out definition);
         }
 
         public bool TryGetByDisplayName(string displayName, out CraftItemDefinition definition)

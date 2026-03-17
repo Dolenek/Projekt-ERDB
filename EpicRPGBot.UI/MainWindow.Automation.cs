@@ -21,6 +21,7 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(RunningExperienceText, "RunningExperienceStat");
             SetAutomationIdentity(RunningProgressText, "RunningProgressStat");
             SetAutomationIdentity(ConsoleList, "ConsoleList");
+            SetAutomationIdentity(DismantleBtn, "DismantleButton");
             SetAutomationIdentity(CraftingBtn, "CraftingButton");
             SetAutomationIdentity(SettingsBtn, "SettingsButton");
             SetAutomationIdentity(ReloadBtn, "ReloadButton");

@@ -18,6 +18,7 @@ Startup flow:
 8. Start polling the bot tab for the last visible message every 2 seconds.
 
 User-visible behaviors:
+- `Dismantle` opens a modal dismantling window for log, fish, and banana dismantle requests.
 - `Crafting` opens a modal crafting window for log, fish, and banana craft requests.
 - `Settings` opens a modal settings window with the editable Discord channel and bot-parameter fields.
 - `Reload` reloads the bot tab even if the player tab is currently selected.
@@ -28,7 +29,9 @@ User-visible behaviors:
 - `rpg cd` queues one cooldown refresh at the next legal bot send slot while the engine is running, or sends immediately through the bot tab when the engine is stopped.
 - The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd` directly below `Start Bot` and two reserved slots beside it for future buttons.
 - If the engine is running when crafting starts, the UI pauses the engine, waits for the current send lane to go idle, runs the craft job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
+- If the engine is running when dismantling starts, the UI pauses the engine, waits for the current send lane to go idle, runs the dismantle job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - Any change in the settings window is saved immediately to local settings.
+- When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - If the bot detects the EPIC GUARD captcha while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.
 - The last-message/cooldown pipeline deduplicates Discord messages by message id so snapshots and time-cookie reductions are not applied twice.
 
