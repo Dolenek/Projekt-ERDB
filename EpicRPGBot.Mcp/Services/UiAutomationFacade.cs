@@ -5,7 +5,7 @@ using System.Windows.Automation;
 
 namespace EpicRPGBot.Mcp.Services;
 
-public sealed class UiAutomationFacade
+public sealed partial class UiAutomationFacade
 {
     private readonly ArtifactStore _artifacts;
     private readonly AutomationElementInspector _inspector;

@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace EpicRPGBot.Mcp.Services;
 
-public sealed class DevToolsProtocolClient
+public sealed partial class DevToolsProtocolClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 

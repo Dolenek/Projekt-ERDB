@@ -4,6 +4,17 @@ namespace EpicRPGBot.Mcp.Services;
 
 public sealed class AutomationElementInspector
 {
+    public AutomationElement? TryFindControl(AutomationElement window, string automationId)
+    {
+        if (string.IsNullOrWhiteSpace(automationId))
+        {
+            return null;
+        }
+
+        var condition = new PropertyCondition(AutomationElement.AutomationIdProperty, automationId);
+        return window.FindFirst(TreeScope.Descendants, condition);
+    }
+
     public AutomationElement FindControl(AutomationElement window, string automationId)
     {
         if (string.IsNullOrWhiteSpace(automationId))
@@ -11,8 +22,7 @@ public sealed class AutomationElementInspector
             throw new ArgumentException("AutomationId is required.", nameof(automationId));
         }
 
-        var condition = new PropertyCondition(AutomationElement.AutomationIdProperty, automationId);
-        return window.FindFirst(TreeScope.Descendants, condition)
+        return TryFindControl(window, automationId)
             ?? throw new InvalidOperationException($"Could not find control '{automationId}'.");
     }
 
