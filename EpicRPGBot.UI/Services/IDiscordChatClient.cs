@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 
@@ -15,8 +16,8 @@ namespace EpicRPGBot.UI.Services
         Task<DiscordMessageSnapshot> GetLatestMessageAsync();
         Task<IReadOnlyList<DiscordMessageSnapshot>> GetRecentMessagesAsync(int maxCount);
         Task<DiscordMessageSnapshot> GetEpicReplyAfterMessageAsync(string outgoingMessageId);
-        Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message);
-        Task<bool> SendMessageAsync(string message);
+        Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message, CancellationToken cancellationToken = default);
+        Task<bool> SendMessageAsync(string message, CancellationToken cancellationToken = default);
         Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId);
         Task<byte[]> CaptureMessageImagePngAsync(string messageId);
     }

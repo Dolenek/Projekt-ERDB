@@ -33,11 +33,13 @@ namespace EpicRPGBot.UI.Services
             _store.SetString("channel_url", snapshot.ChannelUrl);
             _store.SetBool("use_at_me_fallback", snapshot.UseAtMeFallback);
             _store.SetString("area", snapshot.Area);
+            _store.SetBool("ascended", snapshot.Ascended);
             _store.SetString("hunt_ms", snapshot.HuntMs);
             _store.SetString("adventure_ms", snapshot.AdventureMs);
             _store.SetString("work_ms", snapshot.WorkMs);
             _store.SetString("farm_ms", snapshot.FarmMs);
             _store.SetString("lootbox_ms", snapshot.LootboxMs);
+            _store.SetString("work_commands", snapshot.WorkCommands);
 
             Current = snapshot;
             SettingsChanged?.Invoke(Current);
@@ -50,11 +52,13 @@ namespace EpicRPGBot.UI.Services
                 _store.GetString("channel_url", defaults.ChannelUrl),
                 _store.GetBool("use_at_me_fallback", defaults.UseAtMeFallback),
                 _store.GetString("area", defaults.Area),
+                _store.GetBool("ascended", defaults.Ascended),
                 _store.GetString("hunt_ms", defaults.HuntMs),
                 _store.GetString("adventure_ms", defaults.AdventureMs),
                 _store.GetString("work_ms", defaults.WorkMs),
                 _store.GetString("farm_ms", defaults.FarmMs),
-                _store.GetString("lootbox_ms", defaults.LootboxMs));
+                _store.GetString("lootbox_ms", defaults.LootboxMs),
+                _store.GetString("work_commands", defaults.WorkCommands));
         }
     }
 }

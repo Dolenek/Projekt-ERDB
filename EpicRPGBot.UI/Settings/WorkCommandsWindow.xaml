@@ -1,0 +1,63 @@
+<Window x:Class="EpicRPGBot.UI.Settings.WorkCommandsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Work Commands"
+        Width="360"
+        Height="520"
+        MinWidth="360"
+        MinHeight="420"
+        Background="#1e1f22"
+        Foreground="#ddd"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Work Commands" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock Text="Changes save automatically for areas 1-15." Foreground="#aaa" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Area, StringFormat=Area {0}}"
+                                       VerticalAlignment="Center"
+                                       Foreground="#ddd"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Tag="{Binding Area}"
+                                     Loaded="AreaCommandInput_Loaded"
+                                     LostFocus="AreaCommandInput_LostFocus"
+                                     Background="#242529"
+                                     Foreground="#ddd"
+                                     BorderBrush="#3a3c42"
+                                     CaretBrush="#ddd"
+                                     Padding="6,4"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Button Grid.Row="2"
+                Name="CloseBtn"
+                Content="Close"
+                Width="88"
+                Height="30"
+                Margin="0,12,0,0"
+                HorizontalAlignment="Right"
+                Click="CloseBtn_Click"/>
+    </Grid>
+</Window>

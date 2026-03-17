@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 
@@ -10,12 +11,12 @@ namespace EpicRPGBot.UI.Services
         private const int OutgoingMessagePollDelayMs = 200;
         private const int OutgoingMessageScanCount = 12;
 
-        public async Task<bool> SendMessageAsync(string message)
+        public async Task<bool> SendMessageAsync(string message, CancellationToken cancellationToken = default)
         {
-            return await SendMessageAndWaitForOutgoingAsync(message) != null;
+            return await SendMessageAndWaitForOutgoingAsync(message, cancellationToken) != null;
         }
 
-        public async Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message)
+        public async Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message, CancellationToken cancellationToken = default)
         {
             if (_web.CoreWebView2 == null)
             {
@@ -23,7 +24,7 @@ namespace EpicRPGBot.UI.Services
             }
 
             var latestBeforeSend = await GetLatestMessageAsync();
-            if (!await FocusComposerAsync())
+            if (!await FocusComposerAsync(cancellationToken))
             {
                 return null;
             }
@@ -31,7 +32,7 @@ namespace EpicRPGBot.UI.Services
             var text = DiscordScriptParsing.EscapeMessage(message);
             if (await SendWithDevToolsAsync(text))
             {
-                var registered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message);
+                var registered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message, cancellationToken);
                 if (registered != null)
                 {
                     return registered;
@@ -39,7 +40,7 @@ namespace EpicRPGBot.UI.Services
             }
 
             await ClearComposerAsync();
-            if (!await FocusComposerAsync())
+            if (!await FocusComposerAsync(cancellationToken))
             {
                 return null;
             }
@@ -49,7 +50,7 @@ namespace EpicRPGBot.UI.Services
                 return null;
             }
 
-            var fallbackRegistered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message);
+            var fallbackRegistered = await WaitForOutgoingMessageAsync(latestBeforeSend?.Id, message, cancellationToken);
             if (fallbackRegistered == null)
             {
                 await ClearComposerAsync();
@@ -58,7 +59,7 @@ namespace EpicRPGBot.UI.Services
             return fallbackRegistered;
         }
 
-        private async Task<bool> FocusComposerAsync()
+        private async Task<bool> FocusComposerAsync(CancellationToken cancellationToken)
         {
             if (_web.CoreWebView2 == null)
             {
@@ -100,13 +101,14 @@ namespace EpicRPGBot.UI.Services
 
             for (var i = 0; i < 10; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var focused = await _web.CoreWebView2.ExecuteScriptAsync(script);
                 if (string.Equals(focused?.Trim(), "true", StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
 
-                await Task.Delay(500);
+                await Task.Delay(500, cancellationToken);
             }
 
             return false;
@@ -183,11 +185,14 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private async Task<DiscordMessageSnapshot> WaitForOutgoingMessageAsync(string previousMessageId, string originalMessage)
+        private async Task<DiscordMessageSnapshot> WaitForOutgoingMessageAsync(
+            string previousMessageId,
+            string originalMessage,
+            CancellationToken cancellationToken)
         {
             for (var attempt = 0; attempt < OutgoingMessagePollAttempts; attempt++)
             {
-                await Task.Delay(OutgoingMessagePollDelayMs);
+                await Task.Delay(OutgoingMessagePollDelayMs, cancellationToken);
                 var registered = await FindOutgoingMessageAfterAsync(previousMessageId, originalMessage);
                 if (registered != null)
                 {

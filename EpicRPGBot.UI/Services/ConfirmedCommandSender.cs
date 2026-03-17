@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 
@@ -22,28 +23,30 @@ namespace EpicRPGBot.UI.Services
 
         public async Task<ConfirmedCommandSendResult> SendAsync(
             string command,
-            Action<DiscordMessageSnapshot> onOutgoingRegistered = null)
+            Action<DiscordMessageSnapshot> onOutgoingRegistered = null,
+            CancellationToken cancellationToken = default)
         {
             DiscordMessageSnapshot lastOutgoing = null;
             var anchorMessageId = string.Empty;
             for (var attempt = 1; attempt <= MaxAttempts; attempt++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 anchorMessageId = (await _chatClient.GetLatestMessageAsync())?.Id ?? string.Empty;
-                lastOutgoing = await _chatClient.SendMessageAndWaitForOutgoingAsync(command);
+                lastOutgoing = await _chatClient.SendMessageAndWaitForOutgoingAsync(command, cancellationToken);
                 if (lastOutgoing == null)
                 {
                     if (attempt < MaxAttempts)
                     {
-                        await Task.Delay(RetryDelayMs);
+                        await Task.Delay(RetryDelayMs, cancellationToken);
                     }
 
                     continue;
                 }
 
                 onOutgoingRegistered?.Invoke(lastOutgoing);
-                await Task.Delay(PostOutgoingRegistrationDelayMs);
+                await Task.Delay(PostOutgoingRegistrationDelayMs, cancellationToken);
 
-                var reply = await WaitForEpicReplyAsync(anchorMessageId, lastOutgoing.Id, command);
+                var reply = await WaitForEpicReplyAsync(anchorMessageId, lastOutgoing.Id, command, cancellationToken);
                 if (reply != null)
                 {
                     return new ConfirmedCommandSendResult(lastOutgoing, reply, attempt);
@@ -51,7 +54,7 @@ namespace EpicRPGBot.UI.Services
 
                 if (attempt < MaxAttempts)
                 {
-                    await Task.Delay(RetryDelayMs);
+                    await Task.Delay(RetryDelayMs, cancellationToken);
                 }
             }
 
@@ -64,12 +67,16 @@ namespace EpicRPGBot.UI.Services
                    message.TrimStart().StartsWith("rpg ", StringComparison.OrdinalIgnoreCase);
         }
 
-        private async Task<DiscordMessageSnapshot> WaitForEpicReplyAsync(string anchorMessageId, string outgoingMessageId, string command)
+        private async Task<DiscordMessageSnapshot> WaitForEpicReplyAsync(
+            string anchorMessageId,
+            string outgoingMessageId,
+            string command,
+            CancellationToken cancellationToken)
         {
             var waitedMs = 0;
             while (waitedMs < ReplyTimeoutMs)
             {
-                await Task.Delay(ReplyPollDelayMs);
+                await Task.Delay(ReplyPollDelayMs, cancellationToken);
                 waitedMs += ReplyPollDelayMs;
 
                 var reply = await _chatClient.GetEpicReplyAfterMessageAsync(outgoingMessageId);

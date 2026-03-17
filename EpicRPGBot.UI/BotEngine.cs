@@ -18,13 +18,13 @@ namespace EpicRPGBot.UI
         private readonly DispatcherTimer _checkMessageTimer;
         private readonly TrackedCommandScheduler _scheduler;
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
-
-        private readonly int _area;
+        private readonly CancellationTokenSource _stopCancellation = new CancellationTokenSource();
         private readonly int _farmCooldown;
+        private readonly bool _farmEnabled;
 
         private string _hunt = "rpg hunt h";
         private string _adventure = "rpg adv h";
-        private string _work = "rpg chop";
+        private string _work;
         private string _farm = "rpg farm";
         private string _lootbox = "rpg buy ed lb";
         private string _lastMessageId = string.Empty;
@@ -35,29 +35,30 @@ namespace EpicRPGBot.UI
         private bool _awaitingStartupCooldownSnapshot;
         private DateTime _lastCommandSentUtc = DateTime.MinValue;
 
-        public BotEngine(WebView2 web, int area, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(new DiscordChatClient(web), area, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
+        public BotEngine(WebView2 web, string workCommand, bool farmEnabled, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
-        public BotEngine(WebView2 web, int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(new DiscordChatClient(web), area, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown)
+        public BotEngine(WebView2 web, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
-        public BotEngine(IDiscordChatClient chatClient, int area, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(chatClient, area, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
+        public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+            : this(chatClient, workCommand, farmEnabled, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
-        public BotEngine(IDiscordChatClient chatClient, int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+        public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _captchaSolver = new CaptchaSolverService(_chatClient);
             _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
-            _area = area;
+            _work = NormalizeWorkCommand(workCommand);
             _farmCooldown = farmCooldown;
-            _scheduler = new TrackedCommandScheduler(area, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
+            _farmEnabled = farmEnabled;
+            _scheduler = new TrackedCommandScheduler(farmEnabled, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
             _checkMessageTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(2)
@@ -71,6 +72,7 @@ namespace EpicRPGBot.UI
         public event Action OnEngineStarted;
         public event Action OnEngineStopped;
         public event Action<string> OnCommandSent;
+        public event Action<string, DiscordMessageSnapshot> OnCommandConfirmed;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
         public event Action<string> OnCaptchaDetected;
         public event Action<string> OnSolverInfo;
@@ -83,7 +85,6 @@ namespace EpicRPGBot.UI
             }
 
             _running = true;
-            _work = ResolveWorkCommand(_area);
             _awaitingStartupCooldownSnapshot = true;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
@@ -99,6 +100,7 @@ namespace EpicRPGBot.UI
             _running = false;
             _queuedCooldownSnapshot = 0;
             _awaitingStartupCooldownSnapshot = false;
+            _stopCancellation.Cancel();
             _scheduler.StopAll();
             _scheduler.ClearPending();
             _checkMessageTimer.Stop();
@@ -220,6 +222,11 @@ namespace EpicRPGBot.UI
                 _scheduler.HandleResponse(snapshot, _running);
                 EventCheck(snapshot.Text ?? string.Empty);
             }
+        }
+
+        private static string NormalizeWorkCommand(string workCommand)
+        {
+            return string.IsNullOrWhiteSpace(workCommand) ? "rpg chop" : workCommand.Trim();
         }
     }
 }

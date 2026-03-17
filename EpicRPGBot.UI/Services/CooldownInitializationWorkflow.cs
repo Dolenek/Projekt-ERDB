@@ -36,6 +36,9 @@ namespace EpicRPGBot.UI.Services
             int lootboxDefaultMs)
         {
             logInfo?.Invoke("Inicialize sequence started");
+            var currentSettings = _settingsService.Current;
+            var configuredArea = currentSettings.GetAreaOrDefault(10);
+            var workAction = currentSettings.ResolveWorkCommandForArea(configuredArea);
 
             var openingSnapshot = await CaptureOpeningSnapshotAsync(logInfo);
             if (openingSnapshot == null)
@@ -49,7 +52,7 @@ namespace EpicRPGBot.UI.Services
                 new InitializationStep("hunt", "rpg hunt h", 61000),
                 new InitializationStep("adventure", "rpg adv h", adventureDefaultMs),
                 new InitializationStep("farm", "rpg farm", farmDefaultMs),
-                new InitializationStep("work", "rpg chainsaw", workDefaultMs),
+                new InitializationStep("work", workAction, workDefaultMs),
                 new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs)
             };
 

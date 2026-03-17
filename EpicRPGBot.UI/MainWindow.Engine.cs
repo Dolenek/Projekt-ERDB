@@ -44,8 +44,15 @@ namespace EpicRPGBot.UI
                 UiDispatcher.OnUI(() =>
                 {
                     _log.Command($"Message ({command}) sent");
-                    ApplySentCommandCooldown(command);
                     TrackSentCommandStats(command);
+                });
+            };
+
+            engine.OnCommandConfirmed += (command, replySnapshot) =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    ApplyConfirmedCommandCooldown(command);
                 });
             };
 
@@ -93,7 +100,7 @@ namespace EpicRPGBot.UI
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
         }
 
-        private void ApplySentCommandCooldown(string command)
+        private void ApplyConfirmedCommandCooldown(string command)
         {
             switch (GetTrackedCommandKey(command))
             {
@@ -131,7 +138,8 @@ namespace EpicRPGBot.UI
         {
             return new BotEngine(
                 _botChatClient,
-                GetConfiguredArea(),
+                GetConfiguredWorkCommand(),
+                IsFarmAllowedForConfiguredArea(),
                 GetConfiguredHuntMs(),
                 GetConfiguredAdventureMs(),
                 GetConfiguredWorkMs(),

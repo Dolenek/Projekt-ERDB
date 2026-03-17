@@ -16,6 +16,18 @@ namespace EpicRPGBot.UI
             return GetCurrentSettings().GetAreaOrDefault(10);
         }
 
+        private string GetConfiguredWorkCommand()
+        {
+            var settings = GetCurrentSettings();
+            return settings.ResolveWorkCommandForArea(settings.GetAreaOrDefault(10));
+        }
+
+        private bool IsFarmAllowedForConfiguredArea()
+        {
+            var settings = GetCurrentSettings();
+            return settings.IsFarmAllowed(10);
+        }
+
         private int GetConfiguredHuntMs()
         {
             return GetCurrentSettings().GetHuntMsOrDefault(61000);

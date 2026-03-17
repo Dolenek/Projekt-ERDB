@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Services;
 
@@ -190,18 +191,9 @@ namespace EpicRPGBot.UI
         {
             OnSolverInfo?.Invoke(info);
         }
-
-        private static string ResolveWorkCommand(int area)
+        private static Task SafeDelay(int milliseconds, CancellationToken cancellationToken)
         {
-            if (area >= 3 && area <= 5) return "rpg axe";
-            if (area >= 6 && area <= 8) return "rpg bowsaw";
-            if (area >= 9 && area <= 13) return "rpg chainsaw";
-            return "rpg chop";
-        }
-
-        private static Task SafeDelay(int milliseconds)
-        {
-            return Task.Delay(milliseconds);
+            return Task.Delay(milliseconds, cancellationToken);
         }
     }
 }

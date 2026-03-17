@@ -31,7 +31,7 @@ namespace EpicRPGBot.UI.Services
             public DateTime SentAtUtc { get; }
         }
 
-        private readonly int _area;
+        private readonly bool _farmEnabled;
         private readonly int _huntCooldown;
         private readonly int _adventureCooldown;
         private readonly int _workCooldown;
@@ -55,11 +55,11 @@ namespace EpicRPGBot.UI.Services
         private TimeSpan? _pausedFarmDelay;
         private TimeSpan? _pausedLootboxDelay;
 
-        public TrackedCommandScheduler(int area, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
+        public TrackedCommandScheduler(bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
         {
             if (onTimerElapsed == null) throw new ArgumentNullException(nameof(onTimerElapsed));
 
-            _area = area;
+            _farmEnabled = farmEnabled;
             _huntCooldown = huntCooldown;
             _adventureCooldown = adventureCooldown;
             _workCooldown = workCooldown;
@@ -86,7 +86,7 @@ namespace EpicRPGBot.UI.Services
 
         public void Schedule(TrackedCommandKind kind, TimeSpan delay, bool isRunning)
         {
-            if (!isRunning || (kind == TrackedCommandKind.Farm && _area < 4))
+            if (!isRunning || (kind == TrackedCommandKind.Farm && !_farmEnabled))
             {
                 return;
             }

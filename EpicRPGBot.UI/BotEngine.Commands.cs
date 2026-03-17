@@ -41,12 +41,18 @@ namespace EpicRPGBot.UI
                 }
 
                 _scheduler.ClearPending(kind);
-                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
+                if (_running)
+                {
+                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
+                }
             }
             catch
             {
                 _scheduler.ClearPending(kind);
-                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
+                if (_running)
+                {
+                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
+                }
             }
         }
 
@@ -72,7 +78,9 @@ namespace EpicRPGBot.UI
             var elapsed = DateTime.UtcNow - _lastCommandSentUtc;
             if (elapsed < TimeSpan.FromMilliseconds(GlobalCommandGapMs))
             {
-                await SafeDelay((int)Math.Ceiling((TimeSpan.FromMilliseconds(GlobalCommandGapMs) - elapsed).TotalMilliseconds));
+                await SafeDelay(
+                    (int)Math.Ceiling((TimeSpan.FromMilliseconds(GlobalCommandGapMs) - elapsed).TotalMilliseconds),
+                    _stopCancellation.Token);
             }
         }
 
@@ -112,7 +120,15 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(string text, Action onOutgoingRegistered)
         {
-            await _sendGate.WaitAsync();
+            try
+            {
+                await _sendGate.WaitAsync(_stopCancellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+
             try
             {
                 await RespectMinimumCommandGapAsync();
@@ -123,14 +139,20 @@ namespace EpicRPGBot.UI
                     {
                         _lastCommandSentUtc = DateTime.UtcNow;
                         onOutgoingRegistered?.Invoke();
-                    });
+                    },
+                    _stopCancellation.Token);
 
                 if (result.IsConfirmed)
                 {
+                    OnCommandConfirmed?.Invoke(text, result.ReplyMessage);
                     await ProcessIncomingMessagesAsync();
                     return true;
                 }
 
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
                 return false;
             }
             finally
@@ -141,17 +163,29 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> SendRawWithGlobalCooldownAsync(string text)
         {
-            await _sendGate.WaitAsync();
+            try
+            {
+                await _sendGate.WaitAsync(_stopCancellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+
             try
             {
                 await RespectMinimumCommandGapAsync();
-                var ok = await _chatClient.SendMessageAsync(text);
+                var ok = await _chatClient.SendMessageAsync(text, _stopCancellation.Token);
                 if (ok)
                 {
                     _lastCommandSentUtc = DateTime.UtcNow;
                 }
 
                 return ok;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             finally
             {

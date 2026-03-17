@@ -3,7 +3,7 @@
 `EpicRPGBot.UI/BotEngine.cs` is the runtime orchestrator for periodic command sending and chat-triggered reactions. In the two-tab shell it always targets the bot Discord tab, never the player tab.
 
 Engine lifecycle:
-- `Start()` sets the work command from the selected area, starts message polling, and waits for the startup `rpg cd` snapshot before scheduling hunt/adventure/work/farm/lootbox.
+- `Start()` uses the saved work command for the current area, starts message polling, and waits for the startup `rpg cd` snapshot before scheduling hunt/adventure/work/farm/lootbox.
 - `Stop()` stops hunt/adventure/work/farm/lootbox/message timers and marks the engine as stopped.
 - `SendImmediateAsync()` is used by the UI to send the initial `rpg cd` after startup polling is armed.
 - `QueueCooldownSnapshotRequest()` coalesces manual `rpg cd` refresh requests into one pending send while the engine is running.
@@ -15,8 +15,8 @@ Timer behavior:
 - A reply containing `wait at least ...` schedules a retry using the reported remaining time plus a small buffer.
 - The engine processes recent unseen Discord messages in order, so event posts are not skipped when a normal command result lands right after them.
 - Adventure uses `rpg adv h`.
-- Work still uses `rpg chop`, `rpg axe`, `rpg bowsaw`, or `rpg chainsaw` based on the selected area.
-- Farm still runs only when `area >= 4`.
+- Work uses the saved per-area command text for the current area.
+- Farm runs when the saved area is `>= 4`, or earlier if `Ascended` is enabled in settings.
 - Lootbox uses `rpg buy ed lb`.
 - Message timer polls the last Discord message every 2 seconds and runs the reaction rules.
 
@@ -26,9 +26,10 @@ Command send behavior:
 - `rpg ...` commands are not considered complete when the composer clears; the bot waits for the outgoing command to appear in chat and then for a newer reply authored by `EPIC RPG` before the next command can enter the lane.
 - Real command sends retry up to 3 times when outgoing registration or the EPIC RPG reply is missing, and later `rpg ...` commands stay blocked behind that retry loop.
 - Quick-time/event prompt answers and bot status/help text still use the fast path and do not wait for an EPIC RPG follow-up reply.
-- The right-side cooldown panel is also updated immediately when the bot sends hunt/adventure/work/farm/lootbox, without waiting for the next `rpg cd`.
+- The right-side cooldown panel starts hunt/adventure/work/farm/lootbox when the EPIC RPG confirmation reply is received, without waiting for the next `rpg cd`.
 - When the UI parses a fresh `rpg cd` snapshot or a time-cookie reduction, the engine resyncs hunt/adventure/work/farm/lootbox timers from the tracked cooldown panel and clears stale pending replies.
 - Successful sends raise `OnCommandSent`, which is what drives the Console view and the hunt counter.
+- Confirmed `rpg ...` replies raise `OnCommandConfirmed`, which is what drives tracked cooldown starts in the UI.
 
 Reaction behavior currently implemented:
 - `TEST` replies with a timestamp.

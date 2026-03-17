@@ -30,6 +30,8 @@ namespace EpicRPGBot.UI.Settings
             WorkCdBox.TextChanged += OnSettingsChanged;
             FarmCdBox.TextChanged += OnSettingsChanged;
             LootboxCdBox.TextChanged += OnSettingsChanged;
+            AscendedCheckBox.Checked += OnAscendedChanged;
+            AscendedCheckBox.Unchecked += OnAscendedChanged;
             UseAtMeFallback.Checked += OnFallbackChanged;
             UseAtMeFallback.Unchecked += OnFallbackChanged;
         }
@@ -41,6 +43,7 @@ namespace EpicRPGBot.UI.Settings
             ChannelUrlBox.Text = settings.ChannelUrl;
             UseAtMeFallback.IsChecked = settings.UseAtMeFallback;
             AreaBox.Text = settings.Area;
+            AscendedCheckBox.IsChecked = settings.Ascended;
             HuntCdBox.Text = settings.HuntMs;
             AdventureCdBox.Text = settings.AdventureMs;
             WorkCdBox.Text = settings.WorkMs;
@@ -60,6 +63,11 @@ namespace EpicRPGBot.UI.Settings
             PersistSettings();
         }
 
+        private void OnAscendedChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
         private void PersistSettings()
         {
             if (_loadingSettings)
@@ -71,16 +79,28 @@ namespace EpicRPGBot.UI.Settings
                 ChannelUrlBox.Text?.Trim() ?? string.Empty,
                 UseAtMeFallback.IsChecked == true,
                 AreaBox.Text?.Trim() ?? string.Empty,
+                AscendedCheckBox.IsChecked == true,
                 HuntCdBox.Text?.Trim() ?? string.Empty,
                 AdventureCdBox.Text?.Trim() ?? string.Empty,
                 WorkCdBox.Text?.Trim() ?? string.Empty,
                 FarmCdBox.Text?.Trim() ?? string.Empty,
-                LootboxCdBox.Text?.Trim() ?? string.Empty));
+                LootboxCdBox.Text?.Trim() ?? string.Empty,
+                _settingsService.Current.WorkCommands));
         }
 
         private void CloseBtn_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void WorkCommandsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var workCommandsWindow = new WorkCommandsWindow(_settingsService)
+            {
+                Owner = this
+            };
+
+            workCommandsWindow.ShowDialog();
         }
 
         private void ApplyAutomationSurface()
@@ -89,11 +109,13 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(ChannelUrlBox, "SettingsChannelUrlInput");
             SetAutomationIdentity(UseAtMeFallback, "SettingsUseAtMeFallback");
             SetAutomationIdentity(AreaBox, "SettingsAreaInput");
+            SetAutomationIdentity(AscendedCheckBox, "SettingsAscendedInput");
             SetAutomationIdentity(HuntCdBox, "SettingsHuntCooldownInput");
             SetAutomationIdentity(AdventureCdBox, "SettingsAdventureCooldownInput");
             SetAutomationIdentity(WorkCdBox, "SettingsWorkCooldownInput");
             SetAutomationIdentity(FarmCdBox, "SettingsFarmCooldownInput");
             SetAutomationIdentity(LootboxCdBox, "SettingsLootboxCooldownInput");
+            SetAutomationIdentity(WorkCommandsBtn, "SettingsWorkCommandsButton");
             SetAutomationIdentity(CloseBtn, "SettingsCloseButton");
         }
 

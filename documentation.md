@@ -8,6 +8,7 @@ Canonical pages:
 - [Dismantling](docs/dismantling.md)
 - [Area trading](docs/area-trading.md)
 - [Settings window](docs/settings-window.md)
+- [Work command settings](docs/work-command-settings.md)
 - [Automation engine](docs/automation-engine.md)
 - [Command send confirmation](docs/command-send-confirmation.md)
 - [Cooldown management](docs/cooldown-management.md)

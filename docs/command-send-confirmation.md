@@ -23,7 +23,9 @@ Retries and timing:
 
 Runtime effects:
 - Tracked command timers still re-arm from the EPIC RPG confirmation message, not from the local send timestamp.
+- The right-side tracked cooldown panel also starts hunt/adventure/work/farm/lootbox from confirmation receipt, not from outgoing registration.
 - For tracked hunt/adventure/work/farm/lootbox sends, the scheduler marks the command as pending as soon as the outgoing `rpg ...` message is visible.
 - If all confirmation attempts fail, the caller keeps its existing failure handling, such as retry scheduling for tracked commands.
 - Confirmed send results now retain the full EPIC RPG reply snapshot text, which higher-level workflows such as crafting, dismantling, and area trading use for reply parsing.
 - The fallback EPIC RPG reply detector recognizes profile, craft, dismantle, and trade-style replies when Discord does not expose the author or exact outgoing message id cleanly enough.
+- `Stop Bot` cancels in-flight send confirmation waits and retries instead of waiting for the full timeout budget.
