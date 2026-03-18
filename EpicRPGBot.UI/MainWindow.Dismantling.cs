@@ -11,6 +11,11 @@ namespace EpicRPGBot.UI
     {
         private void DismantleBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Dismantle"))
+            {
+                return;
+            }
+
             var dismantleWindow = new DismantleWindow(RunDismantlingJobAsync)
             {
                 Owner = this

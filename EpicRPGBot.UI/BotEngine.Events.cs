@@ -10,25 +10,7 @@ namespace EpicRPGBot.UI
         private void EventCheck(string message)
         {
             var msg = message ?? string.Empty;
-            const string guardAlt = "EPIC GUARD: stop there,";
-            const string guardClassic = "Select the item of the image above or respond with the item name";
-
-            if (msg.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                msg.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                (!string.IsNullOrEmpty(_previousMessageText) &&
-                 (_previousMessageText.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                  _previousMessageText.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0)))
-            {
-                var detectionInfo = msg.IndexOf(guardAlt, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                    msg.IndexOf(guardClassic, StringComparison.OrdinalIgnoreCase) >= 0
-                    ? "Captcha detected in latest message."
-                    : "Captcha detected in previous message.";
-                OnCaptchaDetected?.Invoke(detectionInfo);
-                ReportSolverInfo(detectionInfo);
-                _ = SolveCaptchaAsync(detectionInfo.StartsWith("Captcha detected in latest", StringComparison.Ordinal)
-                    ? _lastMessageId
-                    : _previousMessageId);
-            }
+            HandleGuardMessage(msg);
 
             if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -106,6 +88,42 @@ namespace EpicRPGBot.UI
             }
 
             _previousMessageText = msg;
+        }
+
+        private void HandleGuardMessage(string message)
+        {
+            if (GuardIncidentTracker.ContainsGuardClear(message))
+            {
+                var cleared = _guardIncidentTracker.ClearIfActive();
+                if (cleared != null)
+                {
+                    _captchaSolver.CancelCurrentSolve();
+                    _scheduler.ResumeAll(_running);
+                    OnGuardNotification?.Invoke(cleared);
+                    ReportSolverInfo(cleared.Message);
+                }
+
+                return;
+            }
+
+            var latestHasGuard = GuardIncidentTracker.ContainsGuardPrompt(message);
+            var previousHasGuard = GuardIncidentTracker.ContainsGuardPrompt(_previousMessageText);
+            if (!latestHasGuard && !previousHasGuard)
+            {
+                return;
+            }
+
+            var detectionInfo = latestHasGuard
+                ? "Captcha detected in latest message."
+                : "Captcha detected in previous message.";
+            var notification = _guardIncidentTracker.RegisterDetection(detectionInfo);
+            if (notification != null)
+            {
+                OnGuardNotification?.Invoke(notification);
+            }
+
+            ReportSolverInfo(detectionInfo);
+            _ = SolveCaptchaAsync(latestHasGuard ? _lastMessageId : _previousMessageId);
         }
 
         private void HandleChangeWork(string message)

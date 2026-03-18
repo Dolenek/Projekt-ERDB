@@ -10,6 +10,11 @@ namespace EpicRPGBot.UI
     {
         private async void TradeAreaBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Trade area"))
+            {
+                return;
+            }
+
             if (_isAreaTradeRunning)
             {
                 _log.Info("Area trade already running.");

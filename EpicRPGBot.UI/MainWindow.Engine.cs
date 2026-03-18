@@ -9,6 +9,11 @@ namespace EpicRPGBot.UI
     {
         private async void InitBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Initialize"))
+            {
+                return;
+            }
+
             if (!_botChatClient.IsReady)
             {
                 _log.Info("WebView2 not ready");
@@ -26,6 +31,11 @@ namespace EpicRPGBot.UI
 
         private async void StartBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Start Bot"))
+            {
+                return;
+            }
+
             _log.Info("Start button clicked");
 
             if (_engine != null && _engine.IsRunning)
@@ -56,13 +66,12 @@ namespace EpicRPGBot.UI
                 });
             };
 
-            engine.OnCaptchaDetected += info =>
+            engine.OnGuardNotification += notification =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    SelectBotTab();
-                    _log.Warning("[guard] " + info);
-                    _alertService.ShowCaptchaAlert(this);
+                    LogGuardNotification(notification);
+                    ShowGuardNotification(notification);
                 });
             };
 
@@ -79,6 +88,11 @@ namespace EpicRPGBot.UI
 
         private async void StopBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Stop Bot"))
+            {
+                return;
+            }
+
             if (_engine != null)
             {
                 await _engine.StopAsync();
@@ -89,6 +103,11 @@ namespace EpicRPGBot.UI
 
         private async void RpgCdBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("rpg cd"))
+            {
+                return;
+            }
+
             if (_engine != null && _engine.IsRunning)
             {
                 var queued = _engine.QueueCooldownSnapshotRequest();
@@ -132,6 +151,37 @@ namespace EpicRPGBot.UI
             var sent = await _engine.SendImmediateAsync("rpg cd");
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
             return sent;
+        }
+
+        private void LogGuardNotification(Models.GuardAlertNotification notification)
+        {
+            if (notification == null || string.IsNullOrWhiteSpace(notification.Message))
+            {
+                return;
+            }
+
+            if (notification.Kind == Models.GuardAlertKind.FirstDetected)
+            {
+                _log.Warning("[guard] " + notification.Message);
+                return;
+            }
+
+            _log.Info("[guard] " + notification.Message);
+        }
+
+        private void ShowGuardNotification(Models.GuardAlertNotification notification)
+        {
+            if (notification == null)
+            {
+                return;
+            }
+
+            if (notification.ShouldBringToFront)
+            {
+                SelectBotTab();
+            }
+
+            _alertService.ShowGuardAlert(this, notification);
         }
 
         private BotEngine CreateEngine()

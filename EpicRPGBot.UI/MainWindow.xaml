@@ -148,6 +148,7 @@
                         <Button Name="InitBtn" Grid.Row="0" Grid.Column="2" Content="Inicialize" Margin="0,0,0,8" MinHeight="30" Padding="12,4" Click="InitBtn_Click"/>
                         <Button Name="RpgCdBtn" Grid.Row="1" Grid.Column="0" Content="rpg cd" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="RpgCdBtn_Click"/>
                         <Button Name="TradeAreaBtn" Grid.Row="1" Grid.Column="1" Content="Trade area" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TradeAreaBtn_Click"/>
+                        <Button Name="WishingTokenBtn" Grid.Row="1" Grid.Column="2" Content="Wishing token" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="WishingTokenBtn_Click"/>
                     </Grid>
                 </StackPanel>
 

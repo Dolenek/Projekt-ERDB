@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI
         private readonly CaptchaSolverService _captchaSolver;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly DispatcherTimer _checkMessageTimer;
+        private readonly GuardIncidentTracker _guardIncidentTracker;
         private readonly TrackedCommandScheduler _scheduler;
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
         private readonly CancellationTokenSource _stopCancellation = new CancellationTokenSource();
@@ -55,6 +56,7 @@ namespace EpicRPGBot.UI
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _captchaSolver = new CaptchaSolverService(_chatClient);
             _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
+            _guardIncidentTracker = new GuardIncidentTracker();
             _work = NormalizeWorkCommand(workCommand);
             _farmCooldown = farmCooldown;
             _farmEnabled = farmEnabled;
@@ -73,8 +75,8 @@ namespace EpicRPGBot.UI
         public event Action OnEngineStopped;
         public event Action<string> OnCommandSent;
         public event Action<string, DiscordMessageSnapshot> OnCommandConfirmed;
+        public event Action<GuardAlertNotification> OnGuardNotification;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
-        public event Action<string> OnCaptchaDetected;
         public event Action<string> OnSolverInfo;
 
         public void Start()
@@ -85,6 +87,7 @@ namespace EpicRPGBot.UI
             }
 
             _running = true;
+            _guardIncidentTracker.Reset();
             _awaitingStartupCooldownSnapshot = true;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
@@ -100,6 +103,7 @@ namespace EpicRPGBot.UI
             _running = false;
             _queuedCooldownSnapshot = 0;
             _awaitingStartupCooldownSnapshot = false;
+            _guardIncidentTracker.Reset();
             _stopCancellation.Cancel();
             _scheduler.StopAll();
             _scheduler.ClearPending();

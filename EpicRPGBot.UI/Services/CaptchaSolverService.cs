@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EpicRPGBot.UI.Services
@@ -10,6 +11,7 @@ namespace EpicRPGBot.UI.Services
     {
         private readonly IDiscordChatClient _chatClient;
         private bool _captchaInProgress;
+        private CancellationTokenSource _captchaAttemptCancellation;
         private HttpClient _httpClient;
         private CaptchaClassifier _classifier;
 
@@ -33,9 +35,13 @@ namespace EpicRPGBot.UI.Services
             }
 
             _captchaInProgress = true;
+            using (var cancellation = new CancellationTokenSource())
             try
             {
+                _captchaAttemptCancellation = cancellation;
+                var cancellationToken = cancellation.Token;
                 pauseTimers?.Invoke();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var classifier = EnsureClassifier(reportInfo);
                 if (classifier == null)
@@ -51,11 +57,13 @@ namespace EpicRPGBot.UI.Services
                 }
 
                 var bytes = await _chatClient.CaptureMessageImagePngAsync(targetMessageId);
+                cancellationToken.ThrowIfCancellationRequested();
                 var url = string.Empty;
 
                 if (bytes == null || bytes.Length == 0)
                 {
                     url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(targetMessageId);
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 if ((bytes == null || bytes.Length == 0) && string.IsNullOrWhiteSpace(url))
@@ -65,9 +73,11 @@ namespace EpicRPGBot.UI.Services
                     {
                         reportInfo?.Invoke("Primary message had no image; trying adjacent message.");
                         bytes = await _chatClient.CaptureMessageImagePngAsync(adjacentMessageId);
+                        cancellationToken.ThrowIfCancellationRequested();
                         if (bytes == null || bytes.Length == 0)
                         {
                             url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(adjacentMessageId);
+                            cancellationToken.ThrowIfCancellationRequested();
                         }
                     }
                 }
@@ -84,6 +94,7 @@ namespace EpicRPGBot.UI.Services
                     try
                     {
                         bytes = await EnsureHttpClient().GetByteArrayAsync(url);
+                        cancellationToken.ThrowIfCancellationRequested();
                     }
                     catch (Exception ex)
                     {
@@ -107,7 +118,12 @@ namespace EpicRPGBot.UI.Services
                 }
 
                 reportInfo?.Invoke($"Classifier answer '{result.Label}' (dist={result.Distance}, method={result.Method}, {elapsedMs} ms). Sending.");
+                cancellationToken.ThrowIfCancellationRequested();
                 await sendAndEmitAsync(result.Label);
+            }
+            catch (OperationCanceledException)
+            {
+                reportInfo?.Invoke("Captcha solve cancelled after guard cleared.");
             }
             catch (Exception ex)
             {
@@ -115,8 +131,20 @@ namespace EpicRPGBot.UI.Services
             }
             finally
             {
+                _captchaAttemptCancellation = null;
                 resumeTimers?.Invoke();
                 _captchaInProgress = false;
+            }
+        }
+
+        public void CancelCurrentSolve()
+        {
+            try
+            {
+                _captchaAttemptCancellation?.Cancel();
+            }
+            catch
+            {
             }
         }
 

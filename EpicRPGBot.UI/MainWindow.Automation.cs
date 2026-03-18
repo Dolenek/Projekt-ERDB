@@ -37,6 +37,7 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(InitBtn, "InitializeButton");
             SetAutomationIdentity(RpgCdBtn, "RpgCdButton");
             SetAutomationIdentity(TradeAreaBtn, "TradeAreaButton");
+            SetAutomationIdentity(WishingTokenBtn, "WishingTokenButton");
             SetAutomationIdentity(CooldownsPanel, "CooldownsPanel");
 
             if (!Automation.AutomationRuntime.Current.IsEnabled)

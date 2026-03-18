@@ -18,6 +18,7 @@ namespace EpicRPGBot.UI.Services
         Task<DiscordMessageSnapshot> GetEpicReplyAfterMessageAsync(string outgoingMessageId);
         Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message, CancellationToken cancellationToken = default);
         Task<bool> SendMessageAsync(string message, CancellationToken cancellationToken = default);
+        Task<bool> ClickMessageButtonAsync(string messageId, int rowIndex, int columnIndex, CancellationToken cancellationToken = default);
         Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId);
         Task<byte[]> CaptureMessageImagePngAsync(string messageId);
     }

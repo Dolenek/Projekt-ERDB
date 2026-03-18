@@ -10,6 +10,11 @@ namespace EpicRPGBot.UI
     {
         private void CraftingBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (ShouldBlockForWishingToken("Crafting"))
+            {
+                return;
+            }
+
             var craftingWindow = new CraftingWindow(RunCraftingJobAsync)
             {
                 Owner = this

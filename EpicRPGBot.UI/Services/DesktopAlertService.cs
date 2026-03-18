@@ -4,6 +4,7 @@ using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using EpicRPGBot.UI.Models;
 using Forms = System.Windows.Forms;
 
 namespace EpicRPGBot.UI.Services
@@ -23,7 +24,30 @@ namespace EpicRPGBot.UI.Services
             };
         }
 
-        public void ShowCaptchaAlert(Window window)
+        public void ShowGuardAlert(Window window, GuardAlertNotification notification)
+        {
+            if (notification == null)
+            {
+                return;
+            }
+
+            if (notification.ShouldPlaySound)
+            {
+                PlayAlertSound();
+            }
+
+            if (notification.ShouldShowBalloon)
+            {
+                ShowBalloon(notification);
+            }
+
+            if (notification.ShouldBringToFront)
+            {
+                BringToFront(window);
+            }
+        }
+
+        private static void PlayAlertSound()
         {
             try
             {
@@ -33,19 +57,24 @@ namespace EpicRPGBot.UI.Services
             {
             }
 
+        }
+
+        private void ShowBalloon(GuardAlertNotification notification)
+        {
+            var title = notification.Kind == GuardAlertKind.Reminder
+                ? "EPIC GUARD still active"
+                : "EPIC GUARD detected";
+            var message = notification.Kind == GuardAlertKind.Reminder
+                ? "Captcha check is still active. Review the bot window when available."
+                : "Captcha check detected. Review the bot window now.";
+
             try
             {
-                _notifyIcon.ShowBalloonTip(
-                    5000,
-                    "EPIC GUARD detected",
-                    "Captcha check detected. Review the bot window now.",
-                    Forms.ToolTipIcon.Warning);
+                _notifyIcon.ShowBalloonTip(5000, title, message, Forms.ToolTipIcon.Warning);
             }
             catch
             {
             }
-
-            BringToFront(window);
         }
 
         public void Dispose()
