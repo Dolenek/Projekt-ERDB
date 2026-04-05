@@ -42,9 +42,13 @@ Local settings:
 Captcha `.env`:
 - Only captcha-related configuration stays in `.env` at the repository root.
 - Supported keys:
-  - `CAPTCHA_REFS_DIR`
-  - `CAPTCHA_HASH_THRESHOLD`
+  - `CAPTCHA_OPENAI_API_KEY`
+  - `CAPTCHA_OPENAI_MODEL`
+  - `CAPTCHA_OPENAI_RETRY_MODEL`
+  - `CAPTCHA_ITEM_NAMES_FILE`
+  - `CAPTCHA_API_TIMEOUT_SECONDS`
   - `CAPTCHA_SELFTEST`
+  - `CAPTCHA_SELFTEST_REPLAY_DIR`
 
 Notes:
 - `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.

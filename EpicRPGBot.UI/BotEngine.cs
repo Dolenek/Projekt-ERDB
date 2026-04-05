@@ -88,6 +88,7 @@ namespace EpicRPGBot.UI
 
             _running = true;
             _guardIncidentTracker.Reset();
+            ResetGuardMessageTracking();
             _awaitingStartupCooldownSnapshot = true;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
@@ -104,6 +105,7 @@ namespace EpicRPGBot.UI
             _queuedCooldownSnapshot = 0;
             _awaitingStartupCooldownSnapshot = false;
             _guardIncidentTracker.Reset();
+            ResetGuardMessageTracking();
             _stopCancellation.Cancel();
             _scheduler.StopAll();
             _scheduler.ClearPending();

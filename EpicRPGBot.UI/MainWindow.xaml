@@ -70,7 +70,9 @@
                                  Background="#1e1f22"
                                  Foreground="#ddd"
                                  BorderBrush="#3a3c42"
-                                 HorizontalContentAlignment="Stretch">
+                                 HorizontalContentAlignment="Stretch"
+                                 SelectionMode="Extended"
+                                 PreviewKeyDown="ConsoleList_PreviewKeyDown">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Path=., Mode=OneWay}"

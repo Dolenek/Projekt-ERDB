@@ -1,0 +1,92 @@
+[
+  {
+    "name": "apple",
+    "outline": "Round fruit with a broad lower body, slight top notch, and a short stem or small leaf bump at the top.",
+    "grayscale_cues": "Mostly a solid bulb shape with one small protrusion above the center; not sharply faceted and not strongly elongated.",
+    "disambiguation": "More rounded and fuller than ruby. Not crescent-shaped like banana and not narrow like mermaid hair or unicorn horn."
+  },
+  {
+    "name": "banana",
+    "outline": "Thin crescent with both ends tapered and one end slightly thicker than the other.",
+    "grayscale_cues": "A long curved arc with open space inside the curve and no central body mass.",
+    "disambiguation": "Unlike unicorn horn it is a smooth crescent instead of a straight tapering spike. Unlike mermaid hair it does not form a thick curling lock."
+  },
+  {
+    "name": "chip",
+    "outline": "Small tilted angular token with straight edges, corner cuts, and busy geometric interior blocks.",
+    "grayscale_cues": "Looks mechanical rather than organic: dense angular shapes, inner square-like regions, and irregular edge notches.",
+    "disambiguation": "Unlike coin or epic coin it is not circular. Unlike dragon scale it is boxier and more artificial."
+  },
+  {
+    "name": "coin",
+    "outline": "Simple round coin disc with a smooth outer rim.",
+    "grayscale_cues": "Near-perfect circle with a plain center and a single horizontal band or slot-like marking across the middle.",
+    "disambiguation": "Simpler and smoother than epic coin, which has extra rings, heavier ornament, and a more complex interior."
+  },
+  {
+    "name": "dragon scale",
+    "outline": "Curved shard or scale with one pointed tip and a wider rounded base.",
+    "grayscale_cues": "Asymmetric leaf-like piece with segmented ridges inside; neither circular nor bottle-shaped.",
+    "disambiguation": "Unlike chip it stays organic and curved instead of square and mechanical. Unlike wolf skin it is one compact scale, not a ragged hide."
+  },
+  {
+    "name": "epic coin",
+    "outline": "Round coin-like emblem with a thicker border and more ornate inner structure than a plain coin.",
+    "grayscale_cues": "Still roughly circular, but shows multiple concentric regions, heavier rim detail, and a busier center than coin.",
+    "disambiguation": "Choose this over coin when the icon is not a plain disc and has extra border complexity or segmented inner shapes."
+  },
+  {
+    "name": "epic fish",
+    "outline": "Long slim fish body with a pointed head and more aggressive fins.",
+    "grayscale_cues": "Most elongated of the fish icons, with a narrow body, sharper nose, and a more pronounced spiky tail or fins.",
+    "disambiguation": "Longer and more blade-like than normie fish. Less round and less fan-tailed than golden fish."
+  },
+  {
+    "name": "golden fish",
+    "outline": "Compact fish with a prominent fan-like tail and a visible eye on the body.",
+    "grayscale_cues": "Fish silhouette with a fuller tail spread and clearer eye/body separation than normie fish.",
+    "disambiguation": "Broader tail and more decorative profile than normie fish. Shorter and less sleek than epic fish."
+  },
+  {
+    "name": "life potion",
+    "outline": "Bottle with a narrow neck and stopper above a wide rounded body and flat base.",
+    "grayscale_cues": "Very recognizable bottle silhouette: thin vertical neck on top and large oval or flask body underneath.",
+    "disambiguation": "Unlike coin or apple it has a clear neck. Unlike zombie eye it is vertical and bottle-shaped, not horizontal and oval."
+  },
+  {
+    "name": "mermaid hair",
+    "outline": "Single flowing lock of hair that curls downward like a hooked wave or long comma.",
+    "grayscale_cues": "One thick curved strand with a sweeping curl; no forked end and no straight spike body.",
+    "disambiguation": "More like a curling lock than banana. Softer and more looped than unicorn horn, which is straighter and conical."
+  },
+  {
+    "name": "normie fish",
+    "outline": "Short simple fish with a compact oval body and small tail.",
+    "grayscale_cues": "Squat fish silhouette with a blunt body center and a modest fork or tail, without ornate fins.",
+    "disambiguation": "Simpler and rounder than both golden fish and epic fish. Choose this when the fish looks basic and compact."
+  },
+  {
+    "name": "ruby",
+    "outline": "Faceted gemstone with a symmetric diamond-like body and pointed top and bottom.",
+    "grayscale_cues": "Hard angular silhouette with flat facets and strong symmetry, not rounded like fruit or coins.",
+    "disambiguation": "Sharper and more geometric than apple. Not circular like coin and not bottle-shaped like life potion."
+  },
+  {
+    "name": "unicorn horn",
+    "outline": "Long tapering horn or spike with a thick base and narrow pointed tip.",
+    "grayscale_cues": "Diagonal conical shape with a straighter body than banana and a clearer point than mermaid hair.",
+    "disambiguation": "Pick this when the icon reads as a spear-like spike rather than a crescent or curled strand."
+  },
+  {
+    "name": "wolf skin",
+    "outline": "Irregular pelt or hide with ragged edges, a broad top, and torn lower flaps.",
+    "grayscale_cues": "Messy hide silhouette with multiple corners and cutouts, wider than tall and not a single clean geometric object.",
+    "disambiguation": "Unlike dragon scale it is a ragged skin, not one smooth shard. Unlike chip it is organic and uneven rather than angular and mechanical."
+  },
+  {
+    "name": "zombie eye",
+    "outline": "Horizontal oval eye shape with a dark central pupil or iris area.",
+    "grayscale_cues": "Wide eye silhouette with a clearly darker round center and a lighter outer ring; much wider than tall.",
+    "disambiguation": "Unlike coin it has a strong pupil-like center and an eye shape rather than a flat disc. Unlike life potion it is horizontal, not bottle-shaped."
+  }
+]

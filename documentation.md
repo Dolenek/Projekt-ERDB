@@ -14,6 +14,7 @@ Canonical pages:
 - [Cooldown management](docs/cooldown-management.md)
 - [Wishing token](docs/wishing-token.md)
 - [Captcha solver](docs/captcha-solver.md)
+- [Guard operations](docs/guard-operations.md)
 - [Testing automation](docs/testing-automation.md)
 
 Supporting references:

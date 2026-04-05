@@ -98,6 +98,7 @@ namespace EpicRPGBot.UI
                 if (cleared != null)
                 {
                     _captchaSolver.CancelCurrentSolve();
+                    CompleteGuardSolve(_activeGuardMessageId);
                     _scheduler.ResumeAll(_running);
                     OnGuardNotification?.Invoke(cleared);
                     ReportSolverInfo(cleared.Message);
@@ -113,6 +114,7 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            var targetMessageId = ResolveGuardTargetMessageId(latestHasGuard, previousHasGuard);
             var detectionInfo = latestHasGuard
                 ? "Captcha detected in latest message."
                 : "Captcha detected in previous message.";
@@ -123,7 +125,12 @@ namespace EpicRPGBot.UI
             }
 
             ReportSolverInfo(detectionInfo);
-            _ = SolveCaptchaAsync(latestHasGuard ? _lastMessageId : _previousMessageId);
+            if (!TryBeginGuardSolve(targetMessageId))
+            {
+                return;
+            }
+
+            _ = SolveCaptchaAsync(targetMessageId);
         }
 
         private void HandleChangeWork(string message)
@@ -193,16 +200,23 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private Task SolveCaptchaAsync(string targetMessageId)
+        private async Task SolveCaptchaAsync(string targetMessageId)
         {
-            return _captchaSolver.TrySolveAsync(
-                targetMessageId,
-                _lastMessageId,
-                _previousMessageId,
-                SendAndEmitAsync,
-                _scheduler.PauseAll,
-                () => _scheduler.ResumeAll(_running),
-                ReportSolverInfo);
+            try
+            {
+                await _captchaSolver.TrySolveAsync(
+                    targetMessageId,
+                    _lastMessageId,
+                    _previousMessageId,
+                    SendAndEmitAsync,
+                    _scheduler.PauseAll,
+                    () => _scheduler.ResumeAll(_running),
+                    ReportSolverInfo);
+            }
+            finally
+            {
+                CompleteGuardSolve(targetMessageId);
+            }
         }
 
         private void ReportSolverInfo(string info)

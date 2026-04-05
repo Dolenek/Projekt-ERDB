@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Captcha;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -13,12 +14,14 @@ namespace EpicRPGBot.UI.Services
         private bool _captchaInProgress;
         private CancellationTokenSource _captchaAttemptCancellation;
         private HttpClient _httpClient;
-        private CaptchaClassifier _classifier;
+        private ICaptchaAnswerProvider _answerProvider;
 
         public CaptchaSolverService(IDiscordChatClient chatClient)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
         }
+
+        public bool IsBusy => _captchaInProgress;
 
         public async Task TrySolveAsync(
             string targetMessageId,
@@ -31,6 +34,7 @@ namespace EpicRPGBot.UI.Services
         {
             if (_captchaInProgress)
             {
+                reportInfo?.Invoke("Solve already in progress; duplicate guard trigger ignored.");
                 return;
             }
 
@@ -40,13 +44,14 @@ namespace EpicRPGBot.UI.Services
             {
                 _captchaAttemptCancellation = cancellation;
                 var cancellationToken = cancellation.Token;
+                reportInfo?.Invoke($"Starting guard solve for message {targetMessageId}.");
                 pauseTimers?.Invoke();
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var classifier = EnsureClassifier(reportInfo);
-                if (classifier == null)
+                var provider = EnsureAnswerProvider(reportInfo);
+                if (provider == null)
                 {
-                    reportInfo?.Invoke("Solver unavailable (classifier init failed).");
+                    reportInfo?.Invoke("Solver unavailable (provider init failed).");
                     return;
                 }
 
@@ -108,18 +113,22 @@ namespace EpicRPGBot.UI.Services
                 }
 
                 var start = Stopwatch.GetTimestamp();
-                var result = classifier.Classify(bytes);
+                reportInfo?.Invoke("Submitting captcha image to the vision solver.");
+                var result = await provider.SolveAsync(bytes, cancellationToken);
                 var elapsedMs = (int)(1000.0 * (Stopwatch.GetTimestamp() - start) / Stopwatch.Frequency);
 
                 if (!result.IsMatch || string.IsNullOrWhiteSpace(result.Label))
                 {
-                    reportInfo?.Invoke($"Classifier uncertain; closest='{(string.IsNullOrWhiteSpace(result.Label) ? "<none>" : result.Label)}' (dist={result.Distance}, method={result.Method}, {elapsedMs} ms). Skipping.");
+                    reportInfo?.Invoke($"Solver uncertain via {result.Method} ({result.Detail}, {elapsedMs} ms). Skipping.");
                     return;
                 }
 
-                reportInfo?.Invoke($"Classifier answer '{result.Label}' (dist={result.Distance}, method={result.Method}, {elapsedMs} ms). Sending.");
+                reportInfo?.Invoke($"Solver answer '{result.Label}' via {result.Method} ({result.Detail}, {elapsedMs} ms). Sending.");
                 cancellationToken.ThrowIfCancellationRequested();
-                await sendAndEmitAsync(result.Label);
+                var sent = await sendAndEmitAsync(result.Label);
+                reportInfo?.Invoke(sent
+                    ? $"Captcha answer '{result.Label}' sent to chat."
+                    : $"Captcha answer '{result.Label}' could not be sent to chat.");
             }
             catch (OperationCanceledException)
             {
@@ -148,42 +157,26 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private CaptchaClassifier EnsureClassifier(Action<string> reportInfo)
+        private ICaptchaAnswerProvider EnsureAnswerProvider(Action<string> reportInfo)
         {
-            if (_classifier != null)
+            if (_answerProvider != null)
             {
-                return _classifier;
-            }
-
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var defaultRefs = Path.Combine(baseDir, "CaptchaRefs");
-            var refsDir = Env.Get("CAPTCHA_REFS_DIR", defaultRefs);
-            var threshold = 12;
-
-            try
-            {
-                var raw = Env.Get("CAPTCHA_HASH_THRESHOLD", null);
-                if (!string.IsNullOrWhiteSpace(raw) && int.TryParse(raw, out var parsed) && parsed > 0 && parsed <= 64)
-                {
-                    threshold = parsed;
-                }
-            }
-            catch
-            {
+                return _answerProvider;
             }
 
             try
             {
-                _classifier = new CaptchaClassifier(refsDir, threshold);
-                reportInfo?.Invoke($"Solver initialized (refs={refsDir}, threshold={threshold}).");
+                var settings = CaptchaSettings.LoadDefault();
+                _answerProvider = new CaptchaProviderFactory().Create(settings);
+                reportInfo?.Invoke("Solver initialized (" + _answerProvider.DescribeConfiguration() + ").");
             }
             catch (Exception ex)
             {
                 reportInfo?.Invoke($"Solver init failed: {ex.Message}");
-                _classifier = null;
+                _answerProvider = null;
             }
 
-            return _classifier;
+            return _answerProvider;
         }
 
         private HttpClient EnsureHttpClient()

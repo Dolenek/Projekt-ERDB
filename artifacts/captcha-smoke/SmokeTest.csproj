@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../EpicRPGBot.UI/Env.cs" Link="Env.cs" />
+    <Compile Include="../../EpicRPGBot.UI/Captcha/*.cs" Link="Captcha/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
