@@ -11,6 +11,7 @@ namespace EpicRPGBot.UI.Services
     public sealed class CaptchaSolverService
     {
         private readonly IDiscordChatClient _chatClient;
+        private readonly CaptchaDebugArtifactWriter _debugWriter = new CaptchaDebugArtifactWriter();
         private bool _captchaInProgress;
         private CancellationTokenSource _captchaAttemptCancellation;
         private HttpClient _httpClient;
@@ -61,67 +62,43 @@ namespace EpicRPGBot.UI.Services
                     return;
                 }
 
-                var imageMessageId = targetMessageId;
-                var bytes = await _chatClient.CaptureMessageImagePngAsync(targetMessageId);
-                cancellationToken.ThrowIfCancellationRequested();
-                var url = string.Empty;
-
-                if (bytes == null || bytes.Length == 0)
+                var adjacentMessageId = targetMessageId == lastMessageId ? previousMessageId : lastMessageId;
+                var capture = await TryLoadCaptchaImageAsync(targetMessageId, "selected", reportInfo, cancellationToken);
+                if (capture == null && !string.IsNullOrWhiteSpace(adjacentMessageId))
                 {
-                    url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(targetMessageId);
-                    cancellationToken.ThrowIfCancellationRequested();
+                    reportInfo?.Invoke("Primary message had no image; trying adjacent message.");
+                    capture = await TryLoadCaptchaImageAsync(adjacentMessageId, "adjacent", reportInfo, cancellationToken);
                 }
 
-                if ((bytes == null || bytes.Length == 0) && string.IsNullOrWhiteSpace(url))
-                {
-                    var adjacentMessageId = targetMessageId == lastMessageId ? previousMessageId : lastMessageId;
-                    if (!string.IsNullOrWhiteSpace(adjacentMessageId))
-                    {
-                        reportInfo?.Invoke("Primary message had no image; trying adjacent message.");
-                        imageMessageId = adjacentMessageId;
-                        bytes = await _chatClient.CaptureMessageImagePngAsync(adjacentMessageId);
-                        cancellationToken.ThrowIfCancellationRequested();
-                        if (bytes == null || bytes.Length == 0)
-                        {
-                            url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(adjacentMessageId);
-                            cancellationToken.ThrowIfCancellationRequested();
-                        }
-                    }
-                }
-
-                if ((bytes == null || bytes.Length == 0) && string.IsNullOrWhiteSpace(url))
+                if (capture == null || capture.Bytes == null || capture.Bytes.Length == 0)
                 {
                     reportInfo?.Invoke("Captcha image not found in selected/adjacent messages.");
                     return;
                 }
 
-                if (bytes == null || bytes.Length == 0)
+                var debugPath = _debugWriter.TryWriteCapture(capture.MessageId, capture.Source, capture.Url, capture.Bytes);
+                if (!string.IsNullOrWhiteSpace(debugPath))
                 {
-                    reportInfo?.Invoke($"Captcha image via URL: {url}");
-                    try
-                    {
-                        bytes = await EnsureHttpClient().GetByteArrayAsync(url);
-                        cancellationToken.ThrowIfCancellationRequested();
-                    }
-                    catch (Exception ex)
-                    {
-                        reportInfo?.Invoke($"Download failed: {ex.Message}");
-                        return;
-                    }
+                    reportInfo?.Invoke($"Captcha debug artifact saved: {debugPath}");
+                }
+
+                if (string.Equals(capture.Source, "message-url", StringComparison.Ordinal))
+                {
+                    reportInfo?.Invoke($"Captcha image via URL: {capture.Url}");
                 }
                 else
                 {
                     reportInfo?.Invoke("Captcha image captured via DevTools screenshot.");
                 }
 
-                var usedScreenshotSource = string.IsNullOrWhiteSpace(url);
                 var start = Stopwatch.GetTimestamp();
                 reportInfo?.Invoke("Submitting captcha image to the vision solver.");
-                var result = await provider.SolveAsync(bytes, cancellationToken);
+                var result = await provider.SolveAsync(capture.Bytes, cancellationToken);
 
-                if ((!result.IsMatch || string.IsNullOrWhiteSpace(result.Label)) && usedScreenshotSource)
+                if ((!result.IsMatch || string.IsNullOrWhiteSpace(result.Label)) &&
+                    string.Equals(capture.Source, "devtools-screenshot", StringComparison.Ordinal))
                 {
-                    var retriedFromUrl = await TrySolveFromUrlAsync(provider, imageMessageId, reportInfo, cancellationToken);
+                    var retriedFromUrl = await TrySolveFromUrlAsync(provider, capture.MessageId, reportInfo, cancellationToken);
                     if (retriedFromUrl != null)
                     {
                         result = retriedFromUrl;
@@ -207,6 +184,45 @@ namespace EpicRPGBot.UI.Services
             return _httpClient;
         }
 
+        private async Task<CaptchaImageLoadResult> TryLoadCaptchaImageAsync(
+            string messageId,
+            string label,
+            Action<string> reportInfo,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(messageId))
+            {
+                return null;
+            }
+
+            var url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(messageId);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                try
+                {
+                    var bytes = await EnsureHttpClient().GetByteArrayAsync(url);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    reportInfo?.Invoke($"Resolved {label} captcha image URL.");
+                    return new CaptchaImageLoadResult(messageId, "message-url", url, bytes);
+                }
+                catch (Exception ex) when (!(ex is OperationCanceledException))
+                {
+                    reportInfo?.Invoke($"Captcha image URL download failed for {label} message: {ex.Message}");
+                }
+            }
+
+            var screenshotBytes = await _chatClient.CaptureMessageImagePngAsync(messageId);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (screenshotBytes != null && screenshotBytes.Length > 0)
+            {
+                reportInfo?.Invoke($"Resolved {label} captcha image via screenshot fallback.");
+                return new CaptchaImageLoadResult(messageId, "devtools-screenshot", url, screenshotBytes);
+            }
+
+            return null;
+        }
+
         private async Task<CaptchaAnswerResult> TrySolveFromUrlAsync(
             ICaptchaAnswerProvider provider,
             string messageId,
@@ -237,6 +253,25 @@ namespace EpicRPGBot.UI.Services
                 reportInfo?.Invoke($"URL retry download failed: {ex.Message}");
                 return null;
             }
+        }
+
+        private sealed class CaptchaImageLoadResult
+        {
+            public CaptchaImageLoadResult(string messageId, string source, string url, byte[] bytes)
+            {
+                MessageId = messageId ?? string.Empty;
+                Source = source ?? string.Empty;
+                Url = url ?? string.Empty;
+                Bytes = bytes ?? Array.Empty<byte>();
+            }
+
+            public string MessageId { get; }
+
+            public string Source { get; }
+
+            public string Url { get; }
+
+            public byte[] Bytes { get; }
         }
     }
 }

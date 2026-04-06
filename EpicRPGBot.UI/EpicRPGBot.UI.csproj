@@ -48,10 +48,15 @@
     <Compile Include="Automation\AutomationOptions.cs" />
     <Compile Include="Automation\AutomationRuntime.cs" />
     <Compile Include="BotEngine.Commands.cs" />
+    <Compile Include="BotEngine.Bunny.cs" />
     <Compile Include="BotEngine.Events.cs" />
     <Compile Include="BotEngine.Guard.cs" />
     <Compile Include="BotEngine.Training.cs" />
     <Compile Include="BotEngine.cs" />
+    <Compile Include="Bunny\BunnyCatchPlan.cs" />
+    <Compile Include="Bunny\BunnyCatchPlanBuilder.cs" />
+    <Compile Include="Bunny\BunnyPromptParseResult.cs" />
+    <Compile Include="Bunny\BunnyPromptParser.cs" />
     <Compile Include="Captcha\CaptchaAnswerResult.cs" />
     <Compile Include="Captcha\CaptchaCatalogItem.cs" />
     <Compile Include="Captcha\CaptchaImageMediaTypeDetector.cs" />
@@ -81,6 +86,7 @@
     <Compile Include="Dismantling\DismantlingWorkflow.cs" />
     <Compile Include="Env.cs" />
     <Compile Include="MainWindow.Automation.cs" />
+    <Compile Include="MainWindow.Bunny.cs" />
     <Compile Include="MainWindow.Browser.cs" />
     <Compile Include="MainWindow.Console.cs" />
     <Compile Include="MainWindow.Crafting.cs" />
@@ -108,6 +114,7 @@
     <Compile Include="Services\AreaWorkCommandSettings.cs" />
     <Compile Include="Services\CaptchaSelfTestRunner.cs" />
     <Compile Include="Services\CaptchaSolverService.cs" />
+    <Compile Include="Services\CaptchaDebugArtifactWriter.cs" />
     <Compile Include="Services\ChatMessagePoller.cs" />
     <Compile Include="Services\ConfirmedCommandSender.cs" />
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />
@@ -116,12 +123,14 @@
     <Compile Include="Services\DesktopAlertService.cs" />
     <Compile Include="Services\DiscordChatClient.Components.cs" />
     <Compile Include="Services\DiscordChatClient.Composer.cs" />
+    <Compile Include="Services\DiscordChatClient.CaptchaImages.cs" />
     <Compile Include="Services\DiscordChatClient.Messages.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
     <Compile Include="Services\DiscordScriptParsing.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
     <Compile Include="Services\IDiscordChatClient.cs" />
     <Compile Include="Services\InMemoryLog.cs" />
+    <Compile Include="Services\InteractivePromptGate.cs" />
     <Compile Include="Services\LastMessagesBuffer.cs" />
     <Compile Include="Services\LocalSettingsStore.cs" />
     <Compile Include="Services\ProfileMessageParser.cs" />

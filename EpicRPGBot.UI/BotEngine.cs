@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using EpicRPGBot.UI.Bunny;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.Training;
@@ -18,9 +19,12 @@ namespace EpicRPGBot.UI
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly DispatcherTimer _checkMessageTimer;
         private readonly GuardIncidentTracker _guardIncidentTracker;
+        private readonly InteractivePromptGate _interactivePromptGate = new InteractivePromptGate();
         private readonly TrackedCommandScheduler _scheduler;
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
         private readonly CancellationTokenSource _stopCancellation = new CancellationTokenSource();
+        private readonly BunnyPromptParser _bunnyPromptParser = new BunnyPromptParser();
+        private readonly BunnyCatchPlanBuilder _bunnyCatchPlanBuilder = new BunnyCatchPlanBuilder();
         private readonly int _farmCooldown;
         private readonly bool _farmEnabled;
         private readonly TrainingPromptParser _trainingPromptParser = new TrainingPromptParser();
@@ -35,7 +39,6 @@ namespace EpicRPGBot.UI
         private string _previousMessageId = string.Empty;
         private string _previousMessageText = string.Empty;
         private int _queuedCooldownSnapshot;
-        private int _trainingConfirmationPending;
         private bool _running;
         private bool _awaitingStartupCooldownSnapshot;
         private DateTime _lastCommandSentUtc = DateTime.MinValue;
@@ -80,6 +83,8 @@ namespace EpicRPGBot.UI
         public event Action<string> OnCommandSent;
         public event Action<string, DiscordMessageSnapshot> OnCommandConfirmed;
         public event Action<GuardAlertNotification> OnGuardNotification;
+        public event Action<string> OnBunnyInfo;
+        public event Action<string> OnBunnyAlert;
         public event Action<string> OnTrainingAlert;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
         public event Action<string> OnSolverInfo;
@@ -94,7 +99,7 @@ namespace EpicRPGBot.UI
             _running = true;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
-            Interlocked.Exchange(ref _trainingConfirmationPending, 0);
+            _interactivePromptGate.Reset();
             _awaitingStartupCooldownSnapshot = true;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
@@ -109,7 +114,7 @@ namespace EpicRPGBot.UI
 
             _running = false;
             _queuedCooldownSnapshot = 0;
-            Interlocked.Exchange(ref _trainingConfirmationPending, 0);
+            _interactivePromptGate.Reset();
             _awaitingStartupCooldownSnapshot = false;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();

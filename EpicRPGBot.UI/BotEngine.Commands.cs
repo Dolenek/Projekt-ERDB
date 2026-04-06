@@ -7,7 +7,7 @@ namespace EpicRPGBot.UI
 {
     public sealed partial class BotEngine
     {
-        private const int TrainingPendingPollDelayMs = 100;
+        private const int InteractivePromptPendingPollDelayMs = 100;
 
         public async Task<bool> SendImmediateAsync(string text)
         {
@@ -138,7 +138,7 @@ namespace EpicRPGBot.UI
         {
             while (true)
             {
-                if (!await WaitForTrainingWindowAsync())
+                if (!await WaitForInteractivePromptWindowAsync())
                 {
                     return false;
                 }
@@ -152,7 +152,7 @@ namespace EpicRPGBot.UI
                     return false;
                 }
 
-                if (!IsTrainingConfirmationPending())
+                if (!IsInteractivePromptPending())
                 {
                     break;
                 }
@@ -196,7 +196,7 @@ namespace EpicRPGBot.UI
         {
             while (true)
             {
-                if (!await WaitForTrainingWindowAsync())
+                if (!await WaitForInteractivePromptWindowAsync())
                 {
                     return false;
                 }
@@ -210,7 +210,7 @@ namespace EpicRPGBot.UI
                     return false;
                 }
 
-                if (!IsTrainingConfirmationPending())
+                if (!IsInteractivePromptPending())
                 {
                     break;
                 }
@@ -239,13 +239,13 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task<bool> WaitForTrainingWindowAsync()
+        private async Task<bool> WaitForInteractivePromptWindowAsync()
         {
-            while (IsTrainingConfirmationPending())
+            while (IsInteractivePromptPending())
             {
                 try
                 {
-                    await SafeDelay(TrainingPendingPollDelayMs, _stopCancellation.Token);
+                    await SafeDelay(InteractivePromptPendingPollDelayMs, _stopCancellation.Token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -256,9 +256,9 @@ namespace EpicRPGBot.UI
             return true;
         }
 
-        private bool IsTrainingConfirmationPending()
+        private bool IsInteractivePromptPending()
         {
-            return Interlocked.CompareExchange(ref _trainingConfirmationPending, 0, 0) == 1;
+            return _interactivePromptGate.IsAnyPending;
         }
     }
 }

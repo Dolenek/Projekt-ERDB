@@ -43,8 +43,13 @@ namespace EpicRPGBot.UI.Captcha
                 return primaryResult;
             }
 
-            var retryImage = CaptchaImagePreprocessor.CreateRetryImage(imageBytes) ?? imageBytes;
-            var retryResult = await TrySolveWithModelAsync(_retryModel, retryImage, true, cancellationToken);
+            var retryImage = CaptchaImagePreprocessor.CreateRetryImage(imageBytes);
+            var retryBytes = retryImage ?? imageBytes;
+            var retryResult = await TrySolveWithModelAsync(
+                _retryModel,
+                retryBytes,
+                retryImage != null,
+                cancellationToken);
             if (retryResult.IsMatch)
             {
                 return retryResult;

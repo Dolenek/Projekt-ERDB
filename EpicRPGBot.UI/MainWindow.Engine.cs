@@ -50,6 +50,8 @@ namespace EpicRPGBot.UI
 
         private void WireEngineEvents(BotEngine engine)
         {
+            WireBunnyEvents(engine);
+
             engine.OnCommandSent += command =>
             {
                 UiDispatcher.OnUI(() =>

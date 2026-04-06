@@ -35,7 +35,7 @@ namespace EpicRPGBot.UI
                 return true;
             }
 
-            if (Interlocked.Exchange(ref _trainingConfirmationPending, 1) == 1)
+            if (!_interactivePromptGate.TryBeginTraining())
             {
                 return true;
             }
@@ -80,7 +80,7 @@ namespace EpicRPGBot.UI
             }
             finally
             {
-                Interlocked.Exchange(ref _trainingConfirmationPending, 0);
+                _interactivePromptGate.EndTraining();
                 _sendGate.Release();
             }
         }

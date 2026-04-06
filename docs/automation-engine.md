@@ -27,9 +27,12 @@ Command send behavior:
 - `rpg ...` commands are not considered complete when the composer clears; the bot waits for the outgoing command to appear in chat and then for a newer reply authored by `EPIC RPG` before the next command can enter the lane.
 - Real command sends retry up to 3 times when outgoing registration or the EPIC RPG reply is missing, and later `rpg ...` commands stay blocked behind that retry loop.
 - Quick-time/event prompt answers, including training prompt answers, and bot status/help text still use the fast path and do not wait for an EPIC RPG follow-up reply.
+- Bunny catch prompts also use the fast path: the engine parses the bunny stats from the EPIC RPG message, sends one computed raw reply, and clears the interactive lock after the send attempt finishes.
 - The right-side cooldown panel starts hunt/adventure/training/work/farm/lootbox when the EPIC RPG confirmation reply is received, without waiting for the next `rpg cd`.
 - When a confirmed `rpg tr` reply is a recognized training prompt, the engine resolves the answer from the rendered message body, prefers clicking the matching button, and falls back to typing.
+- When a bunny prompt is recognized, the engine answers automatically from the rendered message body and logs the chosen reply with a `[bunny]` prefix.
 - If a training prompt cannot be solved safely, the engine skips it, logs a `[training]` warning through the UI, and raises a desktop notification.
+- If a bunny prompt is malformed or the reply send fails, the engine raises a `[bunny]` warning and shows a desktop notification.
 - When the UI parses a fresh `rpg cd` snapshot or a time-cookie reduction, the engine resyncs hunt/adventure/training/work/farm/lootbox timers from the tracked cooldown panel and clears stale pending replies.
 - Successful sends raise `OnCommandSent`, which is what drives the Console view and the hunt counter.
 - Confirmed `rpg ...` replies raise `OnCommandConfirmed`, which is what drives tracked cooldown starts in the UI.
@@ -43,6 +46,7 @@ Reaction behavior currently implemented:
 - `CHANGE FARM ...` switches the farm command and acknowledges the change.
 - `BOT FARMING` starts farm-only sending if farm is not already running.
 - Event phrases such as zombie horde, megarace boost, epic tree, megalodon, raining coins, NPC trade, lootbox summoning, and legendary boss keep their existing one-line responses.
+- Bunny catch prompts are handled before the generic phrase-based event responses.
 - EPIC GUARD incidents are tracked as an active alert state: the first detection shows a full alert, reminders are rate-limited to once every 10 seconds, and the incident clears when the `Everything seems fine ... keep playing` message is seen.
 - That clear message also resumes tracked timers immediately and cancels the active captcha solve attempt.
 

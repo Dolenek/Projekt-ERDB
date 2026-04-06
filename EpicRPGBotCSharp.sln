@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicRPGBot.UI", "EpicRPGBot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicRPGBot.Mcp", "EpicRPGBot.Mcp\EpicRPGBot.Mcp.csproj", "{5D46F996-8F49-4A2D-B925-D6C80BC38F34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicRPGBot.Tests", "EpicRPGBot.Tests\EpicRPGBot.Tests.csproj", "{A0B86B0A-60D5-4568-9D8B-E6C177D1F6D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{5D46F996-8F49-4A2D-B925-D6C80BC38F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D46F996-8F49-4A2D-B925-D6C80BC38F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D46F996-8F49-4A2D-B925-D6C80BC38F34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0B86B0A-60D5-4568-9D8B-E6C177D1F6D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0B86B0A-60D5-4568-9D8B-E6C177D1F6D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0B86B0A-60D5-4568-9D8B-E6C177D1F6D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0B86B0A-60D5-4568-9D8B-E6C177D1F6D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

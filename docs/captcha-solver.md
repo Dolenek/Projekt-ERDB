@@ -32,10 +32,12 @@ Configuration:
 - a JSON array of `{ name, outline, grayscale_cues, disambiguation }` items, or
 - a plain text file with one canonical item name per line
 - `CAPTCHA_API_TIMEOUT_SECONDS` default `10`
+- `CAPTCHA_DEBUG_CAPTURE` set to `1` to save the exact captcha image bytes given to the solver
+- `CAPTCHA_DEBUG_DIR` default `artifacts/captcha-debug`
 
 Telemetry:
 - Solver events are written to the Console tab with a `[solver]` prefix.
-- Typical lines include solver initialization, image acquisition source, OpenAI retry use, skipped sends during active guard handling, uncertain classifications, and the final chosen answer.
+- Typical lines include solver initialization, image acquisition source, resolved attachment URLs, saved debug artifact paths, OpenAI retry use, skipped sends during active guard handling, uncertain classifications, and the final chosen answer.
 - Guard notifications use `[guard]`; the first detection is a warning, later reminders and clear events are info logs.
 
 Offline self-test:

@@ -17,6 +17,12 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            if (TryHandleBunnyPrompt(snapshot))
+            {
+                _previousMessageText = msg;
+                return;
+            }
+
             if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _ = SendAndEmitAsync("I hear you: " + DateTime.Now);
@@ -104,6 +110,7 @@ namespace EpicRPGBot.UI
                 {
                     _captchaSolver.CancelCurrentSolve();
                     CompleteGuardSolve(_activeGuardMessageId);
+                    ResetGuardMessageTracking();
                     _scheduler.ResumeAll(_running);
                     OnGuardNotification?.Invoke(cleared);
                     ReportSolverInfo(cleared.Message);

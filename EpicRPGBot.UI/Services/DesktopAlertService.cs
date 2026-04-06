@@ -54,13 +54,17 @@ namespace EpicRPGBot.UI.Services
                 return;
             }
 
-            try
+            ShowWarningBalloon("Training prompt skipped", message);
+        }
+
+        public void ShowBunnyAlert(Window window, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
             {
-                _notifyIcon.ShowBalloonTip(5000, "Training prompt skipped", message, Forms.ToolTipIcon.Warning);
+                return;
             }
-            catch
-            {
-            }
+
+            ShowWarningBalloon("Bunny prompt issue", message);
         }
 
         private static void PlayAlertSound()
@@ -84,6 +88,17 @@ namespace EpicRPGBot.UI.Services
                 ? "Captcha check is still active. Review the bot window when available."
                 : "Captcha check detected. Review the bot window now.";
 
+            try
+            {
+                _notifyIcon.ShowBalloonTip(5000, title, message, Forms.ToolTipIcon.Warning);
+            }
+            catch
+            {
+            }
+        }
+
+        private void ShowWarningBalloon(string title, string message)
+        {
             try
             {
                 _notifyIcon.ShowBalloonTip(5000, title, message, Forms.ToolTipIcon.Warning);

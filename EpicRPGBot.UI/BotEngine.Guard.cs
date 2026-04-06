@@ -10,6 +10,7 @@ namespace EpicRPGBot.UI
         private readonly HashSet<string> _processedGuardMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedGuardMessageOrder = new Queue<string>();
         private string _activeGuardMessageId = string.Empty;
+        private bool _guardSolveStartedForIncident;
 
         private bool IsGuardSolveActive => !string.IsNullOrWhiteSpace(_activeGuardMessageId);
 
@@ -42,6 +43,12 @@ namespace EpicRPGBot.UI
                 return false;
             }
 
+            if (_guardSolveStartedForIncident)
+            {
+                ReportSolverInfo($"Guard incident already has a solve attempt; ignored additional prompt message {targetMessageId}.");
+                return false;
+            }
+
             if (_processedGuardMessageIds.Contains(targetMessageId))
             {
                 ReportSolverInfo($"Guard message {targetMessageId} was already handled; duplicate trigger ignored.");
@@ -55,6 +62,7 @@ namespace EpicRPGBot.UI
             }
 
             _activeGuardMessageId = targetMessageId;
+            _guardSolveStartedForIncident = true;
             RememberProcessedGuardMessage(targetMessageId);
             return true;
         }
@@ -70,6 +78,7 @@ namespace EpicRPGBot.UI
         private void ResetGuardMessageTracking()
         {
             _activeGuardMessageId = string.Empty;
+            _guardSolveStartedForIncident = false;
             _processedGuardMessageIds.Clear();
             _processedGuardMessageOrder.Clear();
         }
