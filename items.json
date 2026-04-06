@@ -7,9 +7,9 @@
   },
   {
     "name": "banana",
-    "outline": "Thin crescent with both ends tapered and one end slightly thicker than the other.",
-    "grayscale_cues": "A long curved arc with open space inside the curve and no central body mass.",
-    "disambiguation": "Unlike unicorn horn it is a smooth crescent instead of a straight tapering spike. Unlike mermaid hair it does not form a thick curling lock."
+    "outline": "Short thick crescent fruit with a smooth outer arc, open inner curve, and both tips curving upward.",
+    "grayscale_cues": "A bent crescent with a fat middle and no straight shaft, no rigid cone body, and no spear-like point progression from base to tip.",
+    "disambiguation": "For colored images, strongly prefer banana when the icon is bright yellow. Do not choose unicorn horn unless the object is mostly straight, rigid, and tapered from a thick base to a sharp tip."
   },
   {
     "name": "chip",
@@ -57,7 +57,7 @@
     "name": "mermaid hair",
     "outline": "Single flowing lock of hair that curls downward like a hooked wave or long comma.",
     "grayscale_cues": "One thick curved strand with a sweeping curl; no forked end and no straight spike body.",
-    "disambiguation": "More like a curling lock than banana. Softer and more looped than unicorn horn, which is straighter and conical."
+    "disambiguation": "More like a curling lock than banana. Softer and more looped than unicorn horn, which is straighter and conical. For colored images it should not beat banana when the icon is a clearly yellow fruit crescent."
   },
   {
     "name": "normie fish",
@@ -73,9 +73,9 @@
   },
   {
     "name": "unicorn horn",
-    "outline": "Long tapering horn or spike with a thick base and narrow pointed tip.",
-    "grayscale_cues": "Diagonal conical shape with a straighter body than banana and a clearer point than mermaid hair.",
-    "disambiguation": "Pick this when the icon reads as a spear-like spike rather than a crescent or curled strand."
+    "outline": "Rigid diagonal spike or horn with one thick base, one narrow sharp tip, and a mostly straight or only slightly bent body.",
+    "grayscale_cues": "Reads like a conical spear or horn, not like a rounded crescent fruit. The width should taper progressively from base to tip.",
+    "disambiguation": "Never choose unicorn horn for a strongly yellow crescent-shaped fruit. Choose it only when the icon is spear-like, rigid, and clearly not banana-shaped."
   },
   {
     "name": "wolf skin",

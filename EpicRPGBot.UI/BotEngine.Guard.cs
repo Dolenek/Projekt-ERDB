@@ -11,6 +11,8 @@ namespace EpicRPGBot.UI
         private readonly Queue<string> _processedGuardMessageOrder = new Queue<string>();
         private string _activeGuardMessageId = string.Empty;
 
+        private bool IsGuardSolveActive => !string.IsNullOrWhiteSpace(_activeGuardMessageId);
+
         private string ResolveGuardTargetMessageId(bool latestHasGuard, bool previousHasGuard)
         {
             if (latestHasGuard && !string.IsNullOrWhiteSpace(_lastMessageId))

@@ -12,7 +12,7 @@ if (!repoRoot || !imagePath) {
 
 const env = readEnv(path.join(repoRoot, ".env"));
 const apiKey = (env.CAPTCHA_OPENAI_API_KEY || "").trim();
-const model = (env.CAPTCHA_OPENAI_MODEL || "gpt-5-mini").trim();
+const model = (env.CAPTCHA_OPENAI_MODEL || "gpt-5.4-mini").trim();
 const itemsFile = resolvePath(repoRoot, env.CAPTCHA_ITEM_NAMES_FILE || "items.json");
 const items = loadCatalog(itemsFile);
 

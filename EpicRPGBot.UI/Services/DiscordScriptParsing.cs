@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
@@ -92,17 +93,22 @@ namespace EpicRPGBot.UI.Services
             }
 
             value = value.Trim();
-            if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
+            try
             {
-                value = value.Substring(1, value.Length - 2)
-                    .Replace("\\n", "\n")
-                    .Replace("\\r", "\r")
-                    .Replace("\\t", "\t")
-                    .Replace("\\\"", "\"")
-                    .Replace("\\\\", "\\");
-            }
+                using (var document = JsonDocument.Parse(value))
+                {
+                    if (document.RootElement.ValueKind == JsonValueKind.String)
+                    {
+                        return document.RootElement.GetString() ?? string.Empty;
+                    }
 
-            return value;
+                    return document.RootElement.GetRawText();
+                }
+            }
+            catch
+            {
+                return value;
+            }
         }
 
         public static IReadOnlyList<DiscordMessageSnapshot> ParseSnapshots(string payload)
@@ -113,75 +119,120 @@ namespace EpicRPGBot.UI.Services
                 return snapshots;
             }
 
-            var index = 0;
-            while (index < payload.Length)
+            try
             {
-                var start = payload.IndexOf('{', index);
-                if (start < 0)
+                using (var document = JsonDocument.Parse(payload))
                 {
-                    break;
-                }
-
-                var depth = 0;
-                var inString = false;
-                var escape = false;
-                var end = -1;
-                for (var i = start; i < payload.Length; i++)
-                {
-                    var current = payload[i];
-                    if (inString)
+                    if (document.RootElement.ValueKind != JsonValueKind.Array)
                     {
-                        if (escape)
-                        {
-                            escape = false;
-                        }
-                        else if (current == '\\')
-                        {
-                            escape = true;
-                        }
-                        else if (current == '"')
-                        {
-                            inString = false;
-                        }
-
-                        continue;
+                        return snapshots;
                     }
 
-                    if (current == '"')
+                    foreach (var item in document.RootElement.EnumerateArray())
                     {
-                        inString = true;
-                    }
-                    else if (current == '{')
-                    {
-                        depth++;
-                    }
-                    else if (current == '}')
-                    {
-                        depth--;
-                        if (depth == 0)
+                        var snapshot = ParseSnapshot(item);
+                        if (snapshot != null && !string.IsNullOrWhiteSpace(snapshot.Id))
                         {
-                            end = i;
-                            break;
+                            snapshots.Add(snapshot);
                         }
                     }
                 }
-
-                if (end < 0)
-                {
-                    break;
-                }
-
-                var item = payload.Substring(start, end - start + 1);
-                snapshots.Add(new DiscordMessageSnapshot(
-                    ExtractField(item, "id"),
-                    ExtractField(item, "text"),
-                    ExtractField(item, "author")));
-                index = end + 1;
+            }
+            catch
+            {
+                return snapshots;
             }
 
-            return snapshots
-                .Where(snapshot => snapshot != null && !string.IsNullOrWhiteSpace(snapshot.Id))
-                .ToList();
+            return snapshots;
+        }
+
+        public static DiscordMessageSnapshot ParseSnapshot(string payload)
+        {
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return null;
+            }
+
+            try
+            {
+                using (var document = JsonDocument.Parse(payload))
+                {
+                    return ParseSnapshot(document.RootElement);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static DiscordMessageSnapshot ParseSnapshot(JsonElement item)
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return new DiscordMessageSnapshot(
+                GetString(item, "id"),
+                GetString(item, "text"),
+                GetString(item, "author"),
+                GetString(item, "renderedText"),
+                ParseButtons(item));
+        }
+
+        private static IReadOnlyList<DiscordMessageButton> ParseButtons(JsonElement item)
+        {
+            if (!item.TryGetProperty("buttons", out var buttonsElement) ||
+                buttonsElement.ValueKind != JsonValueKind.Array)
+            {
+                return Array.Empty<DiscordMessageButton>();
+            }
+
+            var buttons = new List<DiscordMessageButton>();
+            foreach (var button in buttonsElement.EnumerateArray())
+            {
+                if (button.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                buttons.Add(new DiscordMessageButton(
+                    GetString(button, "label"),
+                    GetInt32(button, "rowIndex"),
+                    GetInt32(button, "columnIndex")));
+            }
+
+            return buttons;
+        }
+
+        private static string GetString(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property) ||
+                property.ValueKind == JsonValueKind.Null ||
+                property.ValueKind == JsonValueKind.Undefined)
+            {
+                return string.Empty;
+            }
+
+            return property.ValueKind == JsonValueKind.String
+                ? property.GetString() ?? string.Empty
+                : property.ToString();
+        }
+
+        private static int GetInt32(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property))
+            {
+                return 0;
+            }
+
+            if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var value))
+            {
+                return value;
+            }
+
+            return int.TryParse(property.ToString(), out value) ? value : 0;
         }
     }
 }

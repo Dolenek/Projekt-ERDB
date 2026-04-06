@@ -25,7 +25,7 @@ WebView tools:
 - `webview_eval` evaluates JavaScript in the bot Discord WebView through the WebView2 DevTools endpoint.
 - `webview_capture` saves a DevTools screenshot of the bot Discord page and returns the image path.
 - `read_webview_debug_state` returns URL, title, ready state, tab role, and a short body-text preview.
-- `read_recent_webview_messages` returns parsed recent Discord message snapshots with `id`, `author`, and `text`.
+- `read_recent_webview_messages` returns parsed recent Discord message snapshots with `id`, `author`, `text`, rendered body text, and visible button metadata.
 - `wait_for_webview_message` waits for a Discord message matching author/text filters and optional `afterId`.
 
 Result behavior:
@@ -45,7 +45,7 @@ Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
 - `RpgCdButton`, `TradeAreaButton`, `WishingTokenButton`
 - `DismantleButton`, `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
-- `HuntCountStat`, `AdventureCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
+- `HuntCountStat`, `AdventureCountStat`, `TrainingCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
 - `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
 - `DiscordWebView`, `PlayerDiscordWebView`
@@ -53,6 +53,7 @@ Stable control IDs exposed by the UI:
 - `SettingsWindow`, `SettingsCloseButton`
 - `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
 - `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
+- `SettingsTrainingCooldownInput`
 - `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
 - `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`

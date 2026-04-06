@@ -13,6 +13,7 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(StatsList, "LastMessagesList");
             SetAutomationIdentity(HuntCountText, "HuntCountStat");
             SetAutomationIdentity(AdventureCountText, "AdventureCountStat");
+            SetAutomationIdentity(TrainingCountText, "TrainingCountStat");
             SetAutomationIdentity(WorkCountText, "WorkCountStat");
             SetAutomationIdentity(FarmCountText, "FarmCountStat");
             SetAutomationIdentity(LootboxCountText, "LootboxCountStat");

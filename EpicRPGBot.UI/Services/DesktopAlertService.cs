@@ -47,6 +47,22 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
+        public void ShowTrainingAlert(Window window, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            try
+            {
+                _notifyIcon.ShowBalloonTip(5000, "Training prompt skipped", message, Forms.ToolTipIcon.Warning);
+            }
+            catch
+            {
+            }
+        }
+
         private static void PlayAlertSound()
         {
             try

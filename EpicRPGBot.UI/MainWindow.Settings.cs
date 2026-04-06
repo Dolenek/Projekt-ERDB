@@ -38,6 +38,11 @@ namespace EpicRPGBot.UI
             return GetCurrentSettings().GetAdventureMsOrDefault(61000);
         }
 
+        private int GetConfiguredTrainingMs()
+        {
+            return GetCurrentSettings().GetTrainingMsOrDefault(61000);
+        }
+
         private int GetConfiguredWorkMs()
         {
             return GetCurrentSettings().GetWorkMsOrDefault(99000);

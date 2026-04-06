@@ -20,8 +20,14 @@ Console visibility:
   - whether the answer was sent to chat.
 
 Chat send behavior:
+- While a guard solve is active, scheduled tracked commands and queued cooldown snapshot sends are skipped so they do not occupy the Discord send lane.
 - When the model returns a valid catalog match, the bot sends that exact item name back to Discord.
 - If the solver is uncertain or the send fails, the console logs that outcome instead of silently doing nothing.
+
+Classification behavior:
+- The solver uses color as a strong signal when the captcha is clearly colored.
+- Grayscale notes are treated as fallback guidance for black-and-white or desaturated captchas.
+- Catalog disambiguation notes can explicitly rule out near-duplicate items such as `banana` versus `unicorn horn`.
 
 Console copy:
 - The Console list supports `Ctrl+C`.

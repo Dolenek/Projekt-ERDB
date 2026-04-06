@@ -9,6 +9,7 @@ namespace EpicRPGBot.UI.Services
     {
         Hunt,
         Adventure,
+        Training,
         Work,
         Farm,
         Lootbox
@@ -34,11 +35,13 @@ namespace EpicRPGBot.UI.Services
         private readonly bool _farmEnabled;
         private readonly int _huntCooldown;
         private readonly int _adventureCooldown;
+        private readonly int _trainingCooldown;
         private readonly int _workCooldown;
         private readonly int _farmCooldown;
         private readonly int _lootboxCooldown;
         private readonly DispatcherTimer _huntTimer;
         private readonly DispatcherTimer _adventureTimer;
+        private readonly DispatcherTimer _trainingTimer;
         private readonly DispatcherTimer _workTimer;
         private readonly DispatcherTimer _farmTimer;
         private readonly DispatcherTimer _lootboxTimer;
@@ -46,27 +49,31 @@ namespace EpicRPGBot.UI.Services
 
         private DateTime? _huntDueUtc;
         private DateTime? _adventureDueUtc;
+        private DateTime? _trainingDueUtc;
         private DateTime? _workDueUtc;
         private DateTime? _farmDueUtc;
         private DateTime? _lootboxDueUtc;
         private TimeSpan? _pausedHuntDelay;
         private TimeSpan? _pausedAdventureDelay;
+        private TimeSpan? _pausedTrainingDelay;
         private TimeSpan? _pausedWorkDelay;
         private TimeSpan? _pausedFarmDelay;
         private TimeSpan? _pausedLootboxDelay;
 
-        public TrackedCommandScheduler(bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
+        public TrackedCommandScheduler(bool farmEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
         {
             if (onTimerElapsed == null) throw new ArgumentNullException(nameof(onTimerElapsed));
 
             _farmEnabled = farmEnabled;
             _huntCooldown = huntCooldown;
             _adventureCooldown = adventureCooldown;
+            _trainingCooldown = trainingCooldown;
             _workCooldown = workCooldown;
             _farmCooldown = farmCooldown;
             _lootboxCooldown = lootboxCooldown;
             _huntTimer = CreateCommandTimer(huntCooldown, () => onTimerElapsed(TrackedCommandKind.Hunt));
             _adventureTimer = CreateCommandTimer(adventureCooldown, () => onTimerElapsed(TrackedCommandKind.Adventure));
+            _trainingTimer = CreateCommandTimer(trainingCooldown, () => onTimerElapsed(TrackedCommandKind.Training));
             _workTimer = CreateCommandTimer(workCooldown, () => onTimerElapsed(TrackedCommandKind.Work));
             _farmTimer = CreateCommandTimer(farmCooldown, () => onTimerElapsed(TrackedCommandKind.Farm));
             _lootboxTimer = CreateCommandTimer(lootboxCooldown, () => onTimerElapsed(TrackedCommandKind.Lootbox));
@@ -106,6 +113,7 @@ namespace EpicRPGBot.UI.Services
         {
             Stop(TrackedCommandKind.Hunt);
             Stop(TrackedCommandKind.Adventure);
+            Stop(TrackedCommandKind.Training);
             Stop(TrackedCommandKind.Work);
             Stop(TrackedCommandKind.Farm);
             Stop(TrackedCommandKind.Lootbox);
@@ -120,6 +128,7 @@ namespace EpicRPGBot.UI.Services
         {
             Pause(TrackedCommandKind.Hunt);
             Pause(TrackedCommandKind.Adventure);
+            Pause(TrackedCommandKind.Training);
             Pause(TrackedCommandKind.Work);
             Pause(TrackedCommandKind.Farm);
             Pause(TrackedCommandKind.Lootbox);
@@ -129,6 +138,7 @@ namespace EpicRPGBot.UI.Services
         {
             Resume(TrackedCommandKind.Hunt, isRunning);
             Resume(TrackedCommandKind.Adventure, isRunning);
+            Resume(TrackedCommandKind.Training, isRunning);
             Resume(TrackedCommandKind.Work, isRunning);
             Resume(TrackedCommandKind.Farm, isRunning);
             Resume(TrackedCommandKind.Lootbox, isRunning);
@@ -247,6 +257,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: return _huntTimer;
                 case TrackedCommandKind.Adventure: return _adventureTimer;
+                case TrackedCommandKind.Training: return _trainingTimer;
                 case TrackedCommandKind.Work: return _workTimer;
                 case TrackedCommandKind.Farm: return _farmTimer;
                 default: return _lootboxTimer;
@@ -259,6 +270,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: return _huntCooldown;
                 case TrackedCommandKind.Adventure: return _adventureCooldown;
+                case TrackedCommandKind.Training: return _trainingCooldown;
                 case TrackedCommandKind.Work: return _workCooldown;
                 case TrackedCommandKind.Farm: return _farmCooldown;
                 default: return _lootboxCooldown;
@@ -271,6 +283,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: return _huntDueUtc;
                 case TrackedCommandKind.Adventure: return _adventureDueUtc;
+                case TrackedCommandKind.Training: return _trainingDueUtc;
                 case TrackedCommandKind.Work: return _workDueUtc;
                 case TrackedCommandKind.Farm: return _farmDueUtc;
                 default: return _lootboxDueUtc;
@@ -283,6 +296,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: _huntDueUtc = value; break;
                 case TrackedCommandKind.Adventure: _adventureDueUtc = value; break;
+                case TrackedCommandKind.Training: _trainingDueUtc = value; break;
                 case TrackedCommandKind.Work: _workDueUtc = value; break;
                 case TrackedCommandKind.Farm: _farmDueUtc = value; break;
                 default: _lootboxDueUtc = value; break;
@@ -295,6 +309,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: return _pausedHuntDelay;
                 case TrackedCommandKind.Adventure: return _pausedAdventureDelay;
+                case TrackedCommandKind.Training: return _pausedTrainingDelay;
                 case TrackedCommandKind.Work: return _pausedWorkDelay;
                 case TrackedCommandKind.Farm: return _pausedFarmDelay;
                 default: return _pausedLootboxDelay;
@@ -307,6 +322,7 @@ namespace EpicRPGBot.UI.Services
             {
                 case TrackedCommandKind.Hunt: _pausedHuntDelay = value; break;
                 case TrackedCommandKind.Adventure: _pausedAdventureDelay = value; break;
+                case TrackedCommandKind.Training: _pausedTrainingDelay = value; break;
                 case TrackedCommandKind.Work: _pausedWorkDelay = value; break;
                 case TrackedCommandKind.Farm: _pausedFarmDelay = value; break;
                 default: _pausedLootboxDelay = value; break;

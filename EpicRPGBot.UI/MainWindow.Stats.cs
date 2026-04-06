@@ -8,6 +8,7 @@ namespace EpicRPGBot.UI
     {
         private TextBlock _huntCountText;
         private TextBlock _adventureCountText;
+        private TextBlock _trainingCountText;
         private TextBlock _workCountText;
         private TextBlock _farmCountText;
         private TextBlock _lootboxCountText;
@@ -17,6 +18,7 @@ namespace EpicRPGBot.UI
         private TextBlock _runningProgressText;
         private int _huntCount;
         private int _adventureCount;
+        private int _trainingCount;
         private int _workCount;
         private int _farmCount;
         private int _lootboxCount;
@@ -25,6 +27,7 @@ namespace EpicRPGBot.UI
         {
             _huntCountText = FindName("HuntCountText") as TextBlock;
             _adventureCountText = FindName("AdventureCountText") as TextBlock;
+            _trainingCountText = FindName("TrainingCountText") as TextBlock;
             _workCountText = FindName("WorkCountText") as TextBlock;
             _farmCountText = FindName("FarmCountText") as TextBlock;
             _lootboxCountText = FindName("LootboxCountText") as TextBlock;
@@ -52,6 +55,9 @@ namespace EpicRPGBot.UI
                     break;
                 case "adventure":
                     _adventureCount++;
+                    break;
+                case "training":
+                    _trainingCount++;
                     break;
                 case "work":
                     _workCount++;
@@ -91,6 +97,7 @@ namespace EpicRPGBot.UI
         {
             SetStatText(_huntCountText, $"Hunt sent: {_huntCount}");
             SetStatText(_adventureCountText, $"Adventure sent: {_adventureCount}");
+            SetStatText(_trainingCountText, $"Training sent: {_trainingCount}");
             SetStatText(_workCountText, $"Work sent: {_workCount}");
             SetStatText(_farmCountText, $"Farm sent: {_farmCount}");
             SetStatText(_lootboxCountText, $"Lootbox sent: {_lootboxCount}");
@@ -112,6 +119,11 @@ namespace EpicRPGBot.UI
             if (normalized.StartsWith("rpg adv", System.StringComparison.Ordinal))
             {
                 return "adventure";
+            }
+
+            if (normalized.StartsWith("rpg tr", System.StringComparison.Ordinal))
+            {
+                return "training";
             }
 
             if (normalized.StartsWith("rpg farm", System.StringComparison.Ordinal))

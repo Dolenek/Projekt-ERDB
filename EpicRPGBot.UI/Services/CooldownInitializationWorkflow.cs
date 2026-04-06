@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.Training;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -11,11 +12,15 @@ namespace EpicRPGBot.UI.Services
         private const int ExtraLagMs = 1000;
         private const int OverheadMs = ActionDelayMs + AfterCdDelayMs + ExtraLagMs;
         private const int BetweenCommandsMs = 3000;
+        private const int TrainingConfirmationPollDelayMs = 250;
+        private const int TrainingConfirmationTimeoutMs = 20000;
+        private const int TrainingConfirmationScanCount = 20;
 
         private readonly IDiscordChatClient _chatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly CooldownTracker _tracker;
         private readonly AppSettingsService _settingsService;
+        private readonly TrainingPromptParser _trainingPromptParser = new TrainingPromptParser();
 
         public CooldownInitializationWorkflow(
             IDiscordChatClient chatClient,
@@ -31,6 +36,7 @@ namespace EpicRPGBot.UI.Services
         public async Task RunAsync(
             Action<string> logInfo,
             int adventureDefaultMs,
+            int trainingDefaultMs,
             int workDefaultMs,
             int farmDefaultMs,
             int lootboxDefaultMs)
@@ -51,6 +57,7 @@ namespace EpicRPGBot.UI.Services
             {
                 new InitializationStep("hunt", "rpg hunt h", 61000),
                 new InitializationStep("adventure", "rpg adv h", adventureDefaultMs),
+                new InitializationStep("training", "rpg tr", trainingDefaultMs),
                 new InitializationStep("farm", "rpg farm", farmDefaultMs),
                 new InitializationStep("work", workAction, workDefaultMs),
                 new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs)
@@ -104,6 +111,12 @@ namespace EpicRPGBot.UI.Services
                 return false;
             }
 
+            if (canonical == "training" &&
+                !await TryAnswerTrainingPromptAsync(actionResult.ReplyMessage, logInfo))
+            {
+                return false;
+            }
+
             await Task.Delay(ActionDelayMs);
 
             var cdResult = await _confirmedCommandSender.SendAsync("rpg cd");
@@ -146,6 +159,12 @@ namespace EpicRPGBot.UI.Services
                 return;
             }
 
+            if (canonical == "training")
+            {
+                _settingsService.Save(current.WithTrainingMs(value));
+                return;
+            }
+
             if (canonical == "work")
             {
                 _settingsService.Save(current.WithWorkMs(value));
@@ -168,6 +187,7 @@ namespace EpicRPGBot.UI.Services
         {
             var remaining = canonical == "hunt" ? snapshot.Hunt :
                 canonical == "adventure" ? snapshot.Adventure :
+                canonical == "training" ? snapshot.Training :
                 canonical == "work" ? snapshot.Work :
                 canonical == "farm" ? snapshot.Farm :
                 canonical == "lootbox" ? snapshot.Lootbox :
@@ -180,6 +200,148 @@ namespace EpicRPGBot.UI.Services
         {
             return !string.IsNullOrWhiteSpace(message) &&
                    message.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private async Task<bool> TryAnswerTrainingPromptAsync(DiscordMessageSnapshot snapshot, Action<string> logInfo)
+        {
+            var resolution = _trainingPromptParser.Parse(snapshot);
+            if (!resolution.IsTrainingPrompt)
+            {
+                logInfo?.Invoke("Inicialize: training reply was not recognized as a training prompt.");
+                return false;
+            }
+
+            if (!resolution.IsResolved)
+            {
+                logInfo?.Invoke("Inicialize: training prompt could not be solved safely.");
+                return false;
+            }
+
+            if (await TryClickButtonAsync(snapshot, resolution))
+            {
+                return await WaitForTrainingConfirmationAsync(snapshot.Id, logInfo);
+            }
+
+            if (string.IsNullOrWhiteSpace(resolution.AnswerText))
+            {
+                logInfo?.Invoke("Inicialize: training answer was empty after parsing.");
+                return false;
+            }
+
+            if (await _chatClient.SendMessageAsync(resolution.AnswerText))
+            {
+                return await WaitForTrainingConfirmationAsync(snapshot.Id, logInfo);
+            }
+
+            logInfo?.Invoke("Inicialize: training answer failed to send.");
+            return false;
+        }
+
+        private async Task<bool> TryClickButtonAsync(DiscordMessageSnapshot snapshot, TrainingPromptResolution resolution)
+        {
+            if (snapshot?.Buttons == null || resolution == null)
+            {
+                return false;
+            }
+
+            foreach (var button in snapshot.Buttons)
+            {
+                if (!LabelsMatch(button.Label, resolution.PreferredButtonLabel) &&
+                    !LabelsMatch(button.Label, resolution.AnswerText))
+                {
+                    continue;
+                }
+
+                return await _chatClient.ClickMessageButtonAsync(snapshot.Id, button.RowIndex, button.ColumnIndex);
+            }
+
+            return false;
+        }
+
+        private static bool LabelsMatch(string left, string right)
+        {
+            return string.Equals(NormalizeLabel(left), NormalizeLabel(right), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<bool> WaitForTrainingConfirmationAsync(string afterMessageId, Action<string> logInfo)
+        {
+            var cursorId = afterMessageId ?? string.Empty;
+            var waitedMs = 0;
+            while (waitedMs < TrainingConfirmationTimeoutMs)
+            {
+                await Task.Delay(TrainingConfirmationPollDelayMs);
+                waitedMs += TrainingConfirmationPollDelayMs;
+
+                var snapshots = await _chatClient.GetRecentMessagesAsync(TrainingConfirmationScanCount);
+                var startIndex = ResolveStartIndex(snapshots, cursorId);
+                for (var i = startIndex; snapshots != null && i < snapshots.Count; i++)
+                {
+                    var snapshot = snapshots[i];
+                    if (snapshot == null || string.IsNullOrWhiteSpace(snapshot.Id))
+                    {
+                        continue;
+                    }
+
+                    cursorId = snapshot.Id;
+                    if (IsTrainingConfirmationMessage(snapshot.Text))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            logInfo?.Invoke("Inicialize: training answer sent, but no 'Well done' confirmation was observed.");
+            return false;
+        }
+
+        private static int ResolveStartIndex(
+            System.Collections.Generic.IReadOnlyList<DiscordMessageSnapshot> snapshots,
+            string cursorId)
+        {
+            if (snapshots == null || snapshots.Count == 0 || string.IsNullOrWhiteSpace(cursorId))
+            {
+                return 0;
+            }
+
+            for (var i = 0; i < snapshots.Count; i++)
+            {
+                if (string.Equals(snapshots[i]?.Id, cursorId, StringComparison.Ordinal))
+                {
+                    return i + 1;
+                }
+            }
+
+            return 0;
+        }
+
+        private static bool IsTrainingConfirmationMessage(string message)
+        {
+            return !string.IsNullOrWhiteSpace(message) &&
+                message.IndexOf("Well done", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string NormalizeLabel(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var characters = value.Trim().Trim(':').ToCharArray();
+            var output = new char[characters.Length];
+            var count = 0;
+            for (var index = 0; index < characters.Length; index++)
+            {
+                var current = characters[index];
+                if (!char.IsLetterOrDigit(current))
+                {
+                    continue;
+                }
+
+                output[count++] = char.ToLowerInvariant(current);
+            }
+
+            return new string(output, 0, count);
         }
 
         private sealed class InitializationStep

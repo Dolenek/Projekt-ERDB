@@ -7,10 +7,15 @@ namespace EpicRPGBot.UI
 {
     public sealed partial class BotEngine
     {
-        private void EventCheck(string message)
+        private void EventCheck(Models.DiscordMessageSnapshot snapshot)
         {
-            var msg = message ?? string.Empty;
+            var msg = snapshot?.Text ?? string.Empty;
             HandleGuardMessage(msg);
+            if (TryHandleTrainingPrompt(snapshot))
+            {
+                _previousMessageText = msg;
+                return;
+            }
 
             if (msg.IndexOf("TEST", StringComparison.OrdinalIgnoreCase) >= 0)
             {

@@ -54,6 +54,7 @@
                             <TextBlock Text="Stats" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBlock Name="HuntCountText" Text="Hunt sent: 0" Foreground="#ddd"/>
                             <TextBlock Name="AdventureCountText" Text="Adventure sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
+                            <TextBlock Name="TrainingCountText" Text="Training sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
                             <TextBlock Name="WorkCountText" Text="Work sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
                             <TextBlock Name="FarmCountText" Text="Farm sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
                             <TextBlock Name="LootboxCountText" Text="Lootbox sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>

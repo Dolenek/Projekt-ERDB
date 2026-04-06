@@ -12,6 +12,7 @@ namespace EpicRPGBot.UI.Models
             bool ascended,
             string huntMs,
             string adventureMs,
+            string trainingMs,
             string workMs,
             string farmMs,
             string lootboxMs,
@@ -23,6 +24,7 @@ namespace EpicRPGBot.UI.Models
             Ascended = ascended;
             HuntMs = huntMs ?? string.Empty;
             AdventureMs = adventureMs ?? string.Empty;
+            TrainingMs = trainingMs ?? string.Empty;
             WorkMs = workMs ?? string.Empty;
             FarmMs = farmMs ?? string.Empty;
             LootboxMs = lootboxMs ?? string.Empty;
@@ -43,6 +45,8 @@ namespace EpicRPGBot.UI.Models
 
         public string AdventureMs { get; }
 
+        public string TrainingMs { get; }
+
         public string WorkMs { get; }
 
         public string FarmMs { get; }
@@ -57,6 +61,7 @@ namespace EpicRPGBot.UI.Models
                 true,
                 "10",
                 false,
+                "61000",
                 "61000",
                 "61000",
                 "99000",
@@ -95,6 +100,11 @@ namespace EpicRPGBot.UI.Models
             return ParseOrDefault(AdventureMs, defaultValue);
         }
 
+        public int GetTrainingMsOrDefault(int defaultValue)
+        {
+            return ParseOrDefault(TrainingMs, defaultValue);
+        }
+
         public int GetWorkMsOrDefault(int defaultValue)
         {
             return ParseOrDefault(WorkMs, defaultValue);
@@ -117,52 +127,57 @@ namespace EpicRPGBot.UI.Models
 
         public AppSettingsSnapshot WithChannelUrl(string channelUrl)
         {
-            return new AppSettingsSnapshot(channelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(channelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithUseAtMeFallback(bool useAtMeFallback)
         {
-            return new AppSettingsSnapshot(ChannelUrl, useAtMeFallback, Area, Ascended, HuntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, useAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithArea(string area)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, area, Ascended, HuntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithAscended(bool ascended)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, ascended, HuntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithHuntMs(string huntMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, huntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, huntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithAdventureMs(string adventureMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, adventureMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, adventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
+        }
+
+        public AppSettingsSnapshot WithTrainingMs(string trainingMs)
+        {
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, trainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithWorkMs(string workMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, workMs, FarmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, workMs, FarmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithFarmMs(string farmMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, WorkMs, farmMs, LootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, farmMs, LootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithLootboxMs(string lootboxMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, WorkMs, FarmMs, lootboxMs, WorkCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, lootboxMs, WorkCommands);
         }
 
         public AppSettingsSnapshot WithWorkCommands(string workCommands)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, WorkMs, FarmMs, LootboxMs, workCommands);
+            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, workCommands);
         }
 
         private static int ParseOrDefault(string value, int defaultValue)

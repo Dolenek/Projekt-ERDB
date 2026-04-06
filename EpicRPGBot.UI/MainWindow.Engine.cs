@@ -24,6 +24,7 @@ namespace EpicRPGBot.UI
             await _cooldownWorkflow.RunAsync(
                 _log.Info,
                 settings.GetAdventureMsOrDefault(61000),
+                settings.GetTrainingMsOrDefault(61000),
                 settings.GetWorkMsOrDefault(99000),
                 settings.GetFarmMsOrDefault(196000),
                 settings.GetLootboxMsOrDefault(21600000));
@@ -72,6 +73,15 @@ namespace EpicRPGBot.UI
                 {
                     LogGuardNotification(notification);
                     ShowGuardNotification(notification);
+                });
+            };
+
+            engine.OnTrainingAlert += message =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    _log.Warning("[training] " + message);
+                    _alertService.ShowTrainingAlert(this, message);
                 });
             };
 
@@ -128,6 +138,9 @@ namespace EpicRPGBot.UI
                     break;
                 case "adventure":
                     _cooldownTracker.SetCooldown("adventure", GetConfiguredAdventureMs());
+                    break;
+                case "training":
+                    _cooldownTracker.SetCooldown("training", GetConfiguredTrainingMs());
                     break;
                 case "farm":
                     _cooldownTracker.SetCooldown("farm", GetConfiguredFarmMs());
@@ -192,6 +205,7 @@ namespace EpicRPGBot.UI
                 IsFarmAllowedForConfiguredArea(),
                 GetConfiguredHuntMs(),
                 GetConfiguredAdventureMs(),
+                GetConfiguredTrainingMs(),
                 GetConfiguredWorkMs(),
                 GetConfiguredFarmMs(),
                 GetConfiguredLootboxMs());

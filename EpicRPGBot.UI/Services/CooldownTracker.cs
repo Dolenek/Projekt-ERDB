@@ -14,7 +14,7 @@ namespace EpicRPGBot.UI.Services
     {
         private static readonly Brush ReadyBrush = CreateBrush(0x24, 0x63, 0x3C);
         private static readonly Brush AlternateReadyBrush = CreateBrush(0x2F, 0x7A, 0x4A);
-        private static readonly string[] TrackedKeys = { "hunt", "adventure", "work", "farm", "lootbox" };
+        private static readonly string[] TrackedKeys = { "hunt", "adventure", "training", "work", "farm", "lootbox" };
         private static readonly CooldownDefinition[] Definitions =
         {
             new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", CooldownCategory.Rewards, "daily"),
@@ -130,6 +130,7 @@ namespace EpicRPGBot.UI.Services
             return new TrackedCooldownSnapshot(
                 GetRemaining("hunt"),
                 GetRemaining("adventure"),
+                GetRemaining("training"),
                 GetRemaining("work"),
                 GetRemaining("farm"),
                 GetRemaining("lootbox"));

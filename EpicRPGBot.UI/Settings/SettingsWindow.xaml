@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
         Width="430"
-        Height="540"
+        Height="580"
         MinWidth="430"
-        MinHeight="540"
+        MinHeight="580"
         Background="#1e1f22"
         Foreground="#ddd"
         WindowStartupLocation="CenterOwner">
@@ -68,6 +68,14 @@
                                          BorderBrush="#3a3c42"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Training cooldown (ms)" Foreground="#aaa"/>
+                                <TextBox Name="TrainingCdBox"
+                                         Margin="0,4,0,0"
+                                         Background="#1e1f22"
+                                         Foreground="#ddd"
+                                         BorderBrush="#3a3c42"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
                                 <TextBlock Text="Work cooldown (ms)" Foreground="#aaa"/>
                                 <TextBox Name="WorkCdBox"
                                          Margin="0,4,0,0"
@@ -75,7 +83,7 @@
                                          Foreground="#ddd"
                                          BorderBrush="#3a3c42"/>
                             </StackPanel>
-                            <StackPanel Margin="0,0,8,8">
+                            <StackPanel Margin="0,0,0,8">
                                 <TextBlock Text="Farm cooldown (ms)" Foreground="#aaa"/>
                                 <TextBox Name="FarmCdBox"
                                          Margin="0,4,0,0"

@@ -12,6 +12,7 @@ Canonical pages:
 - [Automation engine](docs/automation-engine.md)
 - [Command send confirmation](docs/command-send-confirmation.md)
 - [Cooldown management](docs/cooldown-management.md)
+- [Training automation](docs/training-automation.md)
 - [Wishing token](docs/wishing-token.md)
 - [Captcha solver](docs/captcha-solver.md)
 - [Guard operations](docs/guard-operations.md)

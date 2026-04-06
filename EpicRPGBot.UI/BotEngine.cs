@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
+using EpicRPGBot.UI.Training;
 using Microsoft.Web.WebView2.Wpf;
 
 namespace EpicRPGBot.UI
@@ -22,9 +23,11 @@ namespace EpicRPGBot.UI
         private readonly CancellationTokenSource _stopCancellation = new CancellationTokenSource();
         private readonly int _farmCooldown;
         private readonly bool _farmEnabled;
+        private readonly TrainingPromptParser _trainingPromptParser = new TrainingPromptParser();
 
         private string _hunt = "rpg hunt h";
         private string _adventure = "rpg adv h";
+        private string _training = "rpg tr";
         private string _work;
         private string _farm = "rpg farm";
         private string _lootbox = "rpg buy ed lb";
@@ -32,26 +35,27 @@ namespace EpicRPGBot.UI
         private string _previousMessageId = string.Empty;
         private string _previousMessageText = string.Empty;
         private int _queuedCooldownSnapshot;
+        private int _trainingConfirmationPending;
         private bool _running;
         private bool _awaitingStartupCooldownSnapshot;
         private DateTime _lastCommandSentUtc = DateTime.MinValue;
 
         public BotEngine(WebView2 web, string workCommand, bool farmEnabled, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
+            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, 61000, 61000, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
         public BotEngine(WebView2 web, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown)
+            : this(new DiscordChatClient(web), workCommand, farmEnabled, huntCooldown, adventureCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
         public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
-            : this(chatClient, workCommand, farmEnabled, huntCooldown, 61000, workCooldown, farmCooldown, lootboxCooldown)
+            : this(chatClient, workCommand, farmEnabled, huntCooldown, 61000, 61000, workCooldown, farmCooldown, lootboxCooldown)
         {
         }
 
-        public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+        public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _captchaSolver = new CaptchaSolverService(_chatClient);
@@ -60,7 +64,7 @@ namespace EpicRPGBot.UI
             _work = NormalizeWorkCommand(workCommand);
             _farmCooldown = farmCooldown;
             _farmEnabled = farmEnabled;
-            _scheduler = new TrackedCommandScheduler(farmEnabled, huntCooldown, adventureCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
+            _scheduler = new TrackedCommandScheduler(farmEnabled, huntCooldown, adventureCooldown, trainingCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
             _checkMessageTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(2)
@@ -76,6 +80,7 @@ namespace EpicRPGBot.UI
         public event Action<string> OnCommandSent;
         public event Action<string, DiscordMessageSnapshot> OnCommandConfirmed;
         public event Action<GuardAlertNotification> OnGuardNotification;
+        public event Action<string> OnTrainingAlert;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
         public event Action<string> OnSolverInfo;
 
@@ -89,6 +94,7 @@ namespace EpicRPGBot.UI
             _running = true;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
+            Interlocked.Exchange(ref _trainingConfirmationPending, 0);
             _awaitingStartupCooldownSnapshot = true;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
@@ -103,6 +109,7 @@ namespace EpicRPGBot.UI
 
             _running = false;
             _queuedCooldownSnapshot = 0;
+            Interlocked.Exchange(ref _trainingConfirmationPending, 0);
             _awaitingStartupCooldownSnapshot = false;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
@@ -133,6 +140,7 @@ namespace EpicRPGBot.UI
         public bool TryInitializeFromCooldownSnapshot(
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
+            TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
             TimeSpan? lootboxRemaining)
@@ -143,13 +151,14 @@ namespace EpicRPGBot.UI
             }
 
             _awaitingStartupCooldownSnapshot = false;
-            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
             return true;
         }
 
         public void SyncTrackedCooldowns(
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
+            TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
             TimeSpan? lootboxRemaining)
@@ -159,12 +168,13 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
         }
 
         private void ApplyTrackedCooldownSnapshot(
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
+            TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
             TimeSpan? lootboxRemaining)
@@ -172,6 +182,7 @@ namespace EpicRPGBot.UI
             _scheduler.ClearPending();
             ScheduleFromRemaining(TrackedCommandKind.Hunt, huntRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Adventure, adventureRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.Training, trainingRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Work, workRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Farm, farmRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Lootbox, lootboxRemaining);
@@ -226,7 +237,7 @@ namespace EpicRPGBot.UI
                 _lastMessageId = snapshot.Id;
                 OnMessageSeen?.Invoke(snapshot);
                 _scheduler.HandleResponse(snapshot, _running);
-                EventCheck(snapshot.Text ?? string.Empty);
+                EventCheck(snapshot);
             }
         }
 

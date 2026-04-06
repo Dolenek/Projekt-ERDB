@@ -36,6 +36,7 @@ namespace EpicRPGBot.UI.Services
             _store.SetBool("ascended", snapshot.Ascended);
             _store.SetString("hunt_ms", snapshot.HuntMs);
             _store.SetString("adventure_ms", snapshot.AdventureMs);
+            _store.SetString("training_ms", snapshot.TrainingMs);
             _store.SetString("work_ms", snapshot.WorkMs);
             _store.SetString("farm_ms", snapshot.FarmMs);
             _store.SetString("lootbox_ms", snapshot.LootboxMs);
@@ -55,6 +56,7 @@ namespace EpicRPGBot.UI.Services
                 _store.GetBool("ascended", defaults.Ascended),
                 _store.GetString("hunt_ms", defaults.HuntMs),
                 _store.GetString("adventure_ms", defaults.AdventureMs),
+                _store.GetString("training_ms", defaults.TrainingMs),
                 _store.GetString("work_ms", defaults.WorkMs),
                 _store.GetString("farm_ms", defaults.FarmMs),
                 _store.GetString("lootbox_ms", defaults.LootboxMs),

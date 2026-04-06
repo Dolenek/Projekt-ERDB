@@ -35,41 +35,17 @@ namespace EpicRPGBot.UI.Services
                 return new DiscordMessageSnapshot(string.Empty, string.Empty, string.Empty);
             }
 
-            const string script = @"
-(() => {
-  const getAuthor = (item) => {
-    const selectors = [
-      '[id^=""message-username-""]',
-      'h3 span[role=""button""]',
-      'h3 span[class*=""username""]',
-      'span[class*=""username""]'
-    ];
-    for (const selector of selectors) {
-      const node = item.querySelector(selector);
-      const text = (node?.textContent || '').trim();
-      if (text) return text;
-    }
-    return '';
-  };
+            var script = BuildSingleMessageSnapshotScript(@"
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
-  if (items.length === 0) return JSON.stringify({ id: '', text: '', author: '' });
-  const last = items[items.length - 1];
-  return JSON.stringify({
-    id: (last.id || ''),
-    text: (last.innerText || ''),
-    author: getAuthor(last)
-  });
-})();
-";
+  if (items.length === 0) return JSON.stringify(emptySnapshot());
+  return JSON.stringify(mapSnapshot(items[items.length - 1]));
+");
 
             try
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                var payload = DiscordScriptParsing.UnquoteJson(json);
-                return new DiscordMessageSnapshot(
-                    DiscordScriptParsing.ExtractField(payload, "id"),
-                    DiscordScriptParsing.ExtractField(payload, "text"),
-                    DiscordScriptParsing.ExtractField(payload, "author"));
+                return DiscordScriptParsing.ParseSnapshot(DiscordScriptParsing.UnquoteJson(json)) ??
+                    new DiscordMessageSnapshot(string.Empty, string.Empty, string.Empty);
             }
             catch
             {
@@ -85,31 +61,7 @@ namespace EpicRPGBot.UI.Services
             }
 
             var count = Math.Max(1, maxCount);
-            var script = $@"
-(() => {{
-  const getAuthor = (item) => {{
-    const selectors = [
-      '[id^=""message-username-""]',
-      'h3 span[role=""button""]',
-      'h3 span[class*=""username""]',
-      'span[class*=""username""]'
-    ];
-    for (const selector of selectors) {{
-      const node = item.querySelector(selector);
-      const text = (node?.textContent || '').trim();
-      if (text) return text;
-    }}
-    return '';
-  }};
-  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
-  const recent = items.slice(-{count});
-  return JSON.stringify(recent.map(item => ({{
-    id: item.id || '',
-    text: item.innerText || '',
-    author: getAuthor(item)
-  }})));
-}})();
-";
+            var script = BuildRecentMessagesScript(count);
 
             try
             {
@@ -129,27 +81,12 @@ namespace EpicRPGBot.UI.Services
                 return null;
             }
 
-            var script = $@"
-(() => {{
-  const getAuthor = (item) => {{
-    const selectors = [
-      '[id^=""message-username-""]',
-      'h3 span[role=""button""]',
-      'h3 span[class*=""username""]',
-      'span[class*=""username""]'
-    ];
-    for (const selector of selectors) {{
-      const node = item.querySelector(selector);
-      const text = (node?.textContent || '').trim();
-      if (text) return text;
-    }}
-    return '';
-  }};
+            var script = BuildSingleMessageSnapshotScript($@"
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
   const outgoingId = '{(outgoingMessageId ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'")}';
   const outgoingIndex = items.findIndex(item => (item.id || '') === outgoingId);
   if (outgoingIndex < 0) {{
-    return JSON.stringify({{ id: '', text: '', author: '' }});
+    return JSON.stringify(emptySnapshot());
   }}
   const looksLikeEpicReply = (author, text) => {{
     const normalizedAuthor = (author || '').toLowerCase();
@@ -167,42 +104,28 @@ namespace EpicRPGBot.UI.Services
   }};
   let fallback = null;
   for (let j = outgoingIndex + 1; j < items.length; j++) {{
-    const item = items[j];
-    const author = getAuthor(item);
-    const text = item.innerText || '';
-    if (looksLikeEpicReply(author, text)) {{
-      return JSON.stringify({{
-        id: item.id || '',
-        text,
-        author
-      }});
+    const snapshot = mapSnapshot(items[j]);
+    if (looksLikeEpicReply(snapshot.author, snapshot.text)) {{
+      return JSON.stringify(snapshot);
     }}
     if (!fallback) {{
-      fallback = JSON.stringify({{
-        id: item.id || '',
-        text,
-        author
-      }});
+      fallback = snapshot;
     }}
   }}
-  return fallback || JSON.stringify({{ id: '', text: '', author: '' }});
-}})();
-";
+  return JSON.stringify(fallback || emptySnapshot());
+");
 
             try
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                var payload = DiscordScriptParsing.UnquoteJson(json);
-                var id = DiscordScriptParsing.ExtractField(payload, "id");
+                var payload = DiscordScriptParsing.ParseSnapshot(DiscordScriptParsing.UnquoteJson(json));
+                var id = payload?.Id;
                 if (string.IsNullOrWhiteSpace(id))
                 {
                     return null;
                 }
 
-                return new DiscordMessageSnapshot(
-                    id,
-                    DiscordScriptParsing.ExtractField(payload, "text"),
-                    DiscordScriptParsing.ExtractField(payload, "author"));
+                return payload;
             }
             catch
             {
@@ -316,6 +239,108 @@ namespace EpicRPGBot.UI.Services
             {
                 return null;
             }
+        }
+
+        private static string BuildRecentMessagesScript(int count)
+        {
+            return BuildSingleMessageSnapshotScript($@"
+  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
+  const recent = items.slice(-{count});
+  return JSON.stringify(recent.map(item => mapSnapshot(item)));
+");
+        }
+
+        private static string BuildSingleMessageSnapshotScript(string body)
+        {
+            return $@"
+(() => {{
+  const emptySnapshot = () => ({{
+    id: '',
+    text: '',
+    author: '',
+    renderedText: '',
+    buttons: []
+  }});
+  const getAuthor = (item) => {{
+    const selectors = [
+      '[id^=""message-username-""]',
+      'h3 span[role=""button""]',
+      'h3 span[class*=""username""]',
+      'span[class*=""username""]'
+    ];
+    for (const selector of selectors) {{
+      const node = item.querySelector(selector);
+      const text = (node?.textContent || '').trim();
+      if (text) return text;
+    }}
+    return '';
+  }};
+  const normalizeImageAlt = (img) => {{
+    if (!img) return '';
+    const raw = (img.getAttribute('alt') || img.getAttribute('aria-label') || img.getAttribute('title') || '').trim();
+    return raw.startsWith(':') && raw.endsWith(':') ? raw : '';
+  }};
+  const replaceImagesWithAlt = (root) => {{
+    Array.from(root.querySelectorAll('img')).forEach(img => {{
+      const text = normalizeImageAlt(img);
+      img.replaceWith(document.createTextNode(text));
+    }});
+  }};
+  const renderTextWithoutButtons = (item) => {{
+    const clone = item.cloneNode(true);
+    Array.from(clone.querySelectorAll('button')).forEach(button => button.remove());
+    replaceImagesWithAlt(clone);
+    return (clone.innerText || '').trim();
+  }};
+  const getVisibleButtons = (item) => {{
+    const visibleButtons = Array.from(item.querySelectorAll('button'))
+      .map(button => {{
+        const rect = button.getBoundingClientRect();
+        const style = window.getComputedStyle(button);
+        return {{
+          button,
+          top: rect.top,
+          left: rect.left,
+          visible: rect.width > 0 &&
+            rect.height > 0 &&
+            !button.disabled &&
+            style.visibility !== 'hidden' &&
+            style.display !== 'none'
+        }};
+      }})
+      .filter(entry => entry.visible)
+      .sort((a, b) => a.top - b.top || a.left - b.left);
+    const rows = [];
+    for (const entry of visibleButtons) {{
+      const existing = rows.find(row => Math.abs(row.top - entry.top) <= 12);
+      if (existing) {{
+        existing.items.push(entry);
+        continue;
+      }}
+      rows.push({{ top: entry.top, items: [entry] }});
+    }}
+    return rows.flatMap((row, rowIndex) => row.items
+      .sort((a, b) => a.left - b.left)
+      .map((entry, columnIndex) => {{
+        const clone = entry.button.cloneNode(true);
+        replaceImagesWithAlt(clone);
+        return {{
+          label: (clone.innerText || '').trim(),
+          rowIndex,
+          columnIndex
+        }};
+      }}));
+  }};
+  const mapSnapshot = (item) => ({{
+    id: item.id || '',
+    text: item.innerText || '',
+    author: getAuthor(item),
+    renderedText: renderTextWithoutButtons(item),
+    buttons: getVisibleButtons(item)
+  }});
+{body}
+}})();
+";
         }
     }
 }

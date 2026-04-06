@@ -7,6 +7,8 @@ namespace EpicRPGBot.UI
 {
     public sealed partial class BotEngine
     {
+        private const int TrainingPendingPollDelayMs = 100;
+
         public async Task<bool> SendImmediateAsync(string text)
         {
             var ok = await SendAndEmitAsync(text);
@@ -22,6 +24,13 @@ namespace EpicRPGBot.UI
         {
             if (!_running)
             {
+                return;
+            }
+
+            if (IsGuardSolveActive)
+            {
+                ReportSolverInfo($"Skipped scheduled command '{command}' while guard solve is active.");
+                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
                 return;
             }
 
@@ -65,6 +74,12 @@ namespace EpicRPGBot.UI
                     return;
                 }
 
+                if (IsGuardSolveActive)
+                {
+                    ReportSolverInfo("Skipped queued 'rpg cd' while guard solve is active.");
+                    return;
+                }
+
                 await SendConfirmedCommandWithGlobalCooldownAsync("rpg cd", () => OnCommandSent?.Invoke("rpg cd"));
             }
             finally
@@ -90,6 +105,7 @@ namespace EpicRPGBot.UI
             {
                 case TrackedCommandKind.Hunt: return _hunt;
                 case TrackedCommandKind.Adventure: return _adventure;
+                case TrackedCommandKind.Training: return _training;
                 case TrackedCommandKind.Work: return _work;
                 case TrackedCommandKind.Farm: return _farm;
                 default: return _lootbox;
@@ -120,13 +136,28 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(string text, Action onOutgoingRegistered)
         {
-            try
+            while (true)
             {
-                await _sendGate.WaitAsync(_stopCancellation.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return false;
+                if (!await WaitForTrainingWindowAsync())
+                {
+                    return false;
+                }
+
+                try
+                {
+                    await _sendGate.WaitAsync(_stopCancellation.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+
+                if (!IsTrainingConfirmationPending())
+                {
+                    break;
+                }
+
+                _sendGate.Release();
             }
 
             try
@@ -163,13 +194,28 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> SendRawWithGlobalCooldownAsync(string text)
         {
-            try
+            while (true)
             {
-                await _sendGate.WaitAsync(_stopCancellation.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return false;
+                if (!await WaitForTrainingWindowAsync())
+                {
+                    return false;
+                }
+
+                try
+                {
+                    await _sendGate.WaitAsync(_stopCancellation.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+
+                if (!IsTrainingConfirmationPending())
+                {
+                    break;
+                }
+
+                _sendGate.Release();
             }
 
             try
@@ -191,6 +237,28 @@ namespace EpicRPGBot.UI
             {
                 _sendGate.Release();
             }
+        }
+
+        private async Task<bool> WaitForTrainingWindowAsync()
+        {
+            while (IsTrainingConfirmationPending())
+            {
+                try
+                {
+                    await SafeDelay(TrainingPendingPollDelayMs, _stopCancellation.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsTrainingConfirmationPending()
+        {
+            return Interlocked.CompareExchange(ref _trainingConfirmationPending, 0, 0) == 1;
         }
     }
 }

@@ -27,6 +27,7 @@ namespace EpicRPGBot.UI.Settings
             AreaBox.TextChanged += OnSettingsChanged;
             HuntCdBox.TextChanged += OnSettingsChanged;
             AdventureCdBox.TextChanged += OnSettingsChanged;
+            TrainingCdBox.TextChanged += OnSettingsChanged;
             WorkCdBox.TextChanged += OnSettingsChanged;
             FarmCdBox.TextChanged += OnSettingsChanged;
             LootboxCdBox.TextChanged += OnSettingsChanged;
@@ -46,6 +47,7 @@ namespace EpicRPGBot.UI.Settings
             AscendedCheckBox.IsChecked = settings.Ascended;
             HuntCdBox.Text = settings.HuntMs;
             AdventureCdBox.Text = settings.AdventureMs;
+            TrainingCdBox.Text = settings.TrainingMs;
             WorkCdBox.Text = settings.WorkMs;
             FarmCdBox.Text = settings.FarmMs;
             LootboxCdBox.Text = settings.LootboxMs;
@@ -82,6 +84,7 @@ namespace EpicRPGBot.UI.Settings
                 AscendedCheckBox.IsChecked == true,
                 HuntCdBox.Text?.Trim() ?? string.Empty,
                 AdventureCdBox.Text?.Trim() ?? string.Empty,
+                TrainingCdBox.Text?.Trim() ?? string.Empty,
                 WorkCdBox.Text?.Trim() ?? string.Empty,
                 FarmCdBox.Text?.Trim() ?? string.Empty,
                 LootboxCdBox.Text?.Trim() ?? string.Empty,
@@ -112,6 +115,7 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(AscendedCheckBox, "SettingsAscendedInput");
             SetAutomationIdentity(HuntCdBox, "SettingsHuntCooldownInput");
             SetAutomationIdentity(AdventureCdBox, "SettingsAdventureCooldownInput");
+            SetAutomationIdentity(TrainingCdBox, "SettingsTrainingCooldownInput");
             SetAutomationIdentity(WorkCdBox, "SettingsWorkCooldownInput");
             SetAutomationIdentity(FarmCdBox, "SettingsFarmCooldownInput");
             SetAutomationIdentity(LootboxCdBox, "SettingsLootboxCooldownInput");

@@ -1,9 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <RootNamespace>EpicRPGBot.UI</RootNamespace>
     <AssemblyName>EpicRPGBot.UI</AssemblyName>
     <LangVersion>latest</LangVersion>
@@ -21,5 +25,120 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+    <Page Include="MainWindow.xaml" />
+    <Page Include="Crafting\CraftingWindow.xaml" />
+    <Page Include="Dismantling\DismantleWindow.xaml" />
+    <Page Include="Settings\SettingsWindow.xaml" />
+    <Page Include="Settings\WorkCommandsWindow.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="AreaTrading\AreaTradePlanCatalog.cs" />
+    <Compile Include="AreaTrading\AreaTradeStep.cs" />
+    <Compile Include="AreaTrading\AreaTradeStepKind.cs" />
+    <Compile Include="AreaTrading\AreaTradeWorkflow.cs" />
+    <Compile Include="AreaTrading\TradeReply.cs" />
+    <Compile Include="AreaTrading\TradeReplyKind.cs" />
+    <Compile Include="AreaTrading\TradeReplyParser.cs" />
+    <Compile Include="Automation\AutomationOptions.cs" />
+    <Compile Include="Automation\AutomationRuntime.cs" />
+    <Compile Include="BotEngine.Commands.cs" />
+    <Compile Include="BotEngine.Events.cs" />
+    <Compile Include="BotEngine.Guard.cs" />
+    <Compile Include="BotEngine.Training.cs" />
+    <Compile Include="BotEngine.cs" />
+    <Compile Include="Captcha\CaptchaAnswerResult.cs" />
+    <Compile Include="Captcha\CaptchaCatalogItem.cs" />
+    <Compile Include="Captcha\CaptchaImageMediaTypeDetector.cs" />
+    <Compile Include="Captcha\CaptchaImagePreprocessor.cs" />
+    <Compile Include="Captcha\CaptchaItemCatalog.cs" />
+    <Compile Include="Captcha\CaptchaProviderFactory.cs" />
+    <Compile Include="Captcha\CaptchaSettings.cs" />
+    <Compile Include="Captcha\CaptchaVisionPromptBuilder.cs" />
+    <Compile Include="Captcha\ICaptchaAnswerProvider.cs" />
+    <Compile Include="Captcha\OpenAiCaptchaAnswerProvider.cs" />
+    <Compile Include="Captcha\OpenAiChatCompletionApiClient.cs" />
+    <Compile Include="Captcha\OpenAiChatCompletionDtos.cs" />
+    <Compile Include="Crafting\CraftItemCatalog.cs" />
+    <Compile Include="Crafting\CraftItemDefinition.cs" />
+    <Compile Include="Crafting\CraftItemKey.cs" />
+    <Compile Include="Crafting\CraftJobResult.cs" />
+    <Compile Include="Crafting\CraftPlan.cs" />
+    <Compile Include="Crafting\CraftPlanBuilder.cs" />
+    <Compile Include="Crafting\CraftReply.cs" />
+    <Compile Include="Crafting\CraftReplyParser.cs" />
+    <Compile Include="Crafting\CraftRequest.cs" />
+    <Compile Include="Crafting\CraftingWindow.xaml.cs" />
+    <Compile Include="Crafting\LogCraftingWorkflow.cs" />
+    <Compile Include="Dismantling\DismantlePlanStep.cs" />
+    <Compile Include="Dismantling\DismantleRequest.cs" />
+    <Compile Include="Dismantling\DismantleWindow.xaml.cs" />
+    <Compile Include="Dismantling\DismantlingWorkflow.cs" />
+    <Compile Include="Env.cs" />
+    <Compile Include="MainWindow.Automation.cs" />
+    <Compile Include="MainWindow.Browser.cs" />
+    <Compile Include="MainWindow.Console.cs" />
+    <Compile Include="MainWindow.Crafting.cs" />
+    <Compile Include="MainWindow.Dismantling.cs" />
+    <Compile Include="MainWindow.Engine.cs" />
+    <Compile Include="MainWindow.Messages.cs" />
+    <Compile Include="MainWindow.Settings.cs" />
+    <Compile Include="MainWindow.Sidebar.cs" />
+    <Compile Include="MainWindow.Stats.cs" />
+    <Compile Include="MainWindow.TradeArea.cs" />
+    <Compile Include="MainWindow.WishingToken.cs" />
+    <Compile Include="MainWindow.xaml.cs" />
+    <Compile Include="Models\AppSettingsSnapshot.cs" />
+    <Compile Include="Models\ConfirmedCommandSendResult.cs" />
+    <Compile Include="Models\CooldownCategory.cs" />
+    <Compile Include="Models\CooldownDefinition.cs" />
+    <Compile Include="Models\CooldownStatsSnapshot.cs" />
+    <Compile Include="Models\DiscordMessageButton.cs" />
+    <Compile Include="Models\DiscordMessageSnapshot.cs" />
+    <Compile Include="Models\GuardAlertNotification.cs" />
+    <Compile Include="Models\LogEntry.cs" />
+    <Compile Include="Models\MessageItem.cs" />
+    <Compile Include="Models\TrackedCooldownSnapshot.cs" />
+    <Compile Include="Services\AppSettingsService.cs" />
+    <Compile Include="Services\AreaWorkCommandSettings.cs" />
+    <Compile Include="Services\CaptchaSelfTestRunner.cs" />
+    <Compile Include="Services\CaptchaSolverService.cs" />
+    <Compile Include="Services\ChatMessagePoller.cs" />
+    <Compile Include="Services\ConfirmedCommandSender.cs" />
+    <Compile Include="Services\CooldownInitializationWorkflow.cs" />
+    <Compile Include="Services\CooldownStatsCalculator.cs" />
+    <Compile Include="Services\CooldownTracker.cs" />
+    <Compile Include="Services\DesktopAlertService.cs" />
+    <Compile Include="Services\DiscordChatClient.Components.cs" />
+    <Compile Include="Services\DiscordChatClient.Composer.cs" />
+    <Compile Include="Services\DiscordChatClient.Messages.cs" />
+    <Compile Include="Services\DiscordChatClient.cs" />
+    <Compile Include="Services\DiscordScriptParsing.cs" />
+    <Compile Include="Services\GuardIncidentTracker.cs" />
+    <Compile Include="Services\IDiscordChatClient.cs" />
+    <Compile Include="Services\InMemoryLog.cs" />
+    <Compile Include="Services\LastMessagesBuffer.cs" />
+    <Compile Include="Services\LocalSettingsStore.cs" />
+    <Compile Include="Services\ProfileMessageParser.cs" />
+    <Compile Include="Services\TimeCookieMessageParser.cs" />
+    <Compile Include="Services\TrackedCommandScheduler.Parsing.cs" />
+    <Compile Include="Services\TrackedCommandScheduler.cs" />
+    <Compile Include="Services\UiDispatcher.cs" />
+    <Compile Include="Services\WebViewEnvironmentFactory.cs" />
+    <Compile Include="Settings\AreaWorkCommandRow.cs" />
+    <Compile Include="Settings\SettingsWindow.xaml.cs" />
+    <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
+    <Compile Include="Training\TrainingPromptKind.cs" />
+    <Compile Include="Training\TrainingPromptParser.cs" />
+    <Compile Include="Training\TrainingPromptResolution.cs" />
+    <Compile Include="WishingToken\WishingTokenReply.cs" />
+    <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
+    <Compile Include="WishingToken\WishingTokenReplyParser.cs" />
+    <Compile Include="WishingToken\WishingTokenWorkflow.cs" />
   </ItemGroup>
 </Project>

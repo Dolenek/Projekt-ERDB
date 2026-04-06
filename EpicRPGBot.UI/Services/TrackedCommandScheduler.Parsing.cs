@@ -53,6 +53,12 @@ namespace EpicRPGBot.UI.Services
                 return true;
             }
 
+            if (msg.Contains("is training in"))
+            {
+                kind = TrackedCommandKind.Training;
+                return true;
+            }
+
             if (msg.Contains("is chopping") ||
                 msg.Contains("is fishing") ||
                 msg.Contains("is picking up") ||
