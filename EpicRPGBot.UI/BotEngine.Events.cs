@@ -7,10 +7,39 @@ namespace EpicRPGBot.UI
 {
     public sealed partial class BotEngine
     {
+        private void ProcessObservedSnapshot(Models.DiscordMessageSnapshot snapshot, bool updateCursor)
+        {
+            if (snapshot == null || string.IsNullOrWhiteSpace(snapshot.Id))
+            {
+                return;
+            }
+
+            if (updateCursor && string.Equals(snapshot.Id, _lastMessageId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (updateCursor)
+            {
+                _previousMessageId = _lastMessageId;
+                _lastMessageId = snapshot.Id;
+            }
+
+            OnMessageSeen?.Invoke(snapshot);
+            _scheduler.HandleResponse(snapshot, _running);
+            EventCheck(snapshot);
+        }
+
         private void EventCheck(Models.DiscordMessageSnapshot snapshot)
         {
             var msg = snapshot?.Text ?? string.Empty;
             HandleGuardMessage(msg);
+            if (IsGuardIncidentActive)
+            {
+                _previousMessageText = msg;
+                return;
+            }
+
             if (TryHandleTrainingPrompt(snapshot))
             {
                 _previousMessageText = msg;
@@ -112,6 +141,10 @@ namespace EpicRPGBot.UI
                     CompleteGuardSolve(_activeGuardMessageId);
                     ResetGuardMessageTracking();
                     _scheduler.ResumeAll(_running);
+                    if (QueueCooldownSnapshotRequest())
+                    {
+                        ReportSolverInfo("Queued 'rpg cd' after guard clear to resync scheduling.");
+                    }
                     OnGuardNotification?.Invoke(cleared);
                     ReportSolverInfo(cleared.Message);
                 }
@@ -220,7 +253,7 @@ namespace EpicRPGBot.UI
                     targetMessageId,
                     _lastMessageId,
                     _previousMessageId,
-                    SendAndEmitAsync,
+                    text => SendAndEmitAsync(text),
                     _scheduler.PauseAll,
                     () => _scheduler.ResumeAll(_running),
                     ReportSolverInfo);

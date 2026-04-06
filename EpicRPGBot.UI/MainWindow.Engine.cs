@@ -163,7 +163,8 @@ namespace EpicRPGBot.UI
             _engine.Start();
             _log.Engine(engineMessage);
 
-            var sent = await _engine.SendImmediateAsync("rpg cd");
+            var sent = await _engine.SendImmediateAsync("rpg cd", _engine.ArmStartupMessageCutoff);
+            await _engine.EnsureStartupMessageCutoffAsync();
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
             return sent;
         }

@@ -13,9 +13,9 @@
   },
   {
     "name": "chip",
-    "outline": "Small tilted angular token with straight edges, corner cuts, and busy geometric interior blocks.",
-    "grayscale_cues": "Looks mechanical rather than organic: dense angular shapes, inner square-like regions, and irregular edge notches.",
-    "disambiguation": "Unlike coin or epic coin it is not circular. Unlike dragon scale it is boxier and more artificial."
+    "outline": "Small tilted rectangular or square token with straight edges, clipped corners, and a flat tech-like body.",
+    "grayscale_cues": "Looks mechanical rather than round: straight sides, hard corners, inner square-like regions, and no circular medallion silhouette.",
+    "disambiguation": "Choose chip only when the icon reads as a small angular circuit-like token. Do not choose chip for a round or nearly round purple-and-gold medallion; those should prefer epic coin. Do not choose chip when the icon looks like a green eye or green frame with a dark pupil-like center; those should prefer zombie eye."
   },
   {
     "name": "coin",
@@ -31,9 +31,9 @@
   },
   {
     "name": "epic coin",
-    "outline": "Round coin-like emblem with a thicker border and more ornate inner structure than a plain coin.",
-    "grayscale_cues": "Still roughly circular, but shows multiple concentric regions, heavier rim detail, and a busier center than coin.",
-    "disambiguation": "Choose this over coin when the icon is not a plain disc and has extra border complexity or segmented inner shapes."
+    "outline": "Round or nearly round medallion-like coin with a thick outer border, ornate interior, and a fuller emblem silhouette than a plain coin.",
+    "grayscale_cues": "Reads as a circular medallion with layered rim detail, bright star-like highlights, and a busy center; not as a rectangle or clipped square.",
+    "disambiguation": "Choose epic coin for the purple-and-gold circular emblem with sparkle or star highlights. Prefer it over chip whenever the icon is fundamentally round rather than angular."
   },
   {
     "name": "epic fish",
@@ -85,8 +85,8 @@
   },
   {
     "name": "zombie eye",
-    "outline": "Horizontal oval eye shape with a dark central pupil or iris area.",
-    "grayscale_cues": "Wide eye silhouette with a clearly darker round center and a lighter outer ring; much wider than tall.",
-    "disambiguation": "Unlike coin it has a strong pupil-like center and an eye shape rather than a flat disc. Unlike life potion it is horizontal, not bottle-shaped."
+    "outline": "Eye-like icon with a dark central pupil or iris area inside a bright green outer shape; it can read as a tilted eye, diamond, or square frame around the pupil.",
+    "grayscale_cues": "High-contrast center-with-ring structure: one dark square or round pupil inside a lighter inner block and a brighter outer green frame, even when the overall silhouette is slightly tilted.",
+    "disambiguation": "Choose zombie eye when the icon reads like an eye or pupil inside a green frame, even if the outer shape looks like a tilted square. Prefer it over chip whenever there is a clear dark pupil-like center with a surrounding light-and-green border."
   }
 ]

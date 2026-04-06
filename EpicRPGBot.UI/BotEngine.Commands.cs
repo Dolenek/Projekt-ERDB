@@ -11,7 +11,7 @@ namespace EpicRPGBot.UI
 
         public async Task<bool> SendImmediateAsync(string text)
         {
-            var ok = await SendAndEmitAsync(text);
+            var ok = await SendAndEmitAsync(text, null);
             return ok;
         }
 
@@ -112,11 +112,22 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task<bool> SendAndEmitAsync(string text)
+        internal async Task<bool> SendImmediateAsync(string text, Action<Models.DiscordMessageSnapshot> onOutgoingRegistered)
+        {
+            var ok = await SendAndEmitAsync(text, onOutgoingRegistered);
+            return ok;
+        }
+
+        private async Task<bool> SendAndEmitAsync(
+            string text,
+            Action<Models.DiscordMessageSnapshot> onOutgoingRegistered = null)
         {
             if (ConfirmedCommandSender.RequiresReplyConfirmation(text))
             {
-                return await SendConfirmedCommandWithGlobalCooldownAsync(text, () => OnCommandSent?.Invoke(text));
+                return await SendConfirmedCommandWithGlobalCooldownAsync(
+                    text,
+                    () => OnCommandSent?.Invoke(text),
+                    onOutgoingRegistered);
             }
 
             var ok = await SendRawWithGlobalCooldownAsync(text);
@@ -134,7 +145,10 @@ namespace EpicRPGBot.UI
             _sendGate.Release();
         }
 
-        private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(string text, Action onOutgoingRegistered)
+        private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(
+            string text,
+            Action onOutgoingRegistered,
+            Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
         {
             while (true)
             {
@@ -170,12 +184,14 @@ namespace EpicRPGBot.UI
                     {
                         _lastCommandSentUtc = DateTime.UtcNow;
                         onOutgoingRegistered?.Invoke();
+                        onOutgoingSnapshotRegistered?.Invoke(snapshot);
                     },
                     _stopCancellation.Token);
 
                 if (result.IsConfirmed)
                 {
                     OnCommandConfirmed?.Invoke(text, result.ReplyMessage);
+                    ProcessObservedSnapshot(result.ReplyMessage, true);
                     await ProcessIncomingMessagesAsync();
                     return true;
                 }

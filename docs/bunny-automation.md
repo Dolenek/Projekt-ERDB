@@ -4,7 +4,8 @@
 
 Runtime behavior:
 - Bunny handling is always enabled during normal engine automation.
-- The engine only treats a message as a bunny prompt when the rendered body contains the bunny footer (`How to get a bunny` or `rpg egg info bunny`) and bunny stat labels.
+- The engine treats a message as a bunny prompt from its rendered body, even when Discord shows it under a `playername — bunny` author instead of `EPIC RPG`.
+- The rendered body must still contain the bunny footer (`How to get a bunny` or `rpg egg info bunny`) and bunny stat labels.
 - Bunny replies use the fast raw-send path, not the confirmed `rpg ...` command loop.
 - While a bunny reply is pending, the global send lane stays blocked so scheduled commands do not race the event answer.
 - The bunny lock clears immediately after the reply send attempt finishes; v1 does not wait for a result message.

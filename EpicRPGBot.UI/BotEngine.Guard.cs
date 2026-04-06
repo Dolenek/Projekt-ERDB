@@ -13,6 +13,7 @@ namespace EpicRPGBot.UI
         private bool _guardSolveStartedForIncident;
 
         private bool IsGuardSolveActive => !string.IsNullOrWhiteSpace(_activeGuardMessageId);
+        private bool IsGuardIncidentActive => _guardSolveStartedForIncident || !string.IsNullOrWhiteSpace(_activeGuardMessageId);
 
         private string ResolveGuardTargetMessageId(bool latestHasGuard, bool previousHasGuard)
         {

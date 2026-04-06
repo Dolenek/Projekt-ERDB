@@ -22,6 +22,7 @@ namespace EpicRPGBot.UI.Captcha
             builder.AppendLine("Return the best match from the numbered catalog.");
             builder.AppendLine("Use color first when the image is clearly colored.");
             builder.AppendLine("Use the outline, grayscale, and disambiguation notes to separate similar icons.");
+            builder.AppendLine("When a disambiguation note explicitly rules out one item and favors another, follow that rule.");
             builder.AppendLine("If a colored image strongly matches one item by color, do not prefer a grayscale-only silhouette match from another item.");
             builder.AppendLine("If the image is too unclear, return unknown with item_index = 0.");
             if (enhancedRetryImage)

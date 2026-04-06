@@ -24,6 +24,12 @@
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyCatchPlanBuilder.cs" Link="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParseResult.cs" Link="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParser.cs" Link="Bunny\BunnyPromptParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageButton.cs" Link="Models\DiscordMessageButton.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageSnapshot.cs" Link="Models\DiscordMessageSnapshot.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\InteractivePromptGate.cs" Link="Services\InteractivePromptGate.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptKind.cs" Link="Training\TrainingPromptKind.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptParser.cs" Link="Training\TrainingPromptParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptResolution.cs" Link="Training\TrainingPromptResolution.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptSignal.cs" Link="Training\TrainingPromptSignal.cs" />
   </ItemGroup>
 </Project>

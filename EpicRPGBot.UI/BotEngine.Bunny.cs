@@ -9,14 +9,7 @@ namespace EpicRPGBot.UI
     {
         private bool TryHandleBunnyPrompt(DiscordMessageSnapshot snapshot)
         {
-            var author = snapshot?.Author ?? string.Empty;
             var text = snapshot?.Text ?? string.Empty;
-            if (author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0 &&
-                text.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                return false;
-            }
-
             var parseResult = _bunnyPromptParser.Parse(snapshot?.RenderedText ?? text);
             if (!parseResult.IsBunnyPrompt)
             {

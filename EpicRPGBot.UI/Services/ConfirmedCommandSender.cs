@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.Training;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -177,8 +178,12 @@ namespace EpicRPGBot.UI.Services
         {
             var author = snapshot?.Author ?? string.Empty;
             var text = snapshot?.Text ?? string.Empty;
+            var renderedText = snapshot?.RenderedText ?? string.Empty;
             return author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   renderedText.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   TrainingPromptSignal.LooksLikePrompt(renderedText) ||
+                   TrainingPromptSignal.LooksLikePrompt(text) ||
                    text.IndexOf("Area:", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("successfully traded", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("you traded", StringComparison.OrdinalIgnoreCase) >= 0 ||

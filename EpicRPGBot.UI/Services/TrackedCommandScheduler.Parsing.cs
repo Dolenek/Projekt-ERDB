@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.Training;
 
 namespace EpicRPGBot.UI.Services
 {
@@ -9,15 +10,28 @@ namespace EpicRPGBot.UI.Services
         private static bool LooksLikeTrackedCommandResponse(DiscordMessageSnapshot snapshot)
         {
             var message = snapshot?.Text ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(message) || message.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
+            var renderedText = snapshot?.RenderedText ?? string.Empty;
+            var looksLikeTrainingPrompt = TrainingPromptSignal.LooksLikePrompt(renderedText) ||
+                TrainingPromptSignal.LooksLikePrompt(message);
+            if (!looksLikeTrainingPrompt &&
+                (string.IsNullOrWhiteSpace(message) || message.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0))
             {
-                if (snapshot == null || snapshot.Author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
+                if (snapshot == null ||
+                    (snapshot.Author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0 &&
+                     renderedText.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0))
                 {
                     return false;
                 }
             }
 
-            return message.IndexOf("EPIC GUARD", StringComparison.OrdinalIgnoreCase) < 0 &&
+            var hasGuardPrompt = GuardIncidentTracker.ContainsGuardPrompt(message);
+            var hasGuardClear = GuardIncidentTracker.ContainsGuardClear(message);
+            if (hasGuardPrompt && !hasGuardClear)
+            {
+                return false;
+            }
+
+            return
                    message.IndexOf("A LOOTBOX SUMMONING HAS", StringComparison.OrdinalIgnoreCase) < 0 &&
                    message.IndexOf("A LEGENDARY BOSS JUST SPAWNED", StringComparison.OrdinalIgnoreCase) < 0 &&
                    message.IndexOf("AN EPIC TREE HAS JUST GROWN", StringComparison.OrdinalIgnoreCase) < 0 &&

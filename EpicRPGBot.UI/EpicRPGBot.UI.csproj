@@ -145,6 +145,7 @@
     <Compile Include="Training\TrainingPromptKind.cs" />
     <Compile Include="Training\TrainingPromptParser.cs" />
     <Compile Include="Training\TrainingPromptResolution.cs" />
+    <Compile Include="Training\TrainingPromptSignal.cs" />
     <Compile Include="WishingToken\WishingTokenReply.cs" />
     <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
     <Compile Include="WishingToken\WishingTokenReplyParser.cs" />

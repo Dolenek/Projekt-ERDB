@@ -15,14 +15,6 @@ namespace EpicRPGBot.UI
 
         private bool TryHandleTrainingPrompt(DiscordMessageSnapshot snapshot)
         {
-            var author = snapshot?.Author ?? string.Empty;
-            var text = snapshot?.Text ?? string.Empty;
-            if (author.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0 &&
-                text.IndexOf("EPIC RPG", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                return false;
-            }
-
             var resolution = _trainingPromptParser.Parse(snapshot);
             if (!resolution.IsTrainingPrompt)
             {

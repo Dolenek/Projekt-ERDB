@@ -6,6 +6,7 @@ Engine lifecycle:
 - `Start()` uses the saved work command for the current area, starts message polling, and waits for the startup `rpg cd` snapshot before scheduling hunt/adventure/training/work/farm/lootbox.
 - `Stop()` stops hunt/adventure/training/work/farm/lootbox/message timers and marks the engine as stopped.
 - `SendImmediateAsync()` is used by the UI to send the initial `rpg cd` after startup polling is armed.
+- A fresh `Start Bot` session ignores older channel backlog and begins processing only after the bot's own outgoing startup `rpg cd` message.
 - `QueueCooldownSnapshotRequest()` coalesces manual `rpg cd` refresh requests into one pending send while the engine is running.
 
 Timer behavior:

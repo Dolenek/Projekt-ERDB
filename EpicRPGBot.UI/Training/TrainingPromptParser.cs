@@ -28,6 +28,12 @@ namespace EpicRPGBot.UI.Training
             ["tenth"] = 9
         };
 
+        private static readonly Dictionary<string, string> LabelAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["diamond"] = "gem",
+            ["gem"] = "gem"
+        };
+
         public TrainingPromptResolution Parse(DiscordMessageSnapshot snapshot)
         {
             var message = snapshot?.RenderedText ?? snapshot?.Text ?? string.Empty;
@@ -92,15 +98,15 @@ namespace EpicRPGBot.UI.Training
 
         private static TrainingPromptResolution TryResolveYesNoMatch(IReadOnlyList<string> lines)
         {
-            var questionLine = lines.FirstOrDefault(line => line.IndexOf("Is this a", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                line.IndexOf("Is this an", StringComparison.OrdinalIgnoreCase) >= 0);
-            if (questionLine == null)
+            var questionIndex = FindYesNoQuestionIndex(lines);
+            if (questionIndex < 0)
             {
                 return null;
             }
 
-            var labelMatch = YesNoQuestionRegex.Match(questionLine);
-            var actualToken = EmojiTokenRegex.Matches(questionLine).Cast<Match>().LastOrDefault()?.Value ?? string.Empty;
+            var questionText = BuildYesNoQuestionText(lines, questionIndex);
+            var labelMatch = YesNoQuestionRegex.Match(questionText);
+            var actualToken = FindYesNoActualToken(lines, questionIndex);
             if (!labelMatch.Success || string.IsNullOrWhiteSpace(actualToken))
             {
                 return new TrainingPromptResolution(true, false, TrainingPromptKind.YesNoMatch, string.Empty, string.Empty, "Training yes/no prompt detected, but the item comparison could not be parsed.");
@@ -110,6 +116,62 @@ namespace EpicRPGBot.UI.Training
             var isMatch = LabelsMatch(expectedLabel, actualToken);
             var answer = isMatch ? "yes" : "no";
             return new TrainingPromptResolution(true, true, TrainingPromptKind.YesNoMatch, answer, answer, $"Training yes/no prompt resolved to '{answer}'.");
+        }
+
+        private static int FindYesNoQuestionIndex(IReadOnlyList<string> lines)
+        {
+            for (var index = 0; index < lines.Count; index++)
+            {
+                if (lines[index].IndexOf("Is this a", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    lines[index].IndexOf("Is this an", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        private static string BuildYesNoQuestionText(IReadOnlyList<string> lines, int questionIndex)
+        {
+            var questionLine = questionIndex >= 0 && questionIndex < lines.Count
+                ? lines[questionIndex]
+                : string.Empty;
+            if (string.IsNullOrWhiteSpace(questionLine))
+            {
+                return string.Empty;
+            }
+
+            if (EmojiTokenRegex.IsMatch(questionLine) || questionIndex + 1 >= lines.Count)
+            {
+                return questionLine;
+            }
+
+            var nextLine = lines[questionIndex + 1];
+            return EmojiTokenRegex.IsMatch(nextLine)
+                ? string.Concat(questionLine, " ", nextLine)
+                : questionLine;
+        }
+
+        private static string FindYesNoActualToken(IReadOnlyList<string> lines, int questionIndex)
+        {
+            if (questionIndex < 0 || questionIndex >= lines.Count)
+            {
+                return string.Empty;
+            }
+
+            var questionLineToken = EmojiTokenRegex.Matches(lines[questionIndex]).Cast<Match>().LastOrDefault()?.Value;
+            if (!string.IsNullOrWhiteSpace(questionLineToken))
+            {
+                return questionLineToken;
+            }
+
+            if (questionIndex + 1 >= lines.Count)
+            {
+                return string.Empty;
+            }
+
+            return EmojiTokenRegex.Matches(lines[questionIndex + 1]).Cast<Match>().FirstOrDefault()?.Value ?? string.Empty;
         }
 
         private static TrainingPromptResolution TryResolveLetterQuestion(string message)
@@ -173,9 +235,7 @@ namespace EpicRPGBot.UI.Training
 
         private static bool LooksLikeTrainingPrompt(string message)
         {
-            return !string.IsNullOrWhiteSpace(message) &&
-                message.IndexOf("is training in", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                message.IndexOf("You have 15 seconds", StringComparison.OrdinalIgnoreCase) >= 0;
+            return TrainingPromptSignal.LooksLikePrompt(message);
         }
 
         private static IReadOnlyList<string> GetLines(string message)
@@ -236,12 +296,16 @@ namespace EpicRPGBot.UI.Training
                 return string.Empty;
             }
 
-            return new string(value
+            var normalized = new string(value
                 .Trim()
                 .Trim(':')
                 .Where(char.IsLetterOrDigit)
                 .Select(char.ToLowerInvariant)
                 .ToArray());
+
+            return LabelAliases.TryGetValue(normalized, out var alias)
+                ? alias
+                : normalized;
         }
     }
 }

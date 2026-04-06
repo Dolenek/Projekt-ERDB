@@ -88,11 +88,22 @@ namespace EpicRPGBot.UI.Services
   if (outgoingIndex < 0) {{
     return JSON.stringify(emptySnapshot());
   }}
-  const looksLikeEpicReply = (author, text) => {{
+  const looksLikeTrainingPrompt = (value) => {{
+    const normalized = (value || '').toLowerCase();
+    return normalized.includes('is training in') && normalized.includes('15 seconds');
+  }};
+  const looksLikeEpicReply = (snapshot) => {{
+    const author = snapshot.author || '';
+    const text = snapshot.text || '';
+    const renderedText = snapshot.renderedText || '';
     const normalizedAuthor = (author || '').toLowerCase();
     const normalizedText = (text || '').toLowerCase();
+    const normalizedRenderedText = (renderedText || '').toLowerCase();
     return normalizedAuthor.includes('epic rpg') ||
       normalizedText.includes('epic rpg') ||
+      normalizedRenderedText.includes('epic rpg') ||
+      looksLikeTrainingPrompt(renderedText) ||
+      looksLikeTrainingPrompt(text) ||
       normalizedText.includes('area:') ||
       normalizedText.includes('successfully traded') ||
       normalizedText.includes('you traded') ||
@@ -105,7 +116,7 @@ namespace EpicRPGBot.UI.Services
   let fallback = null;
   for (let j = outgoingIndex + 1; j < items.length; j++) {{
     const snapshot = mapSnapshot(items[j]);
-    if (looksLikeEpicReply(snapshot.author, snapshot.text)) {{
+    if (looksLikeEpicReply(snapshot)) {{
       return JSON.stringify(snapshot);
     }}
     if (!fallback) {{

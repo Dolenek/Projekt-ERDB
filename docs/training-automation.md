@@ -34,3 +34,6 @@ Initialization:
 Parsing inputs:
 - Training parsing uses a rendered message body that keeps custom emoji `alt` tokens such as `:Banana:` and excludes message buttons from the main body text.
 - Visible button labels are captured with row/column metadata so the runtime can match answers to buttons reliably.
+- Training reply detection also falls back to the prompt body signature itself (`is training in` plus `15 seconds`) when Discord app-message author metadata is missing or unstable.
+- Yes/no item checks tolerate Discord splitting the shown emoji onto the next rendered line instead of keeping it inline with the question text.
+- Yes/no item checks also normalize known training synonyms before comparison, including `diamond` matching `:gem:`.

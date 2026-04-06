@@ -21,8 +21,11 @@ Console visibility:
 
 Chat send behavior:
 - While a guard solve is active, scheduled tracked commands and queued cooldown snapshot sends are skipped so they do not occupy the Discord send lane.
+- While a guard incident is active, other event-triggered fast replies such as `CUT`, `LURE`, `CATCH`, or coin/NPC reactions are suppressed until the clear message arrives.
 - When the model returns a valid catalog match, the bot sends that exact item name back to Discord.
 - If the solver is uncertain or the send fails, the console logs that outcome instead of silently doing nothing.
+- If the guard clear message also contains the delayed result of a tracked command such as `farm`, that same message still counts as the tracked command response so scheduling resumes normally after the clear.
+- After the clear message is seen, the engine also queues one fresh `rpg cd` snapshot so tracked timers are resynced from current EPIC RPG state.
 
 Classification behavior:
 - The solver uses color as a strong signal when the captcha is clearly colored.

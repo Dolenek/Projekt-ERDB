@@ -38,9 +38,11 @@ namespace EpicRPGBot.UI
         private string _lastMessageId = string.Empty;
         private string _previousMessageId = string.Empty;
         private string _previousMessageText = string.Empty;
+        private string _startupCutoffMessageId = string.Empty;
         private int _queuedCooldownSnapshot;
         private bool _running;
         private bool _awaitingStartupCooldownSnapshot;
+        private bool _awaitingStartupMessageCutoff;
         private DateTime _lastCommandSentUtc = DateTime.MinValue;
 
         public BotEngine(WebView2 web, string workCommand, bool farmEnabled, int huntCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
@@ -101,6 +103,8 @@ namespace EpicRPGBot.UI
             ResetGuardMessageTracking();
             _interactivePromptGate.Reset();
             _awaitingStartupCooldownSnapshot = true;
+            _awaitingStartupMessageCutoff = true;
+            _startupCutoffMessageId = string.Empty;
             _checkMessageTimer.Start();
             OnEngineStarted?.Invoke();
         }
@@ -116,6 +120,8 @@ namespace EpicRPGBot.UI
             _queuedCooldownSnapshot = 0;
             _interactivePromptGate.Reset();
             _awaitingStartupCooldownSnapshot = false;
+            _awaitingStartupMessageCutoff = false;
+            _startupCutoffMessageId = string.Empty;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
             _stopCancellation.Cancel();
@@ -229,6 +235,31 @@ namespace EpicRPGBot.UI
                     }
                 }
             }
+            else if (_awaitingStartupMessageCutoff)
+            {
+                return;
+            }
+            else if (!string.IsNullOrWhiteSpace(_startupCutoffMessageId))
+            {
+                var cutoffIndex = -1;
+                for (var i = 0; i < snapshots.Count; i++)
+                {
+                    if (string.Equals(snapshots[i].Id, _startupCutoffMessageId, StringComparison.Ordinal))
+                    {
+                        cutoffIndex = i;
+                        break;
+                    }
+                }
+
+                if (cutoffIndex < 0)
+                {
+                    return;
+                }
+
+                _lastMessageId = _startupCutoffMessageId;
+                _startupCutoffMessageId = string.Empty;
+                startIndex = cutoffIndex + 1;
+            }
 
             for (var i = startIndex; i < snapshots.Count; i++)
             {
@@ -238,17 +269,42 @@ namespace EpicRPGBot.UI
                     continue;
                 }
 
-                _previousMessageId = _lastMessageId;
-                _lastMessageId = snapshot.Id;
-                OnMessageSeen?.Invoke(snapshot);
-                _scheduler.HandleResponse(snapshot, _running);
-                EventCheck(snapshot);
+                ProcessObservedSnapshot(snapshot, true);
             }
         }
 
         private static string NormalizeWorkCommand(string workCommand)
         {
             return string.IsNullOrWhiteSpace(workCommand) ? "rpg chop" : workCommand.Trim();
+        }
+
+        internal void ArmStartupMessageCutoff(DiscordMessageSnapshot outgoingMessage)
+        {
+            var messageId = outgoingMessage?.Id ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(messageId))
+            {
+                return;
+            }
+
+            _startupCutoffMessageId = messageId;
+            _awaitingStartupMessageCutoff = false;
+        }
+
+        internal async Task EnsureStartupMessageCutoffAsync()
+        {
+            if (!_awaitingStartupMessageCutoff && !string.IsNullOrWhiteSpace(_startupCutoffMessageId))
+            {
+                return;
+            }
+
+            var latest = await _chatClient.GetLatestMessageAsync();
+            var messageId = latest?.Id ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(messageId))
+            {
+                _startupCutoffMessageId = messageId;
+            }
+
+            _awaitingStartupMessageCutoff = false;
         }
     }
 }
