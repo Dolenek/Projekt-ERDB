@@ -142,23 +142,27 @@ namespace EpicRPGBot.UI.Services
 
             var js = $@"
 (() => {{
+  const minimumWidth = 96;
+  const minimumHeight = 48;
+  const minimumArea = 6000;
   const root = document.getElementById('{messageId.Replace("'", "\\'")}');
   if (!root) return '';
   const imgs = Array.from(root.querySelectorAll('img'));
-  let best = '';
+  let best = null;
   for (const im of imgs) {{
     const src = im.getAttribute('src') || im.src || '';
     if (!src) continue;
     const r = im.getBoundingClientRect();
     const styles = window.getComputedStyle(im);
     const visible = r.width > 0 && r.height > 0 && styles.visibility !== 'hidden' && styles.display !== 'none';
-    if (visible) {{
-      best = src;
-      break;
+    if (!visible) continue;
+    const area = r.width * r.height;
+    if (r.width < minimumWidth || r.height < minimumHeight || area < minimumArea) continue;
+    if (!best || area > best.area) {{
+      best = {{ src, area }};
     }}
-    if (!best) best = src;
   }}
-  return best || '';
+  return best ? best.src : '';
 }})();";
 
             try
@@ -182,18 +186,26 @@ namespace EpicRPGBot.UI.Services
 
             var js = $@"
 (() => {{
+  const minimumWidth = 96;
+  const minimumHeight = 48;
+  const minimumArea = 6000;
   const root = document.getElementById('{messageId.Replace("'", "\\'")}');
   if (!root) return JSON.stringify({{ ok:false }});
   const imgs = Array.from(root.querySelectorAll('img'));
-  let el = null;
+  let best = null;
   for (const im of imgs) {{
     const r = im.getBoundingClientRect();
     const st = window.getComputedStyle(im);
     const vis = r.width > 1 && r.height > 1 && st.visibility !== 'hidden' && st.display !== 'none';
-    if (vis) {{ el = im; break; }}
+    if (!vis) continue;
+    const area = r.width * r.height;
+    if (r.width < minimumWidth || r.height < minimumHeight || area < minimumArea) continue;
+    if (!best || area > best.area) {{
+      best = {{ element: im, area }};
+    }}
   }}
+  const el = best ? best.element : null;
   if (!el) return JSON.stringify({{ ok:false }});
-  try {{ el.scrollIntoView({{block:'center'}}); }} catch {{}}
   const r = el.getBoundingClientRect();
   return JSON.stringify({{
     ok:true,

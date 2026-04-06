@@ -14,7 +14,7 @@ namespace EpicRPGBot.UI.Captcha
         {
             OpenAiApiKey = openAiApiKey ?? string.Empty;
             OpenAiModel = string.IsNullOrWhiteSpace(openAiModel) ? "gpt-5.4-mini" : openAiModel.Trim();
-            OpenAiRetryModel = string.IsNullOrWhiteSpace(openAiRetryModel) ? "gpt-5" : openAiRetryModel.Trim();
+            OpenAiRetryModel = string.IsNullOrWhiteSpace(openAiRetryModel) ? "gpt-5.4" : openAiRetryModel.Trim();
             ApiTimeoutSeconds = Math.Max(1, apiTimeoutSeconds);
             ItemNamesFile = ResolvePath(itemNamesFile);
             SelfTestReplayDirectory = ResolvePath(selfTestReplayDirectory);
@@ -37,7 +37,7 @@ namespace EpicRPGBot.UI.Captcha
             return new CaptchaSettings(
                 Env.Get("CAPTCHA_OPENAI_API_KEY", null),
                 Env.Get("CAPTCHA_OPENAI_MODEL", "gpt-5.4-mini"),
-                Env.Get("CAPTCHA_OPENAI_RETRY_MODEL", "gpt-5"),
+                Env.Get("CAPTCHA_OPENAI_RETRY_MODEL", "gpt-5.4"),
                 ReadPositiveInt("CAPTCHA_API_TIMEOUT_SECONDS", 10, 120),
                 Env.Get("CAPTCHA_ITEM_NAMES_FILE", null),
                 Env.Get("CAPTCHA_SELFTEST_REPLAY_DIR", null));

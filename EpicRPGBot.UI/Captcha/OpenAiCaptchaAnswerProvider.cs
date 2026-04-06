@@ -27,7 +27,7 @@ namespace EpicRPGBot.UI.Captcha
             _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
             _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             _primaryModel = string.IsNullOrWhiteSpace(primaryModel) ? "gpt-5.4-mini" : primaryModel.Trim();
-            _retryModel = string.IsNullOrWhiteSpace(retryModel) ? "gpt-5" : retryModel.Trim();
+            _retryModel = string.IsNullOrWhiteSpace(retryModel) ? "gpt-5.4" : retryModel.Trim();
         }
 
         public string DescribeConfiguration()

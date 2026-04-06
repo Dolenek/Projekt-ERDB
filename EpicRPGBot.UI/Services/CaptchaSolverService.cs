@@ -61,6 +61,7 @@ namespace EpicRPGBot.UI.Services
                     return;
                 }
 
+                var imageMessageId = targetMessageId;
                 var bytes = await _chatClient.CaptureMessageImagePngAsync(targetMessageId);
                 cancellationToken.ThrowIfCancellationRequested();
                 var url = string.Empty;
@@ -77,6 +78,7 @@ namespace EpicRPGBot.UI.Services
                     if (!string.IsNullOrWhiteSpace(adjacentMessageId))
                     {
                         reportInfo?.Invoke("Primary message had no image; trying adjacent message.");
+                        imageMessageId = adjacentMessageId;
                         bytes = await _chatClient.CaptureMessageImagePngAsync(adjacentMessageId);
                         cancellationToken.ThrowIfCancellationRequested();
                         if (bytes == null || bytes.Length == 0)
@@ -112,9 +114,20 @@ namespace EpicRPGBot.UI.Services
                     reportInfo?.Invoke("Captcha image captured via DevTools screenshot.");
                 }
 
+                var usedScreenshotSource = string.IsNullOrWhiteSpace(url);
                 var start = Stopwatch.GetTimestamp();
                 reportInfo?.Invoke("Submitting captcha image to the vision solver.");
                 var result = await provider.SolveAsync(bytes, cancellationToken);
+
+                if ((!result.IsMatch || string.IsNullOrWhiteSpace(result.Label)) && usedScreenshotSource)
+                {
+                    var retriedFromUrl = await TrySolveFromUrlAsync(provider, imageMessageId, reportInfo, cancellationToken);
+                    if (retriedFromUrl != null)
+                    {
+                        result = retriedFromUrl;
+                    }
+                }
+
                 var elapsedMs = (int)(1000.0 * (Stopwatch.GetTimestamp() - start) / Stopwatch.Frequency);
 
                 if (!result.IsMatch || string.IsNullOrWhiteSpace(result.Label))
@@ -192,6 +205,38 @@ namespace EpicRPGBot.UI.Services
             };
 
             return _httpClient;
+        }
+
+        private async Task<CaptchaAnswerResult> TrySolveFromUrlAsync(
+            ICaptchaAnswerProvider provider,
+            string messageId,
+            Action<string> reportInfo,
+            CancellationToken cancellationToken)
+        {
+            if (provider == null || string.IsNullOrWhiteSpace(messageId))
+            {
+                return null;
+            }
+
+            var url = await _chatClient.GetCaptchaImageUrlForMessageIdAsync(messageId);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return null;
+            }
+
+            try
+            {
+                reportInfo?.Invoke("Screenshot solve was uncertain; retrying with downloaded image URL.");
+                var bytes = await EnsureHttpClient().GetByteArrayAsync(url);
+                cancellationToken.ThrowIfCancellationRequested();
+                return await provider.SolveAsync(bytes, cancellationToken);
+            }
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                reportInfo?.Invoke($"URL retry download failed: {ex.Message}");
+                return null;
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ if (!repoRoot || !outputPath) {
 
 const env = readEnv(path.join(repoRoot, ".env"));
 const apiKey = (env.CAPTCHA_OPENAI_API_KEY || "").trim();
-const model = (env.CAPTCHA_OPENAI_RETRY_MODEL || env.CAPTCHA_OPENAI_MODEL || "gpt-5").trim();
+const model = (env.CAPTCHA_OPENAI_RETRY_MODEL || env.CAPTCHA_OPENAI_MODEL || "gpt-5.4").trim();
 const itemsDir = path.join(repoRoot, "Items");
 const itemFiles = fs.readdirSync(itemsDir)
   .filter((name) => name.toLowerCase().endsWith(".webp"))
