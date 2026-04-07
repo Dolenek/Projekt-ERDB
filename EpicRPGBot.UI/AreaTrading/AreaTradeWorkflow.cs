@@ -77,10 +77,23 @@ namespace EpicRPGBot.UI.AreaTrading
                     ? await RunDismantleStepAsync(step, report, cancellationToken)
                     : await RunTradeStepAsync(step, report, cancellationToken);
 
-                if (!result.Completed)
+                if (result.Completed)
+                {
+                    continue;
+                }
+
+                if (result.Cancelled)
                 {
                     return result;
                 }
+
+                if (step.Kind == AreaTradeStepKind.DismantleAll)
+                {
+                    report?.Invoke($"{result.Summary} Continuing to the next area-trade step.");
+                    continue;
+                }
+
+                return result;
             }
 
             return CraftJobResult.CompletedResult("Area trade completed.");

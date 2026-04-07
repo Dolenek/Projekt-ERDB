@@ -20,20 +20,42 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\AreaTradePlanCatalog.cs" Link="AreaTrading\AreaTradePlanCatalog.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\AreaTradeStep.cs" Link="AreaTrading\AreaTradeStep.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\AreaTradeStepKind.cs" Link="AreaTrading\AreaTradeStepKind.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\AreaTradeWorkflow.cs" Link="AreaTrading\AreaTradeWorkflow.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\TradeReply.cs" Link="AreaTrading\TradeReply.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\TradeReplyKind.cs" Link="AreaTrading\TradeReplyKind.cs" />
+    <Compile Include="..\EpicRPGBot.UI\AreaTrading\TradeReplyParser.cs" Link="AreaTrading\TradeReplyParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyCatchPlan.cs" Link="Bunny\BunnyCatchPlan.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyCatchPlanBuilder.cs" Link="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParseResult.cs" Link="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParser.cs" Link="Bunny\BunnyPromptParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemCatalog.cs" Link="Crafting\CraftItemCatalog.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemDefinition.cs" Link="Crafting\CraftItemDefinition.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemKey.cs" Link="Crafting\CraftItemKey.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftJobResult.cs" Link="Crafting\CraftJobResult.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftReply.cs" Link="Crafting\CraftReply.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Crafting\CraftReplyParser.cs" Link="Crafting\CraftReplyParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dismantling\DismantlePlanStep.cs" Link="Dismantling\DismantlePlanStep.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dismantling\DismantleRequest.cs" Link="Dismantling\DismantleRequest.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dismantling\DismantlingWorkflow.cs" Link="Dismantling\DismantlingWorkflow.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\AppSettingsSnapshot.cs" Link="Models\AppSettingsSnapshot.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\ConfirmedCommandSendResult.cs" Link="Models\ConfirmedCommandSendResult.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\TrackedCooldownSnapshot.cs" Link="Models\TrackedCooldownSnapshot.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageButton.cs" Link="Models\DiscordMessageButton.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageSnapshot.cs" Link="Models\DiscordMessageSnapshot.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AreaWorkCommandSettings.cs" Link="Services\AreaWorkCommandSettings.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\AppSettingsService.cs" Link="Services\AppSettingsService.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidMatchModes.cs" Link="Services\GuildRaidMatchModes.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\IDiscordChatClient.cs" Link="Services\IDiscordChatClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\InteractivePromptGate.cs" Link="Services\InteractivePromptGate.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\LocalSettingsStore.cs" Link="Services\LocalSettingsStore.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\MessageReactionGate.cs" Link="Services\MessageReactionGate.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\ProfileMessageParser.cs" Link="Services\ProfileMessageParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\TimeCookieMessageParser.cs" Link="Services\TimeCookieMessageParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\TrackedCommandKind.cs" Link="Services\TrackedCommandKind.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\TrackedCommandResponseClassifier.cs" Link="Services\TrackedCommandResponseClassifier.cs" />

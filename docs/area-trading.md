@@ -36,6 +36,7 @@ Configured plans:
 
 Failure rules:
 - Dismantle-all steps reuse the normal dismantling workflow and keep skipping empty tiers on the way down.
+- If a dismantle-all step still ends with an unrecognized or failed reply, the sweep logs that dismantle failure and continues into the later trade steps.
 - Trade steps ignore failure replies and continue to the next trade step.
 - If EPIC RPG rejects the `all` amount for a trade step, the sweep logs that trade failure and moves on.
 - If EPIC RPG replies with the standard `wait at least 1s` cooldown warning for a trade step, the sweep waits 1 second and resends the same trade command.
