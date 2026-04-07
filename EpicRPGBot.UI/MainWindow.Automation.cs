@@ -30,8 +30,10 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(BrowserTabs, "BrowserTabs");
             SetAutomationIdentity(BotBrowserTab, "BotBrowserTab");
             SetAutomationIdentity(PlayerBrowserTab, "PlayerBrowserTab");
+            SetAutomationIdentity(GuildBrowserTab, "GuildBrowserTab");
             SetAutomationIdentity(Web, "DiscordWebView");
             SetAutomationIdentity(PlayerWeb, "PlayerDiscordWebView");
+            SetAutomationIdentity(GuildWeb, "GuildDiscordWebView");
             SetAutomationIdentity(InitHint, "InitHint");
             SetAutomationIdentity(StartBtn, "StartButton");
             SetAutomationIdentity(StopBtn, "StopButton");

@@ -52,6 +52,16 @@ namespace EpicRPGBot.UI
         {
             WireBunnyEvents(engine);
 
+            engine.OnEngineStarted += () =>
+            {
+                UiDispatcher.OnUI(RefreshBotControlButtonColors);
+            };
+
+            engine.OnEngineStopped += () =>
+            {
+                UiDispatcher.OnUI(RefreshBotControlButtonColors);
+            };
+
             engine.OnCommandSent += command =>
             {
                 UiDispatcher.OnUI(() =>

@@ -10,6 +10,7 @@ namespace EpicRPGBot.UI.Services
         private readonly IDiscordChatClient _chatClient;
         private readonly DispatcherTimer _timer;
         private string _previousMessageId = string.Empty;
+        private bool _skipNextDetectedMessage;
 
         public ChatMessagePoller(IDiscordChatClient chatClient, TimeSpan? interval = null)
         {
@@ -34,6 +35,29 @@ namespace EpicRPGBot.UI.Services
             _timer.Stop();
         }
 
+        public void ResetCursor()
+        {
+            _previousMessageId = string.Empty;
+        }
+
+        public void SkipNextDetectedMessage()
+        {
+            _skipNextDetectedMessage = true;
+        }
+
+        public async Task CaptureCurrentMessageAsBaselineAsync()
+        {
+            try
+            {
+                var snapshot = await _chatClient.GetLatestMessageAsync();
+                _previousMessageId = snapshot?.Id ?? string.Empty;
+            }
+            catch
+            {
+                _previousMessageId = string.Empty;
+            }
+        }
+
         private async Task OnTickAsync()
         {
             try
@@ -47,6 +71,12 @@ namespace EpicRPGBot.UI.Services
                 }
 
                 _previousMessageId = snapshot.Id;
+                if (_skipNextDetectedMessage)
+                {
+                    _skipNextDetectedMessage = false;
+                    return;
+                }
+
                 MessageDetected?.Invoke(snapshot);
             }
             catch

@@ -88,7 +88,11 @@ namespace EpicRPGBot.UI.Settings
                 WorkCdBox.Text?.Trim() ?? string.Empty,
                 FarmCdBox.Text?.Trim() ?? string.Empty,
                 LootboxCdBox.Text?.Trim() ?? string.Empty,
-                _settingsService.Current.WorkCommands));
+                _settingsService.Current.WorkCommands,
+                _settingsService.Current.GuildRaidChannelUrl,
+                _settingsService.Current.GuildRaidTriggerText,
+                _settingsService.Current.GuildRaidMatchMode,
+                _settingsService.Current.GuildRaidAuthorFilter));
         }
 
         private void CloseBtn_Click(object sender, RoutedEventArgs e)
@@ -106,6 +110,16 @@ namespace EpicRPGBot.UI.Settings
             workCommandsWindow.ShowDialog();
         }
 
+        private void GuildRaidBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var guildRaidWindow = new GuildRaidSettingsWindow(_settingsService)
+            {
+                Owner = this
+            };
+
+            guildRaidWindow.ShowDialog();
+        }
+
         private void ApplyAutomationSurface()
         {
             SetAutomationIdentity(this, "SettingsWindow");
@@ -120,6 +134,7 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(FarmCdBox, "SettingsFarmCooldownInput");
             SetAutomationIdentity(LootboxCdBox, "SettingsLootboxCooldownInput");
             SetAutomationIdentity(WorkCommandsBtn, "SettingsWorkCommandsButton");
+            SetAutomationIdentity(GuildRaidBtn, "SettingsGuildRaidButton");
             SetAutomationIdentity(CloseBtn, "SettingsCloseButton");
         }
 

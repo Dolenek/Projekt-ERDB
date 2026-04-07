@@ -32,6 +32,7 @@
     <Page Include="MainWindow.xaml" />
     <Page Include="Crafting\CraftingWindow.xaml" />
     <Page Include="Dismantling\DismantleWindow.xaml" />
+    <Page Include="Settings\GuildRaidSettingsWindow.xaml" />
     <Page Include="Settings\SettingsWindow.xaml" />
     <Page Include="Settings\WorkCommandsWindow.xaml" />
   </ItemGroup>
@@ -86,12 +87,14 @@
     <Compile Include="Dismantling\DismantlingWorkflow.cs" />
     <Compile Include="Env.cs" />
     <Compile Include="MainWindow.Automation.cs" />
+    <Compile Include="MainWindow.BotControls.cs" />
     <Compile Include="MainWindow.Bunny.cs" />
     <Compile Include="MainWindow.Browser.cs" />
     <Compile Include="MainWindow.Console.cs" />
     <Compile Include="MainWindow.Crafting.cs" />
     <Compile Include="MainWindow.Dismantling.cs" />
     <Compile Include="MainWindow.Engine.cs" />
+    <Compile Include="MainWindow.GuildRaid.cs" />
     <Compile Include="MainWindow.Messages.cs" />
     <Compile Include="MainWindow.Settings.cs" />
     <Compile Include="MainWindow.Sidebar.cs" />
@@ -127,6 +130,10 @@
     <Compile Include="Services\DiscordChatClient.Messages.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
     <Compile Include="Services\DiscordScriptParsing.cs" />
+    <Compile Include="Services\GuildRaidCoordinator.cs" />
+    <Compile Include="Services\GuildRaidMatchModes.cs" />
+    <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
+    <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
     <Compile Include="Services\IDiscordChatClient.cs" />
     <Compile Include="Services\InMemoryLog.cs" />
@@ -140,6 +147,7 @@
     <Compile Include="Services\UiDispatcher.cs" />
     <Compile Include="Services\WebViewEnvironmentFactory.cs" />
     <Compile Include="Settings\AreaWorkCommandRow.cs" />
+    <Compile Include="Settings\GuildRaidSettingsWindow.xaml.cs" />
     <Compile Include="Settings\SettingsWindow.xaml.cs" />
     <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
     <Compile Include="Training\TrainingPromptKind.cs" />

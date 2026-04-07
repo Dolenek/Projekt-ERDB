@@ -17,6 +17,7 @@ Canonical pages:
 - [Wishing token](docs/wishing-token.md)
 - [Captcha solver](docs/captcha-solver.md)
 - [Guard operations](docs/guard-operations.md)
+- [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)
 
 Supporting references:

@@ -1,6 +1,6 @@
 # Automation Engine
 
-`EpicRPGBot.UI/BotEngine.cs` is the runtime orchestrator for periodic command sending and chat-triggered reactions. In the two-tab shell it always targets the bot Discord tab, never the player tab.
+`EpicRPGBot.UI/BotEngine.cs` is the runtime orchestrator for periodic command sending and chat-triggered reactions. In the three-tab shell it always targets the bot Discord tab, never the player tab or guild tab.
 
 Engine lifecycle:
 - `Start()` uses the saved work command for the current area, starts message polling, and waits for the startup `rpg cd` snapshot before scheduling hunt/adventure/training/work/farm/lootbox.

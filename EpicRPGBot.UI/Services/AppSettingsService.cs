@@ -41,6 +41,10 @@ namespace EpicRPGBot.UI.Services
             _store.SetString("farm_ms", snapshot.FarmMs);
             _store.SetString("lootbox_ms", snapshot.LootboxMs);
             _store.SetString("work_commands", snapshot.WorkCommands);
+            _store.SetString("guild_raid_channel_url", snapshot.GuildRaidChannelUrl);
+            _store.SetString("guild_raid_trigger_text", snapshot.GuildRaidTriggerText);
+            _store.SetString("guild_raid_match_mode", snapshot.GuildRaidMatchMode);
+            _store.SetString("guild_raid_author_filter", snapshot.GuildRaidAuthorFilter);
 
             Current = snapshot;
             SettingsChanged?.Invoke(Current);
@@ -60,7 +64,11 @@ namespace EpicRPGBot.UI.Services
                 _store.GetString("work_ms", defaults.WorkMs),
                 _store.GetString("farm_ms", defaults.FarmMs),
                 _store.GetString("lootbox_ms", defaults.LootboxMs),
-                _store.GetString("work_commands", defaults.WorkCommands));
+                _store.GetString("work_commands", defaults.WorkCommands),
+                _store.GetString("guild_raid_channel_url", defaults.GuildRaidChannelUrl),
+                _store.GetString("guild_raid_trigger_text", defaults.GuildRaidTriggerText),
+                _store.GetString("guild_raid_match_mode", defaults.GuildRaidMatchMode),
+                _store.GetString("guild_raid_author_filter", defaults.GuildRaidAuthorFilter));
         }
     }
 }

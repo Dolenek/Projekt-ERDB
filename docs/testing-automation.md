@@ -47,14 +47,16 @@ Stable control IDs exposed by the UI:
 - `DismantleButton`, `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
 - `HuntCountStat`, `AdventureCountStat`, `TrainingCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
-- `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`
-- `DiscordWebView`, `PlayerDiscordWebView`
+- `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`, `GuildBrowserTab`
+- `DiscordWebView`, `PlayerDiscordWebView`, `GuildDiscordWebView`
 - `ConsoleList`, `LastMessagesList`, `CooldownsPanel`
 - `SettingsWindow`, `SettingsCloseButton`
 - `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
 - `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
 - `SettingsTrainingCooldownInput`
 - `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
+- `SettingsGuildRaidButton`
+- `GuildRaidSettingsWindow`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
 - `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`
 - `CraftStatusText`, `CraftStartButton`, `CraftCancelButton`

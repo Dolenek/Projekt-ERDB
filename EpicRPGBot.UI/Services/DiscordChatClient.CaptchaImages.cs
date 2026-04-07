@@ -17,7 +17,7 @@ namespace EpicRPGBot.UI.Services
             {
                 var result = await _web.CoreWebView2.ExecuteScriptAsync(BuildCaptchaImageCandidateScript(messageId));
                 var payload = DiscordScriptParsing.UnquoteJson(result);
-                var url = DiscordScriptParsing.UnquoteJson(DiscordScriptParsing.ExtractField(payload, "url"));
+                var url = NormalizeRemoteImageUrl(DiscordScriptParsing.UnquoteJson(DiscordScriptParsing.ExtractField(payload, "url")));
                 return string.IsNullOrWhiteSpace(url) ? null : url;
             }
             catch
@@ -83,8 +83,17 @@ namespace EpicRPGBot.UI.Services
   const isImageUrl = (value) => {{
     const raw = (value || '').trim();
     if (!raw) return false;
+    if (/^\/\//.test(raw)) return true;
+    if (/^https?:\/\//i.test(raw)) return true;
     return /cdn\.discordapp\.(com|net)|media\.discordapp\.(net|com)|\/attachments\//i.test(raw) ||
       /\.(png|jpe?g|webp|gif)(\?|$)/i.test(raw);
+  }};
+  const normalizeUrl = (value) => {{
+    const raw = (value || '').trim();
+    if (!raw) return '';
+    if (/^\/\//.test(raw)) return 'https:' + raw;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return '';
   }};
   const pickBestUrl = (img) => {{
     const anchor = img.closest('a[href]');
@@ -96,10 +105,7 @@ namespace EpicRPGBot.UI.Services
       img.getAttribute('data-safe-src') || ''
     ];
     for (const candidate of candidates) {{
-      if (isImageUrl(candidate)) return candidate;
-    }}
-    for (const candidate of candidates) {{
-      if ((candidate || '').trim()) return candidate;
+      if (isImageUrl(candidate)) return normalizeUrl(candidate);
     }}
     return '';
   }};
@@ -137,6 +143,34 @@ namespace EpicRPGBot.UI.Services
     h:best.h
   }});
 }})();";
+        }
+
+        private static string NormalizeRemoteImageUrl(string rawUrl)
+        {
+            var value = (rawUrl ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            if (value.StartsWith("//", StringComparison.Ordinal))
+            {
+                value = "https:" + value;
+            }
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+            {
+                return string.Empty;
+            }
+
+            var scheme = uri.Scheme ?? string.Empty;
+            if (!string.Equals(scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            return uri.AbsoluteUri;
         }
     }
 }

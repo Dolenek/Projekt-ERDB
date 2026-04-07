@@ -194,6 +194,10 @@ namespace EpicRPGBot.UI.Services
                     reportInfo?.Invoke($"Captcha image URL download failed for {label} message: {ex.Message}");
                 }
             }
+            else
+            {
+                reportInfo?.Invoke($"No downloadable captcha image URL found for {label} message.");
+            }
 
             return null;
         }

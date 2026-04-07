@@ -19,6 +19,7 @@ namespace EpicRPGBot.UI
         private readonly LastMessagesBuffer _last = new LastMessagesBuffer(5);
         private readonly IDiscordChatClient _botChatClient;
         private readonly IDiscordChatClient _playerChatClient;
+        private readonly IDiscordChatClient _guildChatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly AppSettingsService _settingsService;
         private readonly CooldownTracker _cooldownTracker;
@@ -26,6 +27,7 @@ namespace EpicRPGBot.UI
         private readonly CaptchaSelfTestRunner _captchaSelfTestRunner;
         private readonly DesktopAlertService _alertService;
         private readonly ChatMessagePoller _messagePoller;
+        private readonly GuildRaidCoordinator _guildRaidCoordinator;
         private readonly LogCraftingWorkflow _logCraftingWorkflow;
         private readonly DismantlingWorkflow _dismantlingWorkflow;
         private readonly AreaTradeWorkflow _areaTradeWorkflow;
@@ -46,6 +48,7 @@ namespace EpicRPGBot.UI
 
             _botChatClient = new DiscordChatClient(Web, "bot");
             _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
+            _guildChatClient = new DiscordChatClient(GuildWeb, "guild");
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _settingsService = new AppSettingsService(new LocalSettingsStore());
             _cooldownTracker = new CooldownTracker(this);
@@ -57,6 +60,7 @@ namespace EpicRPGBot.UI
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);
+            _guildRaidCoordinator = new GuildRaidCoordinator(_guildChatClient, GetCurrentSettings);
             _messagePoller.MessageDetected += OnPolledMessage;
 
             Loaded += MainWindow_Loaded;
@@ -73,6 +77,8 @@ namespace EpicRPGBot.UI
             await RunCaptchaSelfTestIfRequestedAsync();
             await InitializeBrowsersAsync();
             await NavigateStartupTabsAsync();
+            HookGuildRaidSettings();
+            await StartGuildRaidWatcherAsync();
             _messagePoller.Start();
         }
 
@@ -82,6 +88,7 @@ namespace EpicRPGBot.UI
             ConsoleList.ItemsSource = _log.Items;
             _lastMessagesPanel = (Grid)FindName("LastMessagesPanel");
             BindStatsUi();
+            RefreshBotControlButtonColors();
         }
 
         private async Task RunCaptchaSelfTestIfRequestedAsync()
@@ -102,6 +109,8 @@ namespace EpicRPGBot.UI
         {
             _wishingTokenCancellation?.Cancel();
             _messagePoller.Stop();
+            UnhookGuildRaidSettings();
+            _guildRaidCoordinator.Dispose();
             _engine?.Stop();
             _cooldownTracker.Stop();
             ReleaseStatsUi();

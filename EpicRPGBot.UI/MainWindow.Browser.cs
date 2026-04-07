@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI
                 await WarmUpBrowserTabsAsync();
                 await _botChatClient.EnsureInitializedAsync();
                 await _playerChatClient.EnsureInitializedAsync();
+                await _guildChatClient.EnsureInitializedAsync();
                 InitHint.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
@@ -26,7 +27,7 @@ namespace EpicRPGBot.UI
 
         private async Task WarmUpBrowserTabsAsync()
         {
-            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null)
+            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null)
             {
                 return;
             }
@@ -34,6 +35,7 @@ namespace EpicRPGBot.UI
             var originalSelection = BrowserTabs.SelectedItem;
             await ShowTabAsync(BotBrowserTab);
             await ShowTabAsync(PlayerBrowserTab);
+            await ShowTabAsync(GuildBrowserTab);
             BrowserTabs.SelectedItem = originalSelection ?? BotBrowserTab;
             BrowserTabs.UpdateLayout();
         }
