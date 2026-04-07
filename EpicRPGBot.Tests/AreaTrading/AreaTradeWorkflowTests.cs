@@ -129,9 +129,14 @@ namespace EpicRPGBot.Tests.AreaTrading
                 return Task.FromResult(reply);
             }
 
+            public Task<bool> OpenDirectMessageAsync(string conversationName, CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult(false);
+            }
+
             public Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message, CancellationToken cancellationToken = default)
             {
-                var outgoing = CreateSnapshot("Firendr", message);
+                var outgoing = CreateSnapshot("TestPlayer", message);
                 _messages.Add(outgoing);
                 _commandsByOutgoingId[outgoing.Id] = message;
                 _sentCommands.Add(message);

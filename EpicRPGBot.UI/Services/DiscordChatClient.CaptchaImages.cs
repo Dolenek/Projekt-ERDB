@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EpicRPGBot.UI.Services
@@ -16,8 +17,8 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 var result = await _web.CoreWebView2.ExecuteScriptAsync(BuildCaptchaImageCandidateScript(messageId));
-                var payload = DiscordScriptParsing.UnquoteJson(result);
-                var url = NormalizeRemoteImageUrl(DiscordScriptParsing.UnquoteJson(DiscordScriptParsing.ExtractField(payload, "url")));
+                var payload = ParseCaptchaImageCandidatePayload(result);
+                var url = NormalizeRemoteImageUrl(payload?.Url);
                 return string.IsNullOrWhiteSpace(url) ? null : url;
             }
             catch
@@ -36,17 +37,16 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(BuildCaptchaImageCandidateScript(messageId));
-                var payload = DiscordScriptParsing.UnquoteJson(json);
-                var ok = DiscordScriptParsing.ExtractField(payload, "ok");
-                if (string.IsNullOrEmpty(ok) || ok.IndexOf("true", StringComparison.OrdinalIgnoreCase) < 0)
+                var payload = ParseCaptchaImageCandidatePayload(json);
+                if (payload == null || !payload.Ok)
                 {
                     return null;
                 }
 
-                var x = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "x"));
-                var y = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "y"));
-                var w = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "w"));
-                var h = DiscordScriptParsing.ParseDouble(DiscordScriptParsing.ExtractField(payload, "h"));
+                var x = payload.X;
+                var y = payload.Y;
+                var w = payload.Width;
+                var h = payload.Height;
                 if (w < 2 || h < 2)
                 {
                     return null;
@@ -79,7 +79,7 @@ namespace EpicRPGBot.UI.Services
   const minimumHeight = 48;
   const minimumArea = 6000;
   const root = document.getElementById('{escapedMessageId}');
-  if (!root) return JSON.stringify({{ ok:false, url:'' }});
+  if (!root) return {{ ok:false, url:'' }};
   const isImageUrl = (value) => {{
     const raw = (value || '').trim();
     if (!raw) return false;
@@ -159,16 +159,100 @@ namespace EpicRPGBot.UI.Services
   for (const element of backgroundNodes) {{
     registerCandidate(element, extractBackgroundUrl(element), 3000);
   }}
-  if (!best) return JSON.stringify({{ ok:false, url:'' }});
-  return JSON.stringify({{
+  if (!best) return {{ ok:false, url:'' }};
+  return {{
     ok:true,
     url:best.url,
     x:best.x,
     y:best.y,
     w:best.w,
     h:best.h
-  }});
+  }};
 }})();";
+        }
+
+        private static CaptchaImageCandidatePayload ParseCaptchaImageCandidatePayload(string rawResult)
+        {
+            var payload = DiscordScriptParsing.UnquoteJson(rawResult);
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return null;
+            }
+
+            try
+            {
+                using (var document = JsonDocument.Parse(payload))
+                {
+                    if (document.RootElement.ValueKind != JsonValueKind.Object)
+                    {
+                        return null;
+                    }
+
+                    var root = document.RootElement;
+                    return new CaptchaImageCandidatePayload(
+                        ReadBoolean(root, "ok"),
+                        ReadString(root, "url"),
+                        ReadDouble(root, "x"),
+                        ReadDouble(root, "y"),
+                        ReadDouble(root, "w"),
+                        ReadDouble(root, "h"));
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool ReadBoolean(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property))
+            {
+                return false;
+            }
+
+            if (property.ValueKind == JsonValueKind.True)
+            {
+                return true;
+            }
+
+            if (property.ValueKind == JsonValueKind.False)
+            {
+                return false;
+            }
+
+            return bool.TryParse(property.ToString(), out var value) && value;
+        }
+
+        private static string ReadString(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property) ||
+                property.ValueKind == JsonValueKind.Null ||
+                property.ValueKind == JsonValueKind.Undefined)
+            {
+                return string.Empty;
+            }
+
+            return property.ValueKind == JsonValueKind.String
+                ? property.GetString() ?? string.Empty
+                : property.ToString();
+        }
+
+        private static double ReadDouble(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property))
+            {
+                return 0;
+            }
+
+            if (property.ValueKind == JsonValueKind.Number && property.TryGetDouble(out var value))
+            {
+                return value;
+            }
+
+            return double.TryParse(property.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out value)
+                ? value
+                : 0;
         }
 
         private static string NormalizeRemoteImageUrl(string rawUrl)
@@ -197,6 +281,31 @@ namespace EpicRPGBot.UI.Services
             }
 
             return uri.AbsoluteUri;
+        }
+
+        private sealed class CaptchaImageCandidatePayload
+        {
+            public CaptchaImageCandidatePayload(bool ok, string url, double x, double y, double width, double height)
+            {
+                Ok = ok;
+                Url = url ?? string.Empty;
+                X = x;
+                Y = y;
+                Width = width;
+                Height = height;
+            }
+
+            public bool Ok { get; }
+
+            public string Url { get; }
+
+            public double X { get; }
+
+            public double Y { get; }
+
+            public double Width { get; }
+
+            public double Height { get; }
         }
     }
 }

@@ -86,6 +86,12 @@
     <Compile Include="Dismantling\DismantleRequest.cs" />
     <Compile Include="Dismantling\DismantleWindow.xaml.cs" />
     <Compile Include="Dismantling\DismantlingWorkflow.cs" />
+    <Compile Include="Dungeon\DungeonBattleState.cs" />
+    <Compile Include="Dungeon\DungeonBattleStateParser.cs" />
+    <Compile Include="Dungeon\DungeonLobbyParser.cs" />
+    <Compile Include="Dungeon\DungeonMessageInteraction.cs" />
+    <Compile Include="Dungeon\DungeonRunResult.cs" />
+    <Compile Include="Dungeon\DungeonWorkflow.cs" />
     <Compile Include="Env.cs" />
     <Compile Include="MainWindow.Automation.cs" />
     <Compile Include="MainWindow.BotControls.cs" />
@@ -93,6 +99,7 @@
     <Compile Include="MainWindow.Browser.cs" />
     <Compile Include="MainWindow.Console.cs" />
     <Compile Include="MainWindow.Crafting.cs" />
+    <Compile Include="MainWindow.Dungeon.cs" />
     <Compile Include="MainWindow.Dismantling.cs" />
     <Compile Include="MainWindow.Engine.cs" />
     <Compile Include="MainWindow.ExclusiveOperations.cs" />
@@ -111,6 +118,7 @@
     <Compile Include="Models\CooldownDefinition.cs" />
     <Compile Include="Models\CooldownStatsSnapshot.cs" />
     <Compile Include="Models\DiscordMessageButton.cs" />
+    <Compile Include="Models\DiscordMessageMention.cs" />
     <Compile Include="Models\DiscordMessageSnapshot.cs" />
     <Compile Include="Models\GuardAlertNotification.cs" />
     <Compile Include="Models\LogEntry.cs" />
@@ -131,6 +139,7 @@
     <Compile Include="Services\DiscordChatClient.Composer.cs" />
     <Compile Include="Services\DiscordChatClient.CaptchaImages.cs" />
     <Compile Include="Services\DiscordChatClient.Messages.cs" />
+    <Compile Include="Services\DiscordChatClient.Sidebar.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
     <Compile Include="Services\DiscordScriptParsing.cs" />
     <Compile Include="Services\GuildRaidCoordinator.cs" />

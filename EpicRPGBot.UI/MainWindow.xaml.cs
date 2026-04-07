@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using EpicRPGBot.UI.AreaTrading;
 using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
+using EpicRPGBot.UI.Dungeon;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.TimeCookie;
@@ -21,7 +22,9 @@ namespace EpicRPGBot.UI
         private readonly IDiscordChatClient _botChatClient;
         private readonly IDiscordChatClient _playerChatClient;
         private readonly IDiscordChatClient _guildChatClient;
+        private readonly IDiscordChatClient _dungeonChatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
+        private readonly ConfirmedCommandSender _dungeonConfirmedCommandSender;
         private readonly AppSettingsService _settingsService;
         private readonly CooldownTracker _cooldownTracker;
         private readonly CooldownInitializationWorkflow _cooldownWorkflow;
@@ -32,15 +35,18 @@ namespace EpicRPGBot.UI
         private readonly LogCraftingWorkflow _logCraftingWorkflow;
         private readonly DismantlingWorkflow _dismantlingWorkflow;
         private readonly AreaTradeWorkflow _areaTradeWorkflow;
+        private readonly DungeonWorkflow _dungeonWorkflow;
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedMessageOrder = new Queue<string>();
 
         private BotEngine _engine;
         private bool _isAreaTradeRunning;
+        private bool _isDungeonRunning;
         private bool _isTimeCookieRunning;
         private bool _isWishingTokenRunning;
         private TimeCookieTarget? _activeTimeCookieTarget;
+        private CancellationTokenSource _dungeonCancellation;
         private CancellationTokenSource _timeCookieCancellation;
         private CancellationTokenSource _wishingTokenCancellation;
         private Grid _lastMessagesPanel;
@@ -53,13 +59,16 @@ namespace EpicRPGBot.UI
             _botChatClient = new DiscordChatClient(Web, "bot");
             _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
             _guildChatClient = new DiscordChatClient(GuildWeb, "guild");
+            _dungeonChatClient = new DiscordChatClient(DungeonWeb, "dungeon");
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
+            _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
             _settingsService = new AppSettingsService(new LocalSettingsStore());
             _cooldownTracker = new CooldownTracker(this);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
             _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
             _dismantlingWorkflow = new DismantlingWorkflow(_confirmedCommandSender);
             _areaTradeWorkflow = new AreaTradeWorkflow(_confirmedCommandSender, _dismantlingWorkflow, _settingsService, GetCurrentSettings);
+            _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();
             _alertService = new DesktopAlertService();
@@ -111,6 +120,7 @@ namespace EpicRPGBot.UI
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
+            _dungeonCancellation?.Cancel();
             _timeCookieCancellation?.Cancel();
             _wishingTokenCancellation?.Cancel();
             _messagePoller.Stop();

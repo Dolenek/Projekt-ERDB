@@ -1,0 +1,152 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using EpicRPGBot.UI.Models;
+
+namespace EpicRPGBot.UI.Dungeon
+{
+    public sealed class DungeonLobbyParser
+    {
+        public DiscordMessageMention FindPartnerMention(
+            IReadOnlyList<DiscordMessageSnapshot> snapshots,
+            string playerName)
+        {
+            if (snapshots == null || snapshots.Count == 0)
+            {
+                return null;
+            }
+
+            var selfKey = NormalizeName(playerName);
+            for (var i = snapshots.Count - 1; i >= 0; i--)
+            {
+                var snapshot = snapshots[i];
+                if (!LooksLikeLobbyMessage(snapshot))
+                {
+                    continue;
+                }
+
+                var listedPlayers = ParseListedPlayers(snapshot.RenderedText);
+                var partner = ResolveMentionBackedPartner(snapshot.Mentions, listedPlayers, selfKey) ??
+                              ResolveTextBackedPartner(listedPlayers, selfKey);
+                if (partner != null)
+                {
+                    return partner;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool LooksLikeLobbyMessage(DiscordMessageSnapshot snapshot)
+        {
+            var text = snapshot?.RenderedText ?? string.Empty;
+            return text.IndexOf("Players listed", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                   text.IndexOf("Dungeon", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static DiscordMessageMention ResolveMentionBackedPartner(
+            IReadOnlyList<DiscordMessageMention> mentions,
+            IReadOnlyList<ListedPlayerEntry> listedPlayers,
+            string selfKey)
+        {
+            if (mentions == null || mentions.Count == 0)
+            {
+                return null;
+            }
+
+            var orderedMentions = mentions
+                .Where(mention => mention != null && !string.IsNullOrWhiteSpace(mention.Label))
+                .OrderByDescending(mention => !string.IsNullOrWhiteSpace(mention.UserId))
+                .ToList();
+            foreach (var mention in orderedMentions)
+            {
+                var listedPlayer = listedPlayers.FirstOrDefault(candidate =>
+                    string.Equals(NormalizeName(candidate.MentionLabel), NormalizeName(mention.Label), StringComparison.Ordinal));
+                if (IsSelfMention(mention.Label, listedPlayer?.PlayerName, selfKey))
+                {
+                    continue;
+                }
+
+                return mention;
+            }
+
+            return null;
+        }
+
+        private static DiscordMessageMention ResolveTextBackedPartner(
+            IReadOnlyList<ListedPlayerEntry> listedPlayers,
+            string selfKey)
+        {
+            var partner = listedPlayers.FirstOrDefault(candidate => !IsSelfMention(candidate.MentionLabel, candidate.PlayerName, selfKey));
+            return partner == null
+                ? null
+                : new DiscordMessageMention(partner.MentionLabel, string.Empty);
+        }
+
+        private static bool IsSelfMention(string mentionLabel, string playerName, string selfKey)
+        {
+            return string.Equals(NormalizeName(mentionLabel), selfKey, StringComparison.Ordinal) ||
+                   string.Equals(NormalizeName(playerName), selfKey, StringComparison.Ordinal);
+        }
+
+        private static IReadOnlyList<ListedPlayerEntry> ParseListedPlayers(string renderedText)
+        {
+            var entries = new List<ListedPlayerEntry>();
+            var lines = (renderedText ?? string.Empty)
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .ToArray();
+            var playersIndex = Array.FindIndex(lines, line => line.IndexOf("Players listed", StringComparison.OrdinalIgnoreCase) >= 0);
+            if (playersIndex < 0)
+            {
+                return entries;
+            }
+
+            for (var i = playersIndex + 1; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (line.IndexOf("Recommended trades", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    line.IndexOf("This channel will be deleted", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    break;
+                }
+
+                if (!line.StartsWith("@", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var hyphenIndex = line.IndexOf('-');
+                var mentionLabel = hyphenIndex > 0 ? line.Substring(0, hyphenIndex).Trim() : line.Trim();
+                var playerName = hyphenIndex > 0 && hyphenIndex + 1 < line.Length
+                    ? line.Substring(hyphenIndex + 1).Trim()
+                    : string.Empty;
+                entries.Add(new ListedPlayerEntry(mentionLabel, playerName));
+            }
+
+            return entries;
+        }
+
+        private static string NormalizeName(string value)
+        {
+            return new string((value ?? string.Empty)
+                .Trim()
+                .TrimStart('@')
+                .Where(char.IsLetterOrDigit)
+                .Select(char.ToLowerInvariant)
+                .ToArray());
+        }
+
+        private sealed class ListedPlayerEntry
+        {
+            public ListedPlayerEntry(string mentionLabel, string playerName)
+            {
+                MentionLabel = mentionLabel ?? string.Empty;
+                PlayerName = playerName ?? string.Empty;
+            }
+
+            public string MentionLabel { get; }
+            public string PlayerName { get; }
+        }
+    }
+}

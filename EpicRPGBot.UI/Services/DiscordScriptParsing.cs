@@ -178,7 +178,8 @@ namespace EpicRPGBot.UI.Services
                 GetString(item, "text"),
                 GetString(item, "author"),
                 GetString(item, "renderedText"),
-                ParseButtons(item));
+                ParseButtons(item),
+                ParseMentions(item));
         }
 
         private static IReadOnlyList<DiscordMessageButton> ParseButtons(JsonElement item)
@@ -204,6 +205,30 @@ namespace EpicRPGBot.UI.Services
             }
 
             return buttons;
+        }
+
+        private static IReadOnlyList<DiscordMessageMention> ParseMentions(JsonElement item)
+        {
+            if (!item.TryGetProperty("mentions", out var mentionsElement) ||
+                mentionsElement.ValueKind != JsonValueKind.Array)
+            {
+                return Array.Empty<DiscordMessageMention>();
+            }
+
+            var mentions = new List<DiscordMessageMention>();
+            foreach (var mention in mentionsElement.EnumerateArray())
+            {
+                if (mention.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                mentions.Add(new DiscordMessageMention(
+                    GetString(mention, "label"),
+                    GetString(mention, "userId")));
+            }
+
+            return mentions;
         }
 
         private static string GetString(JsonElement element, string propertyName)

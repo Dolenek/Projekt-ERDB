@@ -7,6 +7,7 @@ namespace EpicRPGBot.UI.Models
     {
         public AppSettingsSnapshot(
             string channelUrl,
+            string dungeonListingChannelUrl,
             bool useAtMeFallback,
             string area,
             bool ascended,
@@ -17,12 +18,15 @@ namespace EpicRPGBot.UI.Models
             string farmMs,
             string lootboxMs,
             string workCommands,
+            string profilePlayerName,
+            bool autoDeleteDungeonChannel,
             string guildRaidChannelUrl,
             string guildRaidTriggerText,
             string guildRaidMatchMode,
             string guildRaidAuthorFilter)
         {
             ChannelUrl = channelUrl ?? string.Empty;
+            DungeonListingChannelUrl = dungeonListingChannelUrl ?? string.Empty;
             UseAtMeFallback = useAtMeFallback;
             Area = area ?? string.Empty;
             Ascended = ascended;
@@ -35,6 +39,8 @@ namespace EpicRPGBot.UI.Models
             WorkCommands = string.IsNullOrWhiteSpace(workCommands)
                 ? AreaWorkCommandSettings.DefaultSerializedMap
                 : workCommands;
+            ProfilePlayerName = profilePlayerName ?? string.Empty;
+            AutoDeleteDungeonChannel = autoDeleteDungeonChannel;
             GuildRaidChannelUrl = guildRaidChannelUrl ?? string.Empty;
             GuildRaidTriggerText = guildRaidTriggerText ?? string.Empty;
             GuildRaidMatchMode = NormalizeGuildRaidMatchMode(guildRaidMatchMode);
@@ -42,6 +48,8 @@ namespace EpicRPGBot.UI.Models
         }
 
         public string ChannelUrl { get; }
+
+        public string DungeonListingChannelUrl { get; }
 
         public bool UseAtMeFallback { get; }
 
@@ -63,6 +71,10 @@ namespace EpicRPGBot.UI.Models
 
         public string WorkCommands { get; }
 
+        public string ProfilePlayerName { get; }
+
+        public bool AutoDeleteDungeonChannel { get; }
+
         public string GuildRaidChannelUrl { get; }
 
         public string GuildRaidTriggerText { get; }
@@ -74,6 +86,7 @@ namespace EpicRPGBot.UI.Models
         public static AppSettingsSnapshot Default =>
             new AppSettingsSnapshot(
                 "https://discord.com/channels/@me",
+                string.Empty,
                 true,
                 "10",
                 false,
@@ -84,6 +97,8 @@ namespace EpicRPGBot.UI.Models
                 "196000",
                 "21600000",
                 AreaWorkCommandSettings.DefaultSerializedMap,
+                string.Empty,
+                false,
                 string.Empty,
                 string.Empty,
                 GuildRaidMatchModes.Contains,
@@ -98,6 +113,12 @@ namespace EpicRPGBot.UI.Models
             }
 
             return string.IsNullOrEmpty(url) ? "https://discord.com/channels/@me" : url;
+        }
+
+        public string ResolveDungeonListingChannelUrl()
+        {
+            var url = DungeonListingChannelUrl.Trim();
+            return string.IsNullOrEmpty(url) ? ResolveChannelUrl() : url;
         }
 
         public int GetAreaOrDefault(int defaultValue)
@@ -201,77 +222,92 @@ namespace EpicRPGBot.UI.Models
 
         public AppSettingsSnapshot WithChannelUrl(string channelUrl)
         {
-            return new AppSettingsSnapshot(channelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(channelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+        }
+
+        public AppSettingsSnapshot WithDungeonListingChannelUrl(string dungeonListingChannelUrl)
+        {
+            return new AppSettingsSnapshot(ChannelUrl, dungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithUseAtMeFallback(bool useAtMeFallback)
         {
-            return new AppSettingsSnapshot(ChannelUrl, useAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, useAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithArea(string area)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithAscended(bool ascended)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithHuntMs(string huntMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, huntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, huntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithAdventureMs(string adventureMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, adventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, adventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithTrainingMs(string trainingMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, trainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, trainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithWorkMs(string workMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, workMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, workMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithFarmMs(string farmMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, farmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, farmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithLootboxMs(string lootboxMs)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, lootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, lootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithWorkCommands(string workCommands)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, workCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, workCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+        }
+
+        public AppSettingsSnapshot WithProfilePlayerName(string profilePlayerName)
+        {
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, profilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+        }
+
+        public AppSettingsSnapshot WithAutoDeleteDungeonChannel(bool autoDeleteDungeonChannel)
+        {
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, autoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithGuildRaidChannelUrl(string guildRaidChannelUrl)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, guildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, guildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithGuildRaidTriggerText(string guildRaidTriggerText)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, guildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, guildRaidTriggerText, GuildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithGuildRaidMatchMode(string guildRaidMatchMode)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, guildRaidMatchMode, GuildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, guildRaidMatchMode, GuildRaidAuthorFilter);
         }
 
         public AppSettingsSnapshot WithGuildRaidAuthorFilter(string guildRaidAuthorFilter)
         {
-            return new AppSettingsSnapshot(ChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, guildRaidAuthorFilter);
+            return new AppSettingsSnapshot(ChannelUrl, DungeonListingChannelUrl, UseAtMeFallback, Area, Ascended, HuntMs, AdventureMs, TrainingMs, WorkMs, FarmMs, LootboxMs, WorkCommands, ProfilePlayerName, AutoDeleteDungeonChannel, GuildRaidChannelUrl, GuildRaidTriggerText, GuildRaidMatchMode, guildRaidAuthorFilter);
         }
 
         private static int ParseOrDefault(string value, int defaultValue)

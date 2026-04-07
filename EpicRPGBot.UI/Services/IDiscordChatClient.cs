@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI.Services
         Task<DiscordMessageSnapshot> GetLatestMessageAsync();
         Task<IReadOnlyList<DiscordMessageSnapshot>> GetRecentMessagesAsync(int maxCount);
         Task<DiscordMessageSnapshot> GetEpicReplyAfterMessageAsync(string outgoingMessageId);
+        Task<bool> OpenDirectMessageAsync(string conversationName, CancellationToken cancellationToken = default);
         Task<DiscordMessageSnapshot> SendMessageAndWaitForOutgoingAsync(string message, CancellationToken cancellationToken = default);
         Task<bool> SendMessageAsync(string message, CancellationToken cancellationToken = default);
         Task<bool> ClickMessageButtonAsync(string messageId, int rowIndex, int columnIndex, CancellationToken cancellationToken = default);

@@ -31,9 +31,11 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(BotBrowserTab, "BotBrowserTab");
             SetAutomationIdentity(PlayerBrowserTab, "PlayerBrowserTab");
             SetAutomationIdentity(GuildBrowserTab, "GuildBrowserTab");
+            SetAutomationIdentity(DungeonBrowserTab, "DungeonBrowserTab");
             SetAutomationIdentity(Web, "DiscordWebView");
             SetAutomationIdentity(PlayerWeb, "PlayerDiscordWebView");
             SetAutomationIdentity(GuildWeb, "GuildDiscordWebView");
+            SetAutomationIdentity(DungeonWeb, "DungeonDiscordWebView");
             SetAutomationIdentity(InitHint, "InitHint");
             SetAutomationIdentity(StartBtn, "StartButton");
             SetAutomationIdentity(StopBtn, "StopButton");
@@ -41,6 +43,7 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(RpgCdBtn, "RpgCdButton");
             SetAutomationIdentity(TradeAreaBtn, "TradeAreaButton");
             SetAutomationIdentity(WishingTokenBtn, "WishingTokenButton");
+            SetAutomationIdentity(CompleteDungeonBtn, "CompleteDungeonButton");
             SetAutomationIdentity(CooldownsPanel, "CooldownsPanel");
 
             if (!Automation.AutomationRuntime.Current.IsEnabled)

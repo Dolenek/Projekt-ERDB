@@ -16,11 +16,26 @@ namespace EpicRPGBot.UI
             var isEngineRunning = _engine != null && _engine.IsRunning;
             StartBtn.Background = isEngineRunning ? StartActiveBrush : InactiveBotControlBrush;
             StopBtn.Background = isEngineRunning ? InactiveBotControlBrush : StopActiveBrush;
+            RefreshDungeonButton();
             WishingTokenBtn.IsEnabled = !_isTimeCookieRunning || _isWishingTokenRunning;
             WishingTokenBtn.Background = _isWishingTokenRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
             RefreshTimeCookieButton(TimeCookieDungeonBtn, TimeCookieTarget.Dungeon);
             RefreshTimeCookieButton(TimeCookieDuelBtn, TimeCookieTarget.Duel);
             RefreshTimeCookieButton(TimeCookieCardHandBtn, TimeCookieTarget.CardHand);
+        }
+
+        private void RefreshDungeonButton()
+        {
+            if (CompleteDungeonBtn == null)
+            {
+                return;
+            }
+
+            var isActive = _isDungeonRunning;
+            var canStart = string.IsNullOrWhiteSpace(_activeExclusiveBotOperation) || isActive;
+            CompleteDungeonBtn.Content = isActive ? "Stop Dungeon" : "Complete Dungeon";
+            CompleteDungeonBtn.IsEnabled = canStart;
+            CompleteDungeonBtn.Background = isActive ? ExclusiveActiveBrush : InactiveBotControlBrush;
         }
 
         private void RefreshTimeCookieButton(Button button, TimeCookieTarget target)

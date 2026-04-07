@@ -79,6 +79,7 @@ namespace EpicRPGBot.UI.Services
                 }
             }
 
+            await RefreshProfileNameAsync(logInfo);
             logInfo?.Invoke("Inicialize sequence finished");
         }
 
@@ -318,6 +319,26 @@ namespace EpicRPGBot.UI.Services
         {
             return !string.IsNullOrWhiteSpace(message) &&
                 message.IndexOf("Well done", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private async Task RefreshProfileNameAsync(Action<string> logInfo)
+        {
+            var result = await _confirmedCommandSender.SendAsync("rpg p");
+            if (!result.IsConfirmed || !ProfileMessageParser.TryParsePlayerName(result.ReplyMessage?.Text, out var playerName))
+            {
+                logInfo?.Invoke("Inicialize: profile name was not updated from 'rpg p'.");
+                return;
+            }
+
+            var current = _settingsService.Current;
+            if (string.Equals(current.ProfilePlayerName, playerName, StringComparison.OrdinalIgnoreCase))
+            {
+                logInfo?.Invoke($"Inicialize: profile name confirmed as '{playerName}'.");
+                return;
+            }
+
+            _settingsService.Save(current.WithProfilePlayerName(playerName));
+            logInfo?.Invoke($"Inicialize: saved profile name '{playerName}'.");
         }
 
         private static string NormalizeLabel(string value)

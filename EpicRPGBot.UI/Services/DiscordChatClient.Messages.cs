@@ -162,7 +162,8 @@ namespace EpicRPGBot.UI.Services
     text: '',
     author: '',
     renderedText: '',
-    buttons: []
+    buttons: [],
+    mentions: []
   }});
   const getAuthor = (item) => {{
     const selectors = [
@@ -234,12 +235,41 @@ namespace EpicRPGBot.UI.Services
         }};
       }}));
   }};
+  const getMentions = (item) => {{
+    const seen = new Set();
+    const candidates = Array.from(item.querySelectorAll(
+      '[data-user-id], span[class*=""mention""], a[href*=""/users/""]'
+    ));
+    const mentions = [];
+    for (const node of candidates) {{
+      const element = node instanceof HTMLElement ? node : node.parentElement;
+      if (!element) continue;
+      const label = (element.innerText || element.textContent || '').trim();
+      if (!label || label.indexOf('@') < 0) continue;
+      const owner = element.closest('[data-user-id]');
+      let userId = (element.getAttribute('data-user-id') || owner?.getAttribute('data-user-id') || '').trim();
+      if (!userId) {{
+        const href = (element.getAttribute('href') || '').trim();
+        const match = href.match(/\/users\/(\d+)/i);
+        if (match) {{
+          userId = match[1];
+        }}
+      }}
+      if (!userId) continue;
+      const key = `${{userId}}|${{label}}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      mentions.push({{ label, userId }});
+    }}
+    return mentions;
+  }};
   const mapSnapshot = (item) => ({{
     id: item.id || '',
     text: item.innerText || '',
     author: getAuthor(item),
     renderedText: renderTextWithoutButtons(item),
-    buttons: getVisibleButtons(item)
+    buttons: getVisibleButtons(item),
+    mentions: getMentions(item)
   }});
 {body}
 }})();

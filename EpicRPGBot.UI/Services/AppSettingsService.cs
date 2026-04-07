@@ -31,6 +31,7 @@ namespace EpicRPGBot.UI.Services
             }
 
             _store.SetString("channel_url", snapshot.ChannelUrl);
+            _store.SetString("dungeon_listing_channel_url", snapshot.DungeonListingChannelUrl);
             _store.SetBool("use_at_me_fallback", snapshot.UseAtMeFallback);
             _store.SetString("area", snapshot.Area);
             _store.SetBool("ascended", snapshot.Ascended);
@@ -41,6 +42,8 @@ namespace EpicRPGBot.UI.Services
             _store.SetString("farm_ms", snapshot.FarmMs);
             _store.SetString("lootbox_ms", snapshot.LootboxMs);
             _store.SetString("work_commands", snapshot.WorkCommands);
+            _store.SetString("profile_player_name", snapshot.ProfilePlayerName);
+            _store.SetBool("auto_delete_dungeon_channel", snapshot.AutoDeleteDungeonChannel);
             _store.SetString("guild_raid_channel_url", snapshot.GuildRaidChannelUrl);
             _store.SetString("guild_raid_trigger_text", snapshot.GuildRaidTriggerText);
             _store.SetString("guild_raid_match_mode", snapshot.GuildRaidMatchMode);
@@ -55,6 +58,7 @@ namespace EpicRPGBot.UI.Services
             var defaults = AppSettingsSnapshot.Default;
             return new AppSettingsSnapshot(
                 _store.GetString("channel_url", defaults.ChannelUrl),
+                _store.GetString("dungeon_listing_channel_url", defaults.DungeonListingChannelUrl),
                 _store.GetBool("use_at_me_fallback", defaults.UseAtMeFallback),
                 _store.GetString("area", defaults.Area),
                 _store.GetBool("ascended", defaults.Ascended),
@@ -65,6 +69,8 @@ namespace EpicRPGBot.UI.Services
                 _store.GetString("farm_ms", defaults.FarmMs),
                 _store.GetString("lootbox_ms", defaults.LootboxMs),
                 _store.GetString("work_commands", defaults.WorkCommands),
+                _store.GetString("profile_player_name", defaults.ProfilePlayerName),
+                _store.GetBool("auto_delete_dungeon_channel", defaults.AutoDeleteDungeonChannel),
                 _store.GetString("guild_raid_channel_url", defaults.GuildRaidChannelUrl),
                 _store.GetString("guild_raid_trigger_text", defaults.GuildRaidTriggerText),
                 _store.GetString("guild_raid_match_mode", defaults.GuildRaidMatchMode),

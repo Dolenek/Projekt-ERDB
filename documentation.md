@@ -7,6 +7,7 @@ Canonical pages:
 - [Crafting](docs/crafting.md)
 - [Dismantling](docs/dismantling.md)
 - [Area trading](docs/area-trading.md)
+- [Dungeon automation](docs/dungeon-automation.md)
 - [Settings window](docs/settings-window.md)
 - [Work command settings](docs/work-command-settings.md)
 - [Automation engine](docs/automation-engine.md)

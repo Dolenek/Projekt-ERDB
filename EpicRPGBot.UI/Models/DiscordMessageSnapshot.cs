@@ -10,13 +10,15 @@ namespace EpicRPGBot.UI.Models
             string text,
             string author = null,
             string renderedText = null,
-            IReadOnlyList<DiscordMessageButton> buttons = null)
+            IReadOnlyList<DiscordMessageButton> buttons = null,
+            IReadOnlyList<DiscordMessageMention> mentions = null)
         {
             Id = id ?? string.Empty;
             Text = text ?? string.Empty;
             Author = author ?? string.Empty;
             RenderedText = string.IsNullOrWhiteSpace(renderedText) ? Text : renderedText;
             Buttons = buttons?.Where(button => button != null).ToArray() ?? new DiscordMessageButton[0];
+            Mentions = mentions?.Where(mention => mention != null).ToArray() ?? new DiscordMessageMention[0];
         }
 
         public string Id { get; }
@@ -24,5 +26,6 @@ namespace EpicRPGBot.UI.Models
         public string Author { get; }
         public string RenderedText { get; }
         public IReadOnlyList<DiscordMessageButton> Buttons { get; }
+        public IReadOnlyList<DiscordMessageMention> Mentions { get; }
     }
 }

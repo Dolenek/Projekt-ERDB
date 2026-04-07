@@ -7,14 +7,16 @@ namespace EpicRPGBot.Tests.Training
 {
     public sealed class TrainingPromptParserTests
     {
+        private const string TestPlayerName = "testplayer";
+
         [Fact]
         public void Parse_CountQuestionForestLogs_ResolvesCorrectAnswer()
         {
             var parser = new TrainingPromptParser();
             var snapshot = new DiscordMessageSnapshot(
                 "training-1",
-                "firendr is training in the forest!",
-                renderedText: "firendr is training in the forest!\n:MEGAlog::SUPERlog::SUPERlog::EPIClog::MEGAlog:\nHow many :SUPERlog: do you see? you have 15 seconds!",
+                TestPlayerName + " is training in the forest!",
+                renderedText: TestPlayerName + " is training in the forest!\n:MEGAlog::SUPERlog::SUPERlog::EPIClog::MEGAlog:\nHow many :SUPERlog: do you see? you have 15 seconds!",
                 buttons: new List<DiscordMessageButton>
                 {
                     new DiscordMessageButton("0", 0, 0),
@@ -40,8 +42,8 @@ namespace EpicRPGBot.Tests.Training
             var parser = new TrainingPromptParser();
             var snapshot = new DiscordMessageSnapshot(
                 "training-2",
-                "firendr is training in the... casino?",
-                renderedText: "firendr is training in the... casino?\nIs this a DICE ? :gem:\nAnswer with yes or no! You have 15 seconds!",
+                TestPlayerName + " is training in the... casino?",
+                renderedText: TestPlayerName + " is training in the... casino?\nIs this a DICE ? :gem:\nAnswer with yes or no! You have 15 seconds!",
                 buttons: new List<DiscordMessageButton>
                 {
                     new DiscordMessageButton("yes", 0, 0),
@@ -63,8 +65,8 @@ namespace EpicRPGBot.Tests.Training
             var parser = new TrainingPromptParser();
             var snapshot = new DiscordMessageSnapshot(
                 "training-3",
-                "firendr is training in the... casino?",
-                renderedText: "firendr is training in the... casino?\nIs this a DICE ?\n:gem:\nAnswer with yes or no! You have 15 seconds!",
+                TestPlayerName + " is training in the... casino?",
+                renderedText: TestPlayerName + " is training in the... casino?\nIs this a DICE ?\n:gem:\nAnswer with yes or no! You have 15 seconds!",
                 buttons: new List<DiscordMessageButton>
                 {
                     new DiscordMessageButton("yes", 0, 0),
@@ -86,8 +88,8 @@ namespace EpicRPGBot.Tests.Training
             var parser = new TrainingPromptParser();
             var snapshot = new DiscordMessageSnapshot(
                 "training-4",
-                "firendr is training in the... casino?",
-                renderedText: "firendr is training in the... casino?\nIs this a DIAMOND ? :gem:\nAnswer with yes or no! You have 15 seconds!",
+                TestPlayerName + " is training in the... casino?",
+                renderedText: TestPlayerName + " is training in the... casino?\nIs this a DIAMOND ? :gem:\nAnswer with yes or no! You have 15 seconds!",
                 buttons: new List<DiscordMessageButton>
                 {
                     new DiscordMessageButton("yes", 0, 0),

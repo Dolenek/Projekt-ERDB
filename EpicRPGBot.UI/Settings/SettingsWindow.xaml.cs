@@ -24,6 +24,7 @@ namespace EpicRPGBot.UI.Settings
         private void RegisterSettingsPersistence()
         {
             ChannelUrlBox.TextChanged += OnSettingsChanged;
+            DungeonListingChannelUrlBox.TextChanged += OnSettingsChanged;
             AreaBox.TextChanged += OnSettingsChanged;
             HuntCdBox.TextChanged += OnSettingsChanged;
             AdventureCdBox.TextChanged += OnSettingsChanged;
@@ -33,6 +34,8 @@ namespace EpicRPGBot.UI.Settings
             LootboxCdBox.TextChanged += OnSettingsChanged;
             AscendedCheckBox.Checked += OnAscendedChanged;
             AscendedCheckBox.Unchecked += OnAscendedChanged;
+            AutoDeleteDungeonChannelCheckBox.Checked += OnAutoDeleteDungeonChannelChanged;
+            AutoDeleteDungeonChannelCheckBox.Unchecked += OnAutoDeleteDungeonChannelChanged;
             UseAtMeFallback.Checked += OnFallbackChanged;
             UseAtMeFallback.Unchecked += OnFallbackChanged;
         }
@@ -42,6 +45,7 @@ namespace EpicRPGBot.UI.Settings
             _loadingSettings = true;
 
             ChannelUrlBox.Text = settings.ChannelUrl;
+            DungeonListingChannelUrlBox.Text = settings.DungeonListingChannelUrl;
             UseAtMeFallback.IsChecked = settings.UseAtMeFallback;
             AreaBox.Text = settings.Area;
             AscendedCheckBox.IsChecked = settings.Ascended;
@@ -51,6 +55,7 @@ namespace EpicRPGBot.UI.Settings
             WorkCdBox.Text = settings.WorkMs;
             FarmCdBox.Text = settings.FarmMs;
             LootboxCdBox.Text = settings.LootboxMs;
+            AutoDeleteDungeonChannelCheckBox.IsChecked = settings.AutoDeleteDungeonChannel;
 
             _loadingSettings = false;
         }
@@ -70,6 +75,11 @@ namespace EpicRPGBot.UI.Settings
             PersistSettings();
         }
 
+        private void OnAutoDeleteDungeonChannelChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
         private void PersistSettings()
         {
             if (_loadingSettings)
@@ -79,6 +89,7 @@ namespace EpicRPGBot.UI.Settings
 
             _settingsService.Save(new AppSettingsSnapshot(
                 ChannelUrlBox.Text?.Trim() ?? string.Empty,
+                DungeonListingChannelUrlBox.Text?.Trim() ?? string.Empty,
                 UseAtMeFallback.IsChecked == true,
                 AreaBox.Text?.Trim() ?? string.Empty,
                 AscendedCheckBox.IsChecked == true,
@@ -89,6 +100,8 @@ namespace EpicRPGBot.UI.Settings
                 FarmCdBox.Text?.Trim() ?? string.Empty,
                 LootboxCdBox.Text?.Trim() ?? string.Empty,
                 _settingsService.Current.WorkCommands,
+                _settingsService.Current.ProfilePlayerName,
+                AutoDeleteDungeonChannelCheckBox.IsChecked == true,
                 _settingsService.Current.GuildRaidChannelUrl,
                 _settingsService.Current.GuildRaidTriggerText,
                 _settingsService.Current.GuildRaidMatchMode,
@@ -124,9 +137,11 @@ namespace EpicRPGBot.UI.Settings
         {
             SetAutomationIdentity(this, "SettingsWindow");
             SetAutomationIdentity(ChannelUrlBox, "SettingsChannelUrlInput");
+            SetAutomationIdentity(DungeonListingChannelUrlBox, "SettingsDungeonListingChannelUrlInput");
             SetAutomationIdentity(UseAtMeFallback, "SettingsUseAtMeFallback");
             SetAutomationIdentity(AreaBox, "SettingsAreaInput");
             SetAutomationIdentity(AscendedCheckBox, "SettingsAscendedInput");
+            SetAutomationIdentity(AutoDeleteDungeonChannelCheckBox, "SettingsAutoDeleteDungeonChannelInput");
             SetAutomationIdentity(HuntCdBox, "SettingsHuntCooldownInput");
             SetAutomationIdentity(AdventureCdBox, "SettingsAdventureCooldownInput");
             SetAutomationIdentity(TrainingCdBox, "SettingsTrainingCooldownInput");

@@ -11,7 +11,7 @@ namespace EpicRPGBot.Tests.Services
         {
             var snapshot = new DiscordMessageSnapshot(
                 "m1",
-                "EPIC RPG\nfirendr found and killed a GIANT SCORPION\nBy the way, did you try the new event? --> rpg easter",
+                "EPIC RPG\ntestplayer found and killed a GIANT SCORPION\nBy the way, did you try the new event? --> rpg easter",
                 "EPIC RPG");
 
             Assert.True(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));

@@ -17,6 +17,7 @@ namespace EpicRPGBot.UI
                 await _botChatClient.EnsureInitializedAsync();
                 await _playerChatClient.EnsureInitializedAsync();
                 await _guildChatClient.EnsureInitializedAsync();
+                await _dungeonChatClient.EnsureInitializedAsync();
                 InitHint.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
@@ -27,7 +28,7 @@ namespace EpicRPGBot.UI
 
         private async Task WarmUpBrowserTabsAsync()
         {
-            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null)
+            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null || DungeonBrowserTab == null)
             {
                 return;
             }
@@ -36,6 +37,7 @@ namespace EpicRPGBot.UI
             await ShowTabAsync(BotBrowserTab);
             await ShowTabAsync(PlayerBrowserTab);
             await ShowTabAsync(GuildBrowserTab);
+            await ShowTabAsync(DungeonBrowserTab);
             BrowserTabs.SelectedItem = originalSelection ?? BotBrowserTab;
             BrowserTabs.UpdateLayout();
         }
@@ -54,6 +56,7 @@ namespace EpicRPGBot.UI
                 var channelUrl = GetChannelUrl();
                 await _botChatClient.NavigateToChannelAsync(channelUrl);
                 await _playerChatClient.NavigateToChannelAsync(channelUrl);
+                await _dungeonChatClient.NavigateToChannelAsync(channelUrl);
             }
             catch (Exception ex)
             {
@@ -96,12 +99,22 @@ namespace EpicRPGBot.UI
 
         private void SelectBotTab()
         {
-            if (BrowserTabs == null || BotBrowserTab == null)
+            SelectBrowserTab(BotBrowserTab);
+        }
+
+        private void SelectDungeonTab()
+        {
+            SelectBrowserTab(DungeonBrowserTab);
+        }
+
+        private void SelectBrowserTab(TabItem tab)
+        {
+            if (BrowserTabs == null || tab == null)
             {
                 return;
             }
 
-            BrowserTabs.SelectedItem = BotBrowserTab;
+            BrowserTabs.SelectedItem = tab;
         }
 
         private void SetInitHint(string text)

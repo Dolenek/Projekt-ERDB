@@ -55,7 +55,6 @@
             <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Left: Stats / Console -->
         <Border Grid.Column="0" Background="#242529" BorderBrush="#2f3136" BorderThickness="0,0,1,0">
             <DockPanel Margin="12">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,12">
@@ -65,7 +64,6 @@
                 </StackPanel>
 
                 <Grid>
-                    <!-- Stats view: last 5 messages -->
                     <Grid Name="LastMessagesPanel" Visibility="Visible">
                         <ListBox Name="StatsList"
                                  Background="#1e1f22"
@@ -81,7 +79,6 @@
                         </ListBox>
                     </Grid>
 
-                    <!-- Stats counters -->
                     <Grid Name="StatsPanel" Visibility="Collapsed">
                         <StackPanel Background="#1e1f22" Margin="4">
                             <TextBlock Text="Stats" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
@@ -98,7 +95,6 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Console view: log lines -->
                     <Grid Name="ConsolePanel" Visibility="Collapsed">
                         <ListBox Name="ConsoleList"
                                  Background="#1e1f22"
@@ -119,7 +115,6 @@
             </DockPanel>
         </Border>
 
-        <!-- Center: Discord Chat via WebView2 -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="40"/>
@@ -158,12 +153,15 @@
                             <wv2:WebView2 Name="GuildWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </Grid>
                     </TabItem>
+                    <TabItem Name="DungeonBrowserTab" Header="Dungeon tab" Style="{StaticResource BrowserTabItemStyle}">
+                        <Grid Background="#1e1f22">
+                            <wv2:WebView2 Name="DungeonWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
                 <TextBlock Name="InitHint" Text="Loading WebView2..." Foreground="#bbb" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
             </Grid>
         </Grid>
-
-        <!-- Right: Controls / Cooldowns -->
         <Border Grid.Column="2" Background="#242529" BorderBrush="#2f3136" BorderThickness="1,0,0,0">
             <Grid Margin="12">
                 <Grid.RowDefinitions>
@@ -178,6 +176,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -190,6 +189,7 @@
                         <Button Name="RpgCdBtn" Grid.Row="1" Grid.Column="0" Content="rpg cd" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="RpgCdBtn_Click"/>
                         <Button Name="TradeAreaBtn" Grid.Row="1" Grid.Column="1" Content="Trade area" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TradeAreaBtn_Click"/>
                         <Button Name="WishingTokenBtn" Grid.Row="1" Grid.Column="2" Content="Wishing token" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="WishingTokenBtn_Click"/>
+                        <Button Name="CompleteDungeonBtn" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Complete Dungeon" Margin="0,8,0,0" MinHeight="30" Padding="12,4" Click="CompleteDungeonBtn_Click"/>
                     </Grid>
 
                     <TextBlock Text="Time cookie" Foreground="#bbb" Margin="0,12,0,6"/>
