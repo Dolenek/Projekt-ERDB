@@ -10,7 +10,7 @@ namespace EpicRPGBot.UI
     {
         private void CraftingBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("Crafting"))
+            if (ShouldBlockForExclusiveBotOperation("Crafting"))
             {
                 return;
             }

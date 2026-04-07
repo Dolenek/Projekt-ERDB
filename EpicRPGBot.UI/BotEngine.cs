@@ -20,6 +20,7 @@ namespace EpicRPGBot.UI
         private readonly DispatcherTimer _checkMessageTimer;
         private readonly GuardIncidentTracker _guardIncidentTracker;
         private readonly InteractivePromptGate _interactivePromptGate = new InteractivePromptGate();
+        private readonly MessageReactionGate _messageReactionGate = new MessageReactionGate();
         private readonly TrackedCommandScheduler _scheduler;
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
         private readonly CancellationTokenSource _stopCancellation = new CancellationTokenSource();
@@ -102,6 +103,7 @@ namespace EpicRPGBot.UI
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
             _interactivePromptGate.Reset();
+            _messageReactionGate.Reset();
             _awaitingStartupCooldownSnapshot = true;
             _awaitingStartupMessageCutoff = true;
             _startupCutoffMessageId = string.Empty;
@@ -119,6 +121,7 @@ namespace EpicRPGBot.UI
             _running = false;
             _queuedCooldownSnapshot = 0;
             _interactivePromptGate.Reset();
+            _messageReactionGate.Reset();
             _awaitingStartupCooldownSnapshot = false;
             _awaitingStartupMessageCutoff = false;
             _startupCutoffMessageId = string.Empty;

@@ -11,7 +11,7 @@ namespace EpicRPGBot.UI
     {
         private void DismantleBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("Dismantle"))
+            if (ShouldBlockForExclusiveBotOperation("Dismantle"))
             {
                 return;
             }

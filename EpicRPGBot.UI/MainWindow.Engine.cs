@@ -9,7 +9,7 @@ namespace EpicRPGBot.UI
     {
         private async void InitBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("Initialize"))
+            if (ShouldBlockForExclusiveBotOperation("Initialize"))
             {
                 return;
             }
@@ -32,7 +32,7 @@ namespace EpicRPGBot.UI
 
         private async void StartBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("Start Bot"))
+            if (ShouldBlockForExclusiveBotOperation("Start Bot"))
             {
                 return;
             }
@@ -110,7 +110,7 @@ namespace EpicRPGBot.UI
 
         private async void StopBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("Stop Bot"))
+            if (ShouldBlockForExclusiveBotOperation("Stop Bot"))
             {
                 return;
             }
@@ -125,7 +125,7 @@ namespace EpicRPGBot.UI
 
         private async void RpgCdBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForWishingToken("rpg cd"))
+            if (ShouldBlockForExclusiveBotOperation("rpg cd"))
             {
                 return;
             }
@@ -168,15 +168,21 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> StartEngineAndRequestCooldownSnapshotAsync(string engineMessage)
         {
-            _engine = CreateEngine();
-            WireEngineEvents(_engine);
-            _engine.Start();
-            _log.Engine(engineMessage);
+            await StartEngineAsync(engineMessage);
 
             var sent = await _engine.SendImmediateAsync("rpg cd", _engine.ArmStartupMessageCutoff);
             await _engine.EnsureStartupMessageCutoffAsync();
             _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
             return sent;
+        }
+
+        private Task StartEngineAsync(string engineMessage)
+        {
+            _engine = CreateEngine();
+            WireEngineEvents(_engine);
+            _engine.Start();
+            _log.Engine(engineMessage);
+            return Task.CompletedTask;
         }
 
         private void LogGuardNotification(Models.GuardAlertNotification notification)

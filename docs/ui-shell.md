@@ -5,7 +5,7 @@ The active application is `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` desktop ap
 Layout:
 - Left sidebar: tabs for `Last messages`, `Stats`, and `Console`.
 - Center pane: a `TabControl` with `Player tab`, `Bot tab`, and `Guild tab`, each hosting its own Discord WebView2 surface, plus a header button row with `Settings`, `Reload`, and `Go To Channel`.
-- Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` controls at the top and the visual cooldown labels anchored to the bottom.
+- Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` controls at the top, a `Time cookie` target row under them, and the visual cooldown labels anchored to the bottom.
 
 Startup flow:
 1. Load captcha-only `.env` values into process environment for solver configuration.
@@ -35,10 +35,13 @@ User-visible behaviors:
 - `Trade area` starts a one-click live-area dismantle/trade sweep and logs progress to the Console.
 - `Wishing token` starts an exclusive `rpg use wishing token` loop that keeps selecting `time cookie` until the user clicks the same button again or the workflow stops on an unrecognized state.
 - The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd`, `Trade area`, and `Wishing token` on the second row.
+- The `Time cookie` section sits under that grid and exposes `Dungeon`, `Duel`, and `Card hand` target buttons.
+- `Time cookie` starts an exclusive loop that refreshes `rpg cd`, lets normal tracked automation finish, uses `rpg use time cookie`, then waits for newly-ready tracked commands to finish until the selected target cooldown reaches `Ready`.
 - If the engine is running when crafting starts, the UI pauses the engine, waits for the current send lane to go idle, runs the craft job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when dismantling starts, the UI pauses the engine, waits for the current send lane to go idle, runs the dismantle job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when area trading starts, the UI pauses the engine, waits for the current send lane to go idle, runs the area-trade sweep exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when `Wishing token` starts, the UI pauses the engine, runs the loop exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
+- If the engine is stopped when `Time cookie` starts, the UI starts it for the workflow and stops it again when the workflow ends; if it was already running, it keeps running throughout the workflow.
 - Any change in the settings window is saved immediately to local settings.
 - The `Work commands` settings modal also auto-saves each per-area command change immediately.
 - The guild watcher stays active while the app is open and sends `rpg guild raid` from the guild tab when a watched message matches the configured rule.

@@ -20,11 +20,13 @@ Time-cookie handling:
 - EPIC RPG replies containing `time cookie` plus `X minute(s) ahead` reduce the tracked cooldown state immediately.
 - The reduction is applied to tracked hunt/adventure/training/work/farm/lootbox values in the right panel and floors expired timers to `Ready`.
 - Time-cookie detection does not auto-send `rpg cd`.
+- The dedicated `Time cookie` workflow also watches the untracked `dungeon`, `duel`, or `card hand` row chosen by the user and stops when that selected row becomes `Ready`, without auto-using that target command.
 
 Runtime scheduling:
 - The bot still arms hunt/adventure/training/work/farm/lootbox labels immediately when it sends those commands, using the configured settings baseline.
 - If EPIC RPG replies with `wait at least ...`, the engine retries after that reported remaining time plus a small safety buffer.
 - After a parsed `rpg cd` snapshot or time-cookie reduction, hunt/adventure/training/work/farm/lootbox scheduling is resynced from the tracked cooldown state.
+- The `Time cookie` workflow reuses that same tracked scheduling so normal automated commands can finish before and after each `rpg use time cookie`.
 - Incoming Discord messages are deduplicated by message id so cooldown snapshots and time-cookie reductions are only applied once.
 
 Alias mapping preserved in the current app:

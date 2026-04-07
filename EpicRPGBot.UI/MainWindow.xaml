@@ -191,6 +191,18 @@
                         <Button Name="TradeAreaBtn" Grid.Row="1" Grid.Column="1" Content="Trade area" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TradeAreaBtn_Click"/>
                         <Button Name="WishingTokenBtn" Grid.Row="1" Grid.Column="2" Content="Wishing token" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="WishingTokenBtn_Click"/>
                     </Grid>
+
+                    <TextBlock Text="Time cookie" Foreground="#bbb" Margin="0,12,0,6"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Name="TimeCookieDungeonBtn" Grid.Column="0" Content="Dungeon" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDungeonBtn_Click"/>
+                        <Button Name="TimeCookieDuelBtn" Grid.Column="1" Content="Duel" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDuelBtn_Click"/>
+                        <Button Name="TimeCookieCardHandBtn" Grid.Column="2" Content="Card hand" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="TimeCookieCardHandBtn_Click"/>
+                    </Grid>
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1"

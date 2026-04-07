@@ -9,6 +9,7 @@ using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
+using EpicRPGBot.UI.TimeCookie;
 using EpicRPGBot.UI.WishingToken;
 
 namespace EpicRPGBot.UI
@@ -37,7 +38,10 @@ namespace EpicRPGBot.UI
 
         private BotEngine _engine;
         private bool _isAreaTradeRunning;
+        private bool _isTimeCookieRunning;
         private bool _isWishingTokenRunning;
+        private TimeCookieTarget? _activeTimeCookieTarget;
+        private CancellationTokenSource _timeCookieCancellation;
         private CancellationTokenSource _wishingTokenCancellation;
         private Grid _lastMessagesPanel;
 
@@ -107,6 +111,7 @@ namespace EpicRPGBot.UI
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
+            _timeCookieCancellation?.Cancel();
             _wishingTokenCancellation?.Cancel();
             _messagePoller.Stop();
             UnhookGuildRaidSettings();

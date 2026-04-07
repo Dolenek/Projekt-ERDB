@@ -30,6 +30,8 @@ Command send behavior:
 - Quick-time/event prompt answers, including training prompt answers, and bot status/help text still use the fast path and do not wait for an EPIC RPG follow-up reply.
 - Bunny catch prompts also use the fast path: the engine parses the bunny stats from the EPIC RPG message, sends one computed raw reply, and clears the interactive lock after the send attempt finishes.
 - The right-side cooldown panel starts hunt/adventure/training/work/farm/lootbox when the EPIC RPG confirmation reply is received, without waiting for the next `rpg cd`.
+- Tracked replies remain eligible even when EPIC RPG appends inline command suggestions such as `--> rpg easter` to the same result message.
+- Message-triggered reactions are deduped by Discord message id, so repeated observations of the same prompt do not resend `LURE`, `CUT`, training answers, or similar one-shot replies.
 - When a confirmed `rpg tr` reply is a recognized training prompt, the engine resolves the answer from the rendered message body, prefers clicking the matching button, and falls back to typing.
 - When a bunny prompt is recognized, the engine answers automatically from the rendered message body and logs the chosen reply with a `[bunny]` prefix.
 - If a training prompt cannot be solved safely, the engine skips it, logs a `[training]` warning through the UI, and raises a desktop notification.

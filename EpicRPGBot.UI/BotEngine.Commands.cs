@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
@@ -13,6 +14,16 @@ namespace EpicRPGBot.UI
         {
             var ok = await SendAndEmitAsync(text, null);
             return ok;
+        }
+
+        internal async Task<ConfirmedCommandSendResult> SendConfirmedCommandAsync(
+            string text,
+            Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
+        {
+            return await SendConfirmedCommandWithGlobalCooldownCoreAsync(
+                text,
+                () => OnCommandSent?.Invoke(text),
+                onOutgoingSnapshotRegistered);
         }
 
         private async Task OnTrackedTimerElapsedAsync(TrackedCommandKind kind)
@@ -150,11 +161,23 @@ namespace EpicRPGBot.UI
             Action onOutgoingRegistered,
             Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
         {
+            var result = await SendConfirmedCommandWithGlobalCooldownCoreAsync(
+                text,
+                onOutgoingRegistered,
+                onOutgoingSnapshotRegistered);
+            return result.IsConfirmed;
+        }
+
+        private async Task<ConfirmedCommandSendResult> SendConfirmedCommandWithGlobalCooldownCoreAsync(
+            string text,
+            Action onOutgoingRegistered,
+            Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
+        {
             while (true)
             {
                 if (!await WaitForInteractivePromptWindowAsync())
                 {
-                    return false;
+                    return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
                 try
@@ -163,7 +186,7 @@ namespace EpicRPGBot.UI
                 }
                 catch (OperationCanceledException)
                 {
-                    return false;
+                    return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
                 if (!IsInteractivePromptPending())
@@ -193,14 +216,14 @@ namespace EpicRPGBot.UI
                     OnCommandConfirmed?.Invoke(text, result.ReplyMessage);
                     ProcessObservedSnapshot(result.ReplyMessage, true);
                     await ProcessIncomingMessagesAsync();
-                    return true;
+                    return result;
                 }
 
-                return false;
+                return result;
             }
             catch (OperationCanceledException)
             {
-                return false;
+                return new ConfirmedCommandSendResult(null, null, 0);
             }
             finally
             {

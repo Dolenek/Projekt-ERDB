@@ -95,6 +95,22 @@ namespace EpicRPGBot.UI.Services
     if (/^https?:\/\//i.test(raw)) return raw;
     return '';
   }};
+  const extractBackgroundUrl = (element) => {{
+    if (!element) return '';
+    const style = window.getComputedStyle(element);
+    const bg = (style && style.backgroundImage) || '';
+    const match = bg.match(/url\((['""]?)(.*?)\1\)/i);
+    return match && match[2] ? match[2].trim() : '';
+  }};
+  const isVisibleCandidate = (element) => {{
+    if (!element) return false;
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    if (style.visibility === 'hidden' || style.display === 'none') return false;
+    if (rect.width < minimumWidth || rect.height < minimumHeight) return false;
+    if (rect.width * rect.height < minimumArea) return false;
+    return true;
+  }};
   const pickBestUrl = (img) => {{
     const anchor = img.closest('a[href]');
     const candidates = [
@@ -109,29 +125,39 @@ namespace EpicRPGBot.UI.Services
     }}
     return '';
   }};
-  const imgs = Array.from(root.querySelectorAll('img'));
-  let best = null;
-  for (const img of imgs) {{
-    const rect = img.getBoundingClientRect();
-    const style = window.getComputedStyle(img);
-    const visible = rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden' && style.display !== 'none';
-    if (!visible) continue;
+  const registerCandidate = (element, url, scoreBoost) => {{
+    if (!element || !url || !isImageUrl(url) || !isVisibleCandidate(element)) return;
+    const rect = element.getBoundingClientRect();
     const area = rect.width * rect.height;
-    if (rect.width < minimumWidth || rect.height < minimumHeight || area < minimumArea) continue;
-    const url = pickBestUrl(img);
-    if (!url) continue;
-    const anchor = img.closest('a[href]');
-    const score = area + (anchor ? 5000 : 0) + Math.min((img.naturalWidth || 0) * (img.naturalHeight || 0), 200000) / 50;
+    const score = area + (scoreBoost || 0);
     if (!best || score > best.score) {{
       best = {{
         score,
-        url,
+        url: normalizeUrl(url),
         x: rect.left + window.scrollX,
         y: rect.top + window.scrollY,
         w: rect.width,
         h: rect.height
       }};
     }}
+  }};
+
+  let best = null;
+  const imgs = Array.from(root.querySelectorAll('img'));
+  for (const img of imgs) {{
+    const anchor = img.closest('a[href]');
+    const naturalBoost = Math.min((img.naturalWidth || 0) * (img.naturalHeight || 0), 200000) / 50;
+    registerCandidate(img, pickBestUrl(img), (anchor ? 5000 : 0) + naturalBoost);
+  }}
+
+  const anchors = Array.from(root.querySelectorAll('a[href]'));
+  for (const anchor of anchors) {{
+    registerCandidate(anchor, anchor.href || anchor.getAttribute('href') || '', 4000);
+  }}
+
+  const backgroundNodes = Array.from(root.querySelectorAll('div, span, section, article, a'));
+  for (const element of backgroundNodes) {{
+    registerCandidate(element, extractBackgroundUrl(element), 3000);
   }}
   if (!best) return JSON.stringify({{ ok:false, url:'' }});
   return JSON.stringify({{

@@ -15,6 +15,7 @@ Canonical pages:
 - [Training automation](docs/training-automation.md)
 - [Bunny automation](docs/bunny-automation.md)
 - [Wishing token](docs/wishing-token.md)
+- [Time cookie](docs/time-cookie.md)
 - [Captcha solver](docs/captcha-solver.md)
 - [Guard operations](docs/guard-operations.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)

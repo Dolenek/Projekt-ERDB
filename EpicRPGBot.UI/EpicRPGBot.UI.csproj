@@ -52,6 +52,7 @@
     <Compile Include="BotEngine.Bunny.cs" />
     <Compile Include="BotEngine.Events.cs" />
     <Compile Include="BotEngine.Guard.cs" />
+    <Compile Include="BotEngine.Reactions.cs" />
     <Compile Include="BotEngine.Training.cs" />
     <Compile Include="BotEngine.cs" />
     <Compile Include="Bunny\BunnyCatchPlan.cs" />
@@ -94,11 +95,13 @@
     <Compile Include="MainWindow.Crafting.cs" />
     <Compile Include="MainWindow.Dismantling.cs" />
     <Compile Include="MainWindow.Engine.cs" />
+    <Compile Include="MainWindow.ExclusiveOperations.cs" />
     <Compile Include="MainWindow.GuildRaid.cs" />
     <Compile Include="MainWindow.Messages.cs" />
     <Compile Include="MainWindow.Settings.cs" />
     <Compile Include="MainWindow.Sidebar.cs" />
     <Compile Include="MainWindow.Stats.cs" />
+    <Compile Include="MainWindow.TimeCookie.cs" />
     <Compile Include="MainWindow.TradeArea.cs" />
     <Compile Include="MainWindow.WishingToken.cs" />
     <Compile Include="MainWindow.xaml.cs" />
@@ -140,8 +143,11 @@
     <Compile Include="Services\InteractivePromptGate.cs" />
     <Compile Include="Services\LastMessagesBuffer.cs" />
     <Compile Include="Services\LocalSettingsStore.cs" />
+    <Compile Include="Services\MessageReactionGate.cs" />
     <Compile Include="Services\ProfileMessageParser.cs" />
     <Compile Include="Services\TimeCookieMessageParser.cs" />
+    <Compile Include="Services\TrackedCommandKind.cs" />
+    <Compile Include="Services\TrackedCommandResponseClassifier.cs" />
     <Compile Include="Services\TrackedCommandScheduler.Parsing.cs" />
     <Compile Include="Services\TrackedCommandScheduler.cs" />
     <Compile Include="Services\UiDispatcher.cs" />
@@ -150,6 +156,9 @@
     <Compile Include="Settings\GuildRaidSettingsWindow.xaml.cs" />
     <Compile Include="Settings\SettingsWindow.xaml.cs" />
     <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
+    <Compile Include="TimeCookie\TimeCookieLoopEvaluator.cs" />
+    <Compile Include="TimeCookie\TimeCookieTarget.cs" />
+    <Compile Include="TimeCookie\TimeCookieTargetCatalog.cs" />
     <Compile Include="Training\TrainingPromptKind.cs" />
     <Compile Include="Training\TrainingPromptParser.cs" />
     <Compile Include="Training\TrainingPromptResolution.cs" />

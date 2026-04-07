@@ -40,6 +40,12 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            if (!TryBeginReactiveHandling(snapshot))
+            {
+                _previousMessageText = msg;
+                return;
+            }
+
             if (TryHandleTrainingPrompt(snapshot))
             {
                 _previousMessageText = msg;

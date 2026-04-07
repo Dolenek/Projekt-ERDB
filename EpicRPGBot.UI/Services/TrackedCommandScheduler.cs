@@ -5,16 +5,6 @@ using System.Windows.Threading;
 
 namespace EpicRPGBot.UI.Services
 {
-    public enum TrackedCommandKind
-    {
-        Hunt,
-        Adventure,
-        Training,
-        Work,
-        Farm,
-        Lootbox
-    }
-
     public sealed partial class TrackedCommandScheduler
     {
         private const int MinimumDelayMs = 500;

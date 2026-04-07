@@ -8,6 +8,8 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
+        private const string WishingTokenOperationName = "wishing token";
+
         private async void WishingTokenBtn_Click(object sender, RoutedEventArgs e)
         {
             if (_isWishingTokenRunning)
@@ -16,9 +18,15 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            if (!TryBeginExclusiveBotOperation(WishingTokenOperationName))
+            {
+                return;
+            }
+
             if (!_botChatClient.IsReady)
             {
                 _log.Info("WebView2 not ready");
+                EndExclusiveBotOperation(WishingTokenOperationName);
                 return;
             }
 
@@ -56,6 +64,7 @@ namespace EpicRPGBot.UI
                 _wishingTokenCancellation.Dispose();
                 _wishingTokenCancellation = null;
                 SetWishingTokenRunning(false);
+                EndExclusiveBotOperation(WishingTokenOperationName);
 
                 if (shouldResumeEngine)
                 {
@@ -80,17 +89,7 @@ namespace EpicRPGBot.UI
         {
             _isWishingTokenRunning = isRunning;
             WishingTokenBtn.Content = isRunning ? "Stop wishing token" : "Wishing token";
-        }
-
-        private bool ShouldBlockForWishingToken(string actionName)
-        {
-            if (!_isWishingTokenRunning)
-            {
-                return false;
-            }
-
-            _log.Info($"[wishing token] {actionName} ignored while the wishing-token loop is running.");
-            return true;
+            RefreshBotControlButtonColors();
         }
 
         private void LogWishingTokenInfo(string message)

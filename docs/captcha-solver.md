@@ -11,17 +11,18 @@ Trigger:
 Solve flow:
 1. Pause hunt/adventure/work/farm timers.
 2. Resolve the original attachment image URL from the selected Discord message.
-3. If the selected message has no image, try the adjacent message to support split text/image guard posts.
-4. Download that original image asset and send those exact bytes to the solver.
-5. Load or reuse the OpenAI captcha answer provider.
-6. Send the image and the fixed item catalog to OpenAI and require a strict JSON answer with a catalog index or `unknown`.
-7. For full-color captchas, treat color as a strong signal together with shape; only fall back to grayscale cues when the captcha is clearly desaturated, grayscale, or black-and-white.
-8. If a guard solve is active, scheduled tracked commands and queued `rpg cd` sends are skipped so the answer lane stays reserved for the guard reply.
-9. If the first OpenAI answer is invalid or `unknown`, retry once with the configured retry model and an enlarged retry image.
-10. If the result is confident, send the matched canonical item name back to Discord.
-11. If the provider is uncertain, skip sending instead of guessing.
-12. Resume timers after the attempt completes.
-13. Show one desktop alert on first detection, then at most one reminder every 10 seconds while the same guard incident stays active.
+3. The extractor inspects visible attachment candidates from `img`, attachment links, and large elements with image backgrounds so Discord renderer variations still map to one downloadable `http/https` asset.
+4. If the selected message has no image, try the adjacent message to support split text/image guard posts.
+5. Download that original image asset and send those exact bytes to the solver.
+6. Load or reuse the OpenAI captcha answer provider.
+7. Send the image and the fixed item catalog to OpenAI and require a strict JSON answer with a catalog index or `unknown`.
+8. For full-color captchas, treat color as a strong signal together with shape; only fall back to grayscale cues when the captcha is clearly desaturated, grayscale, or black-and-white.
+9. If a guard solve is active, scheduled tracked commands and queued `rpg cd` sends are skipped so the answer lane stays reserved for the guard reply.
+10. If the first OpenAI answer is invalid or `unknown`, retry once with the configured retry model and an enlarged retry image.
+11. If the result is confident, send the matched canonical item name back to Discord.
+12. If the provider is uncertain, skip sending instead of guessing.
+13. Resume timers after the attempt completes.
+14. Show one desktop alert on first detection, then at most one reminder every 10 seconds while the same guard incident stays active.
 
 Configuration:
 - `CAPTCHA_OPENAI_API_KEY`
