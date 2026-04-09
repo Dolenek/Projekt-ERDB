@@ -16,6 +16,9 @@ namespace EpicRPGBot.Tests.Dungeon
 
     internal sealed class FakeDungeonChatClient : IDiscordChatClient
     {
+        private const string PlainPartnerMention = "@Prathamm";
+        private const string PlainPartnerHandle = "Prathamm";
+        private const string PlainPartnerPlayerTag = "patham_0803";
         private const string StylizedPartnerMention = "@𝓓𝖊𝖘𝖒𝖔𝖓𝖉";
         private const string StylizedPartnerPlayerTag = "lifegoesonwithyou";
         private const string ArmyHelperDm = "army-helper-dm";
@@ -35,6 +38,7 @@ Area: 7 (Max: 7)";
         private readonly Queue<string> _dungeonEntryReplies;
         private readonly bool _inviteAlreadyVisible;
         private readonly bool _partnerInitiatesEntryPrompt;
+        private readonly bool _usePlainHandleFallback;
         private readonly bool _usePlayerTagFallback;
         private readonly bool _useSnowflakeIds;
         private bool _shouldQueueReinvite;
@@ -45,12 +49,14 @@ Area: 7 (Max: 7)";
         public FakeDungeonChatClient(
             bool inviteAlreadyVisible = false,
             bool partnerInitiatesEntryPrompt = false,
+            bool usePlainHandleFallback = false,
             bool usePlayerTagFallback = false,
             bool useSnowflakeIds = false,
             IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;
             _partnerInitiatesEntryPrompt = partnerInitiatesEntryPrompt;
+            _usePlainHandleFallback = usePlainHandleFallback;
             _usePlayerTagFallback = usePlayerTagFallback;
             _useSnowflakeIds = useSnowflakeIds;
             _dungeonEntryReplies = new Queue<string>(dungeonEntryReplies ?? Array.Empty<string>());
@@ -147,7 +153,7 @@ Area: 7 (Max: 7)";
                 return Task.FromResult(reply);
             }
 
-            if (string.Equals(command, "rpg dung " + StylizedPartnerPlayerTag, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(command, "rpg dung @" + StylizedPartnerPlayerTag, StringComparison.OrdinalIgnoreCase))
             {
                 var replyText = _dungeonEntryReplies.Count > 0
                     ? _dungeonEntryReplies.Dequeue()
@@ -166,6 +172,31 @@ Area: 7 (Max: 7)";
                         });
                 _dungeonMessages.Add(reply);
                 _shouldQueueReinvite |= isBusyReply;
+                return Task.FromResult(reply);
+            }
+
+            if (string.Equals(command, "rpg dung @" + PlainPartnerHandle, StringComparison.OrdinalIgnoreCase))
+            {
+                var reply = CreateSnapshot(
+                    "EPIC RPG",
+                    EntryConfirmationText,
+                    EntryConfirmationText,
+                    new[]
+                    {
+                        new DiscordMessageButton("yes", 0, 0),
+                        new DiscordMessageButton("no", 0, 1)
+                    });
+                _dungeonMessages.Add(reply);
+                return Task.FromResult(reply);
+            }
+
+            if (string.Equals(command, "rpg dung @" + PlainPartnerPlayerTag, StringComparison.OrdinalIgnoreCase))
+            {
+                var reply = CreateSnapshot(
+                    "EPIC RPG",
+                    "That player could not be found.",
+                    "That player could not be found.");
+                _dungeonMessages.Add(reply);
                 return Task.FromResult(reply);
             }
 
@@ -211,7 +242,12 @@ Area: 7 (Max: 7)";
             {
                 TakeMeThereClickCount++;
                 _location = DungeonChannel;
-                _dungeonMessages.Add(_usePlayerTagFallback
+                _dungeonMessages.Add(_usePlainHandleFallback
+                    ? CreateSnapshot(
+                        "Army Helper",
+                        "Dungeon 8 commands",
+                        "Dungeon 8 commands\nPlayers listed\n" + PlainPartnerMention + " - " + PlainPartnerPlayerTag + "\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName)
+                    : _usePlayerTagFallback
                     ? CreateSnapshot(
                         "Army Helper",
                         "Dungeon 6 commands",

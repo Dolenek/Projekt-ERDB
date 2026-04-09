@@ -88,7 +88,15 @@ namespace EpicRPGBot.UI.Dungeon
             _waitAsync = waitAsync ?? throw new ArgumentNullException(nameof(waitAsync));
         }
 
-        public async Task<DungeonRunResult> RunAsync(Action<string> report, CancellationToken cancellationToken)
+        public Task<DungeonRunResult> RunAsync(Action<string> report, CancellationToken cancellationToken)
+        {
+            return RunAsync(report, null, cancellationToken);
+        }
+
+        public async Task<DungeonRunResult> RunAsync(
+            Action<string> report,
+            Func<Action<string>, CancellationToken, Task> onInviteFoundAsync,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -120,6 +128,12 @@ namespace EpicRPGBot.UI.Dungeon
                     if (inviteMessage == null)
                     {
                         return DungeonRunResult.FailedResult("Dungeon stopped: no Army Helper invite arrived within 15 minutes.");
+                    }
+
+                    if (onInviteFoundAsync != null)
+                    {
+                        await onInviteFoundAsync(report, cancellationToken);
+                        onInviteFoundAsync = null;
                     }
 
                     dmBaselineId = inviteMessage.Id;
@@ -247,10 +261,57 @@ namespace EpicRPGBot.UI.Dungeon
             Action<string> report,
             CancellationToken cancellationToken)
         {
-            var partnerToken = string.IsNullOrWhiteSpace(partner.UserId)
-                ? partner.CommandToken
-                : $"<@{partner.UserId}>";
-            var entryCommand = $"rpg dung {partnerToken}";
+            foreach (var entryCommand in BuildDungeonEntryCommands(partner))
+            {
+                var attemptResult = await TryEnterDungeonWithCommandAsync(entryCommand, report, cancellationToken);
+                if (attemptResult == DungeonEntryAttemptResult.Confirmed ||
+                    attemptResult == DungeonEntryAttemptResult.WaitForNextInvite)
+                {
+                    return attemptResult;
+                }
+
+                report?.Invoke($"Entry command '{entryCommand}' did not produce the dungeon prompt. Trying the alternate partner token.");
+            }
+
+            return DungeonEntryAttemptResult.Failed;
+        }
+
+        private IEnumerable<string> BuildDungeonEntryCommands(DiscordMessageMention partner)
+        {
+            if (!string.IsNullOrWhiteSpace(partner.UserId))
+            {
+                yield return $"rpg dung <@{partner.UserId}>";
+                yield break;
+            }
+
+            if (!string.IsNullOrWhiteSpace(partner.CommandToken))
+            {
+                yield return $"rpg dung {FormatTextTarget(partner.CommandToken)}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(partner.AlternateCommandToken) &&
+                !string.Equals(partner.AlternateCommandToken, partner.CommandToken, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return $"rpg dung {FormatTextTarget(partner.AlternateCommandToken)}";
+            }
+        }
+
+        private static string FormatTextTarget(string token)
+        {
+            var trimmed = (token ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                return string.Empty;
+            }
+
+            return trimmed.StartsWith("@", StringComparison.Ordinal) ? trimmed : "@" + trimmed;
+        }
+
+        private async Task<DungeonEntryAttemptResult> TryEnterDungeonWithCommandAsync(
+            string entryCommand,
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
             var maxAttempts = PartnerBusyRetryCount + 1;
             for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
@@ -260,10 +321,16 @@ namespace EpicRPGBot.UI.Dungeon
                     return DungeonEntryAttemptResult.Failed;
                 }
 
-                if (_entryReplyParser.Parse(entryResult.ReplyMessage.Text) != DungeonEntryReplyKind.PartnerBusy)
+                var replyKind = _entryReplyParser.Parse(entryResult.ReplyMessage);
+                if (replyKind == DungeonEntryReplyKind.EntryPrompt)
                 {
                     report?.Invoke($"Sent {entryCommand}");
                     return DungeonEntryAttemptResult.Confirmed;
+                }
+
+                if (replyKind != DungeonEntryReplyKind.PartnerBusy)
+                {
+                    return DungeonEntryAttemptResult.Failed;
                 }
 
                 if (attempt >= maxAttempts)

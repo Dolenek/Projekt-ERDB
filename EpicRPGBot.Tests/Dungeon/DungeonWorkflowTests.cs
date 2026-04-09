@@ -163,7 +163,7 @@ namespace EpicRPGBot.Tests.Dungeon
         }
 
         [Fact]
-        public void DungeonLobbyParser_FallsBackToPlayersListedMentionWhenIdsAreUnavailable()
+        public void DungeonLobbyParser_PrefersPlainDiscordHandleWhenIdsAreUnavailable()
         {
             var parser = new DungeonLobbyParser();
             var snapshots = new[]
@@ -180,7 +180,8 @@ namespace EpicRPGBot.Tests.Dungeon
             Assert.NotNull(partner);
             Assert.Equal("@Jpack", partner.Label);
             Assert.Equal(string.Empty, partner.UserId);
-            Assert.Equal("jpack2552", partner.CommandToken);
+            Assert.Equal("Jpack", partner.CommandToken);
+            Assert.Equal("jpack2552", partner.AlternateCommandToken);
         }
 
         [Fact]
@@ -202,6 +203,7 @@ namespace EpicRPGBot.Tests.Dungeon
             Assert.Equal("@𝓓𝖊𝖘𝖒𝖔𝖓𝖉", partner.Label);
             Assert.Equal(string.Empty, partner.UserId);
             Assert.Equal("lifegoesonwithyou", partner.CommandToken);
+            Assert.Equal(string.Empty, partner.AlternateCommandToken);
         }
 
         [Fact]
@@ -217,7 +219,58 @@ namespace EpicRPGBot.Tests.Dungeon
                 var result = await workflow.RunAsync(_ => { }, CancellationToken.None);
 
                 Assert.True(result.Completed);
-                Assert.Contains("rpg dung lifegoesonwithyou", chatClient.SentCommands);
+                Assert.Contains("rpg dung @lifegoesonwithyou", chatClient.SentCommands);
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_PrefersPlainDiscordHandleOverArmyHelperPlayerTag()
+        {
+            var fileName = "dungeon-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var settingsService = CreateSettingsService(fileName);
+                var chatClient = new FakeDungeonChatClient(usePlainHandleFallback: true);
+                var workflow = CreateWorkflow(chatClient, settingsService);
+
+                var result = await workflow.RunAsync(_ => { }, CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.Contains("rpg dung @Prathamm", chatClient.SentCommands);
+                Assert.DoesNotContain("rpg dung @patham_0803", chatClient.SentCommands);
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_InvokesInviteFoundCallbackOnceBeforeEnteringDungeon()
+        {
+            var fileName = "dungeon-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var settingsService = CreateSettingsService(fileName);
+                var chatClient = new FakeDungeonChatClient();
+                var workflow = CreateWorkflow(chatClient, settingsService);
+                var callbackCount = 0;
+
+                var result = await workflow.RunAsync(
+                    _ => { },
+                    (report, cancellationToken) =>
+                    {
+                        callbackCount++;
+                        return Task.CompletedTask;
+                    },
+                    CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.Equal(1, callbackCount);
             }
             finally
             {

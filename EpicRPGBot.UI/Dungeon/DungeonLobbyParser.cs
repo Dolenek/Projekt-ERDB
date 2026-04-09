@@ -78,12 +78,20 @@ namespace EpicRPGBot.UI.Dungeon
             string selfKey)
         {
             var partner = listedPlayers.FirstOrDefault(candidate => !IsSelfMention(candidate.MentionLabel, candidate.PlayerName, selfKey));
-            return partner == null
-                ? null
-                : new DiscordMessageMention(
-                    partner.MentionLabel,
-                    string.Empty,
-                    string.IsNullOrWhiteSpace(partner.PlayerName) ? partner.MentionLabel : partner.PlayerName);
+            if (partner == null)
+            {
+                return null;
+            }
+
+            var mentionHandle = ExtractMentionHandle(partner.MentionLabel);
+            var playerTag = partner.PlayerName;
+            var commandToken = SelectPreferredToken(mentionHandle, playerTag);
+            var alternateToken = SelectAlternateToken(commandToken, mentionHandle, playerTag);
+            return new DiscordMessageMention(
+                partner.MentionLabel,
+                string.Empty,
+                commandToken,
+                alternateToken);
         }
 
         private static bool IsSelfMention(string mentionLabel, string playerName, string selfKey)
@@ -144,6 +152,67 @@ namespace EpicRPGBot.UI.Dungeon
             }
 
             return line.LastIndexOf('-');
+        }
+
+        private static string ExtractMentionHandle(string mentionLabel)
+        {
+            return (mentionLabel ?? string.Empty).Trim().TrimStart('@');
+        }
+
+        private static string SelectPreferredToken(string mentionHandle, string playerTag)
+        {
+            if (IsPlainCommandToken(mentionHandle))
+            {
+                return mentionHandle;
+            }
+
+            if (!string.IsNullOrWhiteSpace(playerTag))
+            {
+                return playerTag;
+            }
+
+            return mentionHandle;
+        }
+
+        private static string SelectAlternateToken(string selectedToken, string mentionHandle, string playerTag)
+        {
+            if (IsDistinctToken(selectedToken, mentionHandle) && IsPlainCommandToken(mentionHandle))
+            {
+                return mentionHandle;
+            }
+
+            if (IsDistinctToken(selectedToken, playerTag))
+            {
+                return playerTag;
+            }
+
+            return string.Empty;
+        }
+
+        private static bool IsDistinctToken(string selectedToken, string candidate)
+        {
+            return !string.IsNullOrWhiteSpace(candidate) &&
+                   !string.Equals(selectedToken ?? string.Empty, candidate, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPlainCommandToken(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            foreach (var character in value)
+            {
+                var isAsciiLetter = character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z';
+                var isDigit = character >= '0' && character <= '9';
+                if (!isAsciiLetter && !isDigit && character != '_' && character != '.')
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static string NormalizeName(string value)

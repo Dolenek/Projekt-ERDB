@@ -80,13 +80,17 @@ namespace EpicRPGBot.UI
             {
                 return await _completeDungeonRunCoordinator.RunAsync(
                     RunPreDungeonAreaTradeAsync,
-                    RunDungeonListingPhaseAsync,
+                    async (phaseReport, phaseCancellationToken) =>
+                    {
+                        await ResumeBotAutomationForDungeonMatchmakingAsync(phaseReport);
+                        return await RunDungeonListingPhaseAsync(phaseReport, phaseCancellationToken);
+                    },
                     report,
                     cancellationToken);
             }
             finally
             {
-                if (shouldResumeEngine)
+                if (shouldResumeEngine && (_engine == null || !_engine.IsRunning))
                 {
                     report?.Invoke("[dungeon] Resuming bot automation.");
                     await StartEngineAndRequestCooldownSnapshotAsync("Engine resumed after dungeon automation");
@@ -108,7 +112,35 @@ namespace EpicRPGBot.UI
             CancellationToken cancellationToken)
         {
             SelectDungeonTab();
-            return await _dungeonWorkflow.RunAsync(message => report?.Invoke("[dungeon] " + message), cancellationToken);
+            return await _dungeonWorkflow.RunAsync(
+                message => report?.Invoke("[dungeon] " + message),
+                PauseBotAutomationAfterDungeonMatchAsync,
+                cancellationToken);
+        }
+
+        private async Task ResumeBotAutomationForDungeonMatchmakingAsync(Action<string> report)
+        {
+            if (_engine == null || _engine.IsRunning)
+            {
+                return;
+            }
+
+            report?.Invoke("[dungeon] Resuming bot automation while waiting for a partner.");
+            await StartEngineAndRequestCooldownSnapshotAsync("Engine resumed during dungeon matchmaking");
+        }
+
+        private async Task PauseBotAutomationAfterDungeonMatchAsync(
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            if (_engine == null || !_engine.IsRunning)
+            {
+                return;
+            }
+
+            report?.Invoke("[dungeon] Partner found. Pausing bot automation before entering the dungeon.");
+            await _engine.StopAsync();
+            _log.Engine("Engine paused after dungeon partner was found");
         }
 
         private void SetDungeonRunning(bool isRunning)
