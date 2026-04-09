@@ -248,7 +248,7 @@ namespace EpicRPGBot.UI.Dungeon
             CancellationToken cancellationToken)
         {
             var partnerToken = string.IsNullOrWhiteSpace(partner.UserId)
-                ? partner.Label
+                ? partner.CommandToken
                 : $"<@{partner.UserId}>";
             var entryCommand = $"rpg dung {partnerToken}";
             var maxAttempts = PartnerBusyRetryCount + 1;

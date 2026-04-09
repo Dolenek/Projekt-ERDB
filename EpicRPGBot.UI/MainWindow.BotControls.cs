@@ -17,8 +17,9 @@ namespace EpicRPGBot.UI
             StartBtn.Background = isEngineRunning ? StartActiveBrush : InactiveBotControlBrush;
             StopBtn.Background = isEngineRunning ? InactiveBotControlBrush : StopActiveBrush;
             RefreshDungeonButton();
-            WishingTokenBtn.IsEnabled = !_isTimeCookieRunning || _isWishingTokenRunning;
+            WishingTokenBtn.IsEnabled = (!_isTimeCookieRunning && !_isSleepyPotionRunning) || _isWishingTokenRunning;
             WishingTokenBtn.Background = _isWishingTokenRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
+            RefreshSleepyPotionButton();
             RefreshTimeCookieButton(TimeCookieDungeonBtn, TimeCookieTarget.Dungeon);
             RefreshTimeCookieButton(TimeCookieDuelBtn, TimeCookieTarget.Duel);
             RefreshTimeCookieButton(TimeCookieCardHandBtn, TimeCookieTarget.CardHand);
@@ -48,8 +49,24 @@ namespace EpicRPGBot.UI
             var definition = TimeCookieTargetCatalog.Get(target);
             var isActive = _isTimeCookieRunning && _activeTimeCookieTarget == target;
             button.Content = isActive ? $"Stop {definition.DisplayName}" : definition.DisplayName;
-            button.IsEnabled = !_isWishingTokenRunning && (!_isTimeCookieRunning || isActive);
+            button.IsEnabled = !_isWishingTokenRunning &&
+                !_isSleepyPotionRunning &&
+                (!_isTimeCookieRunning || isActive);
             button.Background = isActive ? ExclusiveActiveBrush : InactiveBotControlBrush;
+        }
+
+        private void RefreshSleepyPotionButton()
+        {
+            if (SleepyPotionBtn == null)
+            {
+                return;
+            }
+
+            SleepyPotionBtn.Content = _isSleepyPotionRunning ? "Stop Sleepy potion" : "Sleepy potion";
+            SleepyPotionBtn.IsEnabled = !_isWishingTokenRunning &&
+                !_isTimeCookieRunning &&
+                (!_isSleepyPotionRunning || _activeExclusiveBotOperation == SleepyPotionOperationName);
+            SleepyPotionBtn.Background = _isSleepyPotionRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
         }
     }
 }

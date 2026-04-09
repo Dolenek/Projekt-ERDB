@@ -5,7 +5,7 @@ The active application is `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` desktop ap
 Layout:
 - Left sidebar: tabs for `Last messages`, `Stats`, and `Console`.
 - Center pane: a `TabControl` with `Player tab`, `Bot tab`, `Guild tab`, and `Dungeon tab`, each hosting its own Discord WebView2 surface, plus a header button row with `Settings`, `Reload`, and `Go To Channel`.
-- Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` / `Complete Dungeon` controls at the top, a `Time cookie` target row under them, and the visual cooldown labels anchored to the bottom.
+- Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` / `Complete Dungeon` controls at the top, a `Time cookie` section under them, and the visual cooldown labels anchored to the bottom.
 
 Startup flow:
 1. Load captcha-only `.env` values into process environment for solver configuration.
@@ -35,9 +35,11 @@ User-visible behaviors:
 - `rpg cd` queues one cooldown refresh at the next legal bot send slot while the engine is running, or sends immediately through the bot tab when the engine is stopped.
 - `Trade area` starts a one-click live-area dismantle/trade sweep and logs progress to the Console.
 - `Wishing token` starts an exclusive `rpg use wishing token` loop that keeps selecting `time cookie` until the user clicks the same button again or the workflow stops on an unrecognized state.
+- `Sleepy potion` starts a one-shot exclusive workflow that sends `rpg cd`, lets ready automated tracked commands finish, uses `rpg egg use sleepy potion`, refreshes with `rpg cd`, and lets newly-ready tracked commands finish.
 - The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd`, `Trade area`, and `Wishing token` on the second row, and `Complete Dungeon` spanning the full third row.
-- The `Time cookie` section sits under that grid and exposes `Dungeon`, `Duel`, and `Card hand` target buttons.
+- The `Time cookie` section sits under that grid and exposes `Dungeon`, `Duel`, and `Card hand` target buttons, plus `Sleepy potion` directly under `Dungeon`.
 - `Time cookie` starts an exclusive loop that refreshes `rpg cd`, lets normal tracked automation finish, uses `rpg use time cookie`, then waits for newly-ready tracked commands to finish until the selected target cooldown reaches `Ready`.
+- If the engine is stopped when `Sleepy potion` starts, the UI starts it for the workflow and stops it again when the workflow ends; if it was already running, it keeps running throughout the workflow.
 - If the engine is running when crafting starts, the UI pauses the engine, waits for the current send lane to go idle, runs the craft job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when dismantling starts, the UI pauses the engine, waits for the current send lane to go idle, runs the dismantle job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when area trading starts, the UI pauses the engine, waits for the current send lane to go idle, runs the area-trade sweep exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.

@@ -16,6 +16,8 @@ namespace EpicRPGBot.Tests.Dungeon
 
     internal sealed class FakeDungeonChatClient : IDiscordChatClient
     {
+        private const string StylizedPartnerMention = "@𝓓𝖊𝖘𝖒𝖔𝖓𝖉";
+        private const string StylizedPartnerPlayerTag = "lifegoesonwithyou";
         private const string ArmyHelperDm = "army-helper-dm";
         private const string DungeonChannel = "dungeon-channel";
         private const string HomeUrl = "https://discord.com/channels/@me";
@@ -33,6 +35,7 @@ Area: 7 (Max: 7)";
         private readonly Queue<string> _dungeonEntryReplies;
         private readonly bool _inviteAlreadyVisible;
         private readonly bool _partnerInitiatesEntryPrompt;
+        private readonly bool _usePlayerTagFallback;
         private readonly bool _useSnowflakeIds;
         private bool _shouldQueueReinvite;
         private int _armyHelperReadCount;
@@ -42,11 +45,13 @@ Area: 7 (Max: 7)";
         public FakeDungeonChatClient(
             bool inviteAlreadyVisible = false,
             bool partnerInitiatesEntryPrompt = false,
+            bool usePlayerTagFallback = false,
             bool useSnowflakeIds = false,
             IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;
             _partnerInitiatesEntryPrompt = partnerInitiatesEntryPrompt;
+            _usePlayerTagFallback = usePlayerTagFallback;
             _useSnowflakeIds = useSnowflakeIds;
             _dungeonEntryReplies = new Queue<string>(dungeonEntryReplies ?? Array.Empty<string>());
             _armyHelperMessages.Add(CreateSnapshot("Army Helper", "waiting", "Old invite placeholder"));
@@ -142,6 +147,28 @@ Area: 7 (Max: 7)";
                 return Task.FromResult(reply);
             }
 
+            if (string.Equals(command, "rpg dung " + StylizedPartnerPlayerTag, StringComparison.OrdinalIgnoreCase))
+            {
+                var replyText = _dungeonEntryReplies.Count > 0
+                    ? _dungeonEntryReplies.Dequeue()
+                    : EntryConfirmationText;
+                var isBusyReply = replyText.IndexOf("middle of a command", StringComparison.OrdinalIgnoreCase) >= 0;
+                var reply = CreateSnapshot(
+                    "EPIC RPG",
+                    replyText,
+                    replyText,
+                    isBusyReply
+                        ? null
+                        : new[]
+                        {
+                            new DiscordMessageButton("yes", 0, 0),
+                            new DiscordMessageButton("no", 0, 1)
+                        });
+                _dungeonMessages.Add(reply);
+                _shouldQueueReinvite |= isBusyReply;
+                return Task.FromResult(reply);
+            }
+
             return Task.FromResult<DiscordMessageSnapshot>(null);
         }
 
@@ -184,15 +211,20 @@ Area: 7 (Max: 7)";
             {
                 TakeMeThereClickCount++;
                 _location = DungeonChannel;
-                _dungeonMessages.Add(CreateSnapshot(
-                    "Army Helper",
-                    "Dungeon 6 commands",
-                    "Dungeon 6 commands\nPlayers listed\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\n@partner - partner",
-                    mentions: new[]
-                    {
-                        new DiscordMessageMention(DungeonTestData.TestDisplayMention, "111"),
-                        new DiscordMessageMention("@partner", "222")
-                    }));
+                _dungeonMessages.Add(_usePlayerTagFallback
+                    ? CreateSnapshot(
+                        "Army Helper",
+                        "Dungeon 6 commands",
+                        "Dungeon 6 commands\nPlayers listed\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\n" + StylizedPartnerMention + " - " + StylizedPartnerPlayerTag)
+                    : CreateSnapshot(
+                        "Army Helper",
+                        "Dungeon 6 commands",
+                        "Dungeon 6 commands\nPlayers listed\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\n@partner - partner",
+                        mentions: new[]
+                        {
+                            new DiscordMessageMention(DungeonTestData.TestDisplayMention, "111"),
+                            new DiscordMessageMention("@partner", "222")
+                        }));
                 if (_partnerInitiatesEntryPrompt)
                 {
                     _dungeonMessages.Add(CreateSnapshot(

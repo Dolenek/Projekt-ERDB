@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
+    <Page Include="Controls\CooldownPanelControl.xaml" />
     <Page Include="MainWindow.xaml" />
     <Page Include="Crafting\CraftingWindow.xaml" />
     <Page Include="Dismantling\DismantleWindow.xaml" />
@@ -71,6 +72,7 @@
     <Compile Include="Captcha\OpenAiCaptchaAnswerProvider.cs" />
     <Compile Include="Captcha\OpenAiChatCompletionApiClient.cs" />
     <Compile Include="Captcha\OpenAiChatCompletionDtos.cs" />
+    <Compile Include="Controls\CooldownPanelControl.xaml.cs" />
     <Compile Include="Crafting\CraftItemCatalog.cs" />
     <Compile Include="Crafting\CraftItemDefinition.cs" />
     <Compile Include="Crafting\CraftItemKey.cs" />
@@ -99,6 +101,7 @@
     <Compile Include="Dungeon\DungeonWorkflow.cs" />
     <Compile Include="Env.cs" />
     <Compile Include="MainWindow.Automation.cs" />
+    <Compile Include="MainWindow.AutomatedCooldownBatch.cs" />
     <Compile Include="MainWindow.BotControls.cs" />
     <Compile Include="MainWindow.Bunny.cs" />
     <Compile Include="MainWindow.Browser.cs" />
@@ -112,6 +115,7 @@
     <Compile Include="MainWindow.Messages.cs" />
     <Compile Include="MainWindow.Settings.cs" />
     <Compile Include="MainWindow.Sidebar.cs" />
+    <Compile Include="MainWindow.SleepyPotion.cs" />
     <Compile Include="MainWindow.Stats.cs" />
     <Compile Include="MainWindow.TimeCookie.cs" />
     <Compile Include="MainWindow.TradeArea.cs" />

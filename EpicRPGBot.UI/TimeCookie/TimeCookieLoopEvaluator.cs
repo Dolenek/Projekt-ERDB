@@ -18,14 +18,10 @@ namespace EpicRPGBot.UI.TimeCookie
 
     public static class TimeCookieLoopEvaluator
     {
-        public static TimeCookieLoopStatus Evaluate(
-            TimeSpan? targetRemaining,
-            TrackedCooldownSnapshot trackedCooldowns,
-            bool farmEnabled)
+        public static bool HasReadyAutomatedCommands(TrackedCooldownSnapshot trackedCooldowns, bool farmEnabled)
         {
             var snapshot = trackedCooldowns ?? new TrackedCooldownSnapshot(null, null, null, null, null, null, null, null);
-            var hasReadyAutomatedCommands =
-                IsReady(snapshot.Daily) ||
+            return IsReady(snapshot.Daily) ||
                 IsReady(snapshot.Weekly) ||
                 IsReady(snapshot.Hunt) ||
                 IsReady(snapshot.Adventure) ||
@@ -33,8 +29,16 @@ namespace EpicRPGBot.UI.TimeCookie
                 IsReady(snapshot.Work) ||
                 IsReady(snapshot.Lootbox) ||
                 (farmEnabled && IsReady(snapshot.Farm));
+        }
 
-            return new TimeCookieLoopStatus(IsReady(targetRemaining), hasReadyAutomatedCommands);
+        public static TimeCookieLoopStatus Evaluate(
+            TimeSpan? targetRemaining,
+            TrackedCooldownSnapshot trackedCooldowns,
+            bool farmEnabled)
+        {
+            return new TimeCookieLoopStatus(
+                IsReady(targetRemaining),
+                HasReadyAutomatedCommands(trackedCooldowns, farmEnabled));
         }
 
         private static bool IsReady(TimeSpan? remaining)

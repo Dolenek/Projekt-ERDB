@@ -24,6 +24,11 @@ Time-cookie handling:
 - Time-cookie detection does not auto-send `rpg cd`.
 - The dedicated `Time cookie` workflow also watches the untracked `dungeon`, `duel`, or `card hand` row chosen by the user and stops when that selected row becomes `Ready`, without auto-using that target command.
 
+Sleepy-potion handling:
+- The `Sleepy potion` workflow sends `rpg cd`, waits for ready automated tracked commands to finish, uses `rpg egg use sleepy potion`, sends `rpg cd` again, and waits for newly-ready automated tracked commands to finish.
+- Unlike `time cookie`, the app does not infer a fixed cooldown reduction directly from the sleepy-potion reply text.
+- The follow-up `rpg cd` snapshot is treated as the authoritative cooldown resync after the potion use.
+
 Runtime scheduling:
 - The bot still arms daily/weekly labels with fixed EPIC RPG cooldowns and hunt/adventure/training/work/farm/lootbox labels with the configured settings baseline when it sends those commands.
 - If EPIC RPG replies with `wait at least ...`, the engine retries after that reported remaining time plus a small safety buffer.

@@ -23,7 +23,7 @@ Workflow behavior:
 6. Navigate to Discord `@me`, open the fixed `Army Helper` DM, and wait up to 15 minutes for a newer message with `Take me there`.
 7. Click the newest `Take me there` button.
 8. If the dungeon channel already shows the EPIC RPG `ARE YOU SURE YOU WANT TO ENTER?` prompt from the partner's invite, click `yes` immediately without sending a new `rpg dung`.
-9. Otherwise parse the `Players listed` message, resolve the non-self Discord mention, and send `rpg dung <@partnerId>`.
+9. Otherwise parse the `Players listed` message and resolve the non-self partner target. Use `rpg dung <@partnerId>` when Discord exposes a real mention id; otherwise use the right-side Army Helper player tag from `Players listed` instead of the stylized display mention.
 10. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
 11. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
 12. Click `yes` on the entry prompt.

@@ -7,6 +7,9 @@ namespace EpicRPGBot.UI.Bunny
     {
         private static readonly Regex HappinessRegex = new Regex(@"Happiness\s*:\s*(?<value>\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex HungerRegex = new Regex(@"Hunger\s*:\s*(?<value>\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex PetTierRegex = new Regex(
+            @"\b(?:DOG|CAT|DRAGON)\s+TIER(?:\s+[A-Z0-9]+)?\s+IS\s+APPROACHING\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public BunnyPromptParseResult Parse(string renderedMessage)
         {
@@ -50,10 +53,7 @@ namespace EpicRPGBot.UI.Bunny
                 message.IndexOf("How to get a bunny", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 message.IndexOf("rpg egg info bunny", StringComparison.OrdinalIgnoreCase) >= 0;
             var hasPetFooter = message.IndexOf("Use \"info\" to get information about pets", StringComparison.OrdinalIgnoreCase) >= 0;
-            var hasPetTier =
-                message.IndexOf("DOG TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                message.IndexOf("CAT TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                message.IndexOf("DRAGON TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0;
+            var hasPetTier = PetTierRegex.IsMatch(message);
             var hasFooter = hasBunnyFooter || (hasPetFooter && hasPetTier);
             if (!hasFooter)
             {

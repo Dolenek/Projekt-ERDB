@@ -44,10 +44,12 @@ namespace EpicRPGBot.UI
         private BotEngine _engine;
         private bool _isAreaTradeRunning;
         private bool _isDungeonRunning;
+        private bool _isSleepyPotionRunning;
         private bool _isTimeCookieRunning;
         private bool _isWishingTokenRunning;
         private TimeCookieTarget? _activeTimeCookieTarget;
         private CancellationTokenSource _dungeonCancellation;
+        private CancellationTokenSource _sleepyPotionCancellation;
         private CancellationTokenSource _timeCookieCancellation;
         private CancellationTokenSource _wishingTokenCancellation;
         private Grid _lastMessagesPanel;
@@ -64,7 +66,7 @@ namespace EpicRPGBot.UI
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
             _settingsService = new AppSettingsService(new LocalSettingsStore());
-            _cooldownTracker = new CooldownTracker(this);
+            _cooldownTracker = new CooldownTracker(CooldownVisual);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
             _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
             _dismantlingWorkflow = new DismantlingWorkflow(_confirmedCommandSender);
@@ -124,6 +126,7 @@ namespace EpicRPGBot.UI
         private void MainWindow_Closed(object sender, EventArgs e)
         {
             _dungeonCancellation?.Cancel();
+            _sleepyPotionCancellation?.Cancel();
             _timeCookieCancellation?.Cancel();
             _wishingTokenCancellation?.Cancel();
             _messagePoller.Stop();

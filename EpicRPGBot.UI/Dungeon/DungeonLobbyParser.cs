@@ -80,7 +80,10 @@ namespace EpicRPGBot.UI.Dungeon
             var partner = listedPlayers.FirstOrDefault(candidate => !IsSelfMention(candidate.MentionLabel, candidate.PlayerName, selfKey));
             return partner == null
                 ? null
-                : new DiscordMessageMention(partner.MentionLabel, string.Empty);
+                : new DiscordMessageMention(
+                    partner.MentionLabel,
+                    string.Empty,
+                    string.IsNullOrWhiteSpace(partner.PlayerName) ? partner.MentionLabel : partner.PlayerName);
         }
 
         private static bool IsSelfMention(string mentionLabel, string playerName, string selfKey)

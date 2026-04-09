@@ -5,7 +5,7 @@
 Runtime behavior:
 - Cat, dog, and dragon pet prompts are handled by the same reactive path that already answers bunny prompts.
 - Pet handling is always enabled during normal engine automation.
-- The engine recognizes pet prompts from the rendered Discord body when it contains the pet footer `Use "info" to get information about pets`, a supported `... TIER IS APPROACHING` line, and the `Happiness` / `Hunger` stat labels.
+- The engine recognizes pet prompts from the rendered Discord body when it contains the pet footer `Use "info" to get information about pets`, a supported `... TIER ... IS APPROACHING` line for cat/dog/dragon pets, and the `Happiness` / `Hunger` stat labels.
 - Pet replies use the fast raw-send path, not the confirmed `rpg ...` command loop.
 - While a pet reply is pending, the global send lane stays blocked so scheduled commands do not race the event answer.
 - The interactive prompt lock clears immediately after the reply send attempt finishes; v1 does not wait for a result message.

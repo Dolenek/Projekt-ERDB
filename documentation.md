@@ -18,6 +18,7 @@ Canonical pages:
 - [Pet automation](docs/pet-automation.md)
 - [Wishing token](docs/wishing-token.md)
 - [Time cookie](docs/time-cookie.md)
+- [Sleepy potion](docs/sleepy-potion.md)
 - [Captcha solver](docs/captcha-solver.md)
 - [Guard operations](docs/guard-operations.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)

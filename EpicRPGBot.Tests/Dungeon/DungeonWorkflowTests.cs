@@ -180,26 +180,49 @@ namespace EpicRPGBot.Tests.Dungeon
             Assert.NotNull(partner);
             Assert.Equal("@Jpack", partner.Label);
             Assert.Equal(string.Empty, partner.UserId);
+            Assert.Equal("jpack2552", partner.CommandToken);
         }
 
         [Fact]
-        public void DungeonLobbyParser_KeepsHyphenatedDiscordMentionWhenIdsAreUnavailable()
+        public void DungeonLobbyParser_UsesPlayerTagWhenIdsAreUnavailable()
         {
             var parser = new DungeonLobbyParser();
             var snapshots = new[]
             {
                 new DiscordMessageSnapshot(
                     "m1",
-                    "Dungeon 2 with eternal partner commands",
+                    "Dungeon 6 commands",
                     "Army Helper",
-                    "@Stuggi - 0711 " + DungeonTestData.TestDisplayMention + " Your dungeon is ready.\nPlayers listed:\n@Stuggi - 0711 - stuggi_0711\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\nRecommended trades")
+                    "Dungeon 6 commands\nPlayers listed:\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\n@𝓓𝖊𝖘𝖒𝖔𝖓𝖉 - lifegoesonwithyou\nRecommended trades")
             };
 
             var partner = parser.FindPartnerMention(snapshots, DungeonTestData.TestPlayerName);
 
             Assert.NotNull(partner);
-            Assert.Equal("@Stuggi - 0711", partner.Label);
+            Assert.Equal("@𝓓𝖊𝖘𝖒𝖔𝖓𝖉", partner.Label);
             Assert.Equal(string.Empty, partner.UserId);
+            Assert.Equal("lifegoesonwithyou", partner.CommandToken);
+        }
+
+        [Fact]
+        public async Task RunAsync_UsesPlayerTagFallbackWhenMentionIdsAreUnavailable()
+        {
+            var fileName = "dungeon-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var settingsService = CreateSettingsService(fileName);
+                var chatClient = new FakeDungeonChatClient(usePlayerTagFallback: true);
+                var workflow = CreateWorkflow(chatClient, settingsService);
+
+                var result = await workflow.RunAsync(_ => { }, CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.Contains("rpg dung lifegoesonwithyou", chatClient.SentCommands);
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
         }
 
         [Fact]

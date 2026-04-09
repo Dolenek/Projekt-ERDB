@@ -4,16 +4,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:EpicRPGBot.UI.Controls"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="EpicRPG Bot UI" Height="800" Width="1300" WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <Style x:Key="CooldownRowBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Padding" Value="6,2"/>
-            <Setter Property="Margin" Value="0,1,0,1"/>
-        </Style>
         <Style x:Key="BrowserTabItemStyle" TargetType="TabItem">
             <Setter Property="Background" Value="#2b2d31"/>
             <Setter Property="Foreground" Value="#ddd"/>
@@ -194,203 +189,23 @@
 
                     <TextBlock Text="Time cookie" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,6"/>
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Name="TimeCookieDungeonBtn" Grid.Column="0" Content="Dungeon" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDungeonBtn_Click"/>
-                        <Button Name="TimeCookieDuelBtn" Grid.Column="1" Content="Duel" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDuelBtn_Click"/>
-                        <Button Name="TimeCookieCardHandBtn" Grid.Column="2" Content="Card hand" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="TimeCookieCardHandBtn_Click"/>
+                        <Button Name="TimeCookieDungeonBtn" Grid.Row="0" Grid.Column="0" Content="Dungeon" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDungeonBtn_Click"/>
+                        <Button Name="TimeCookieDuelBtn" Grid.Row="0" Grid.Column="1" Content="Duel" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDuelBtn_Click"/>
+                        <Button Name="TimeCookieCardHandBtn" Grid.Row="0" Grid.Column="2" Content="Card hand" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="TimeCookieCardHandBtn_Click"/>
+                        <Button Name="SleepyPotionBtn" Grid.Row="1" Grid.Column="0" Content="Sleepy potion" Margin="0,8,8,0" MinHeight="30" Padding="12,4" Click="SleepyPotionBtn_Click"/>
                     </Grid>
                 </StackPanel>
 
-                <ScrollViewer Grid.Row="1"
-                              Margin="0,12,0,0"
-                              VerticalAlignment="Bottom"
-                              VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <Separator Background="#2f3136" Margin="0,0,0,8"/>
-                        <TextBlock Text="Cooldowns (visual)" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <StackPanel Name="CooldownsPanel" Margin="0,0,0,8">
-
-                        <!-- Rewards -->
-                        <TextBlock Text="Rewards" Foreground="#ccc" Margin="0,6,0,2"/>
-
-                        <Border Name="DailyCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="daily" Foreground="#ddd"/>
-                                <TextBlock Name="DailyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="WeeklyCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="weekly" Foreground="#ddd"/>
-                                <TextBlock Name="WeeklyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="LootboxCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="lootbox" Foreground="#ddd"/>
-                                <TextBlock Name="LootboxCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="CardHandCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="card hand" Foreground="#ddd"/>
-                                <TextBlock Name="CardHandCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="VoteCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="vote" Foreground="#ddd"/>
-                                <TextBlock Name="VoteCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Experience -->
-                        <TextBlock Text="Experience" Foreground="#ccc" Margin="0,6,0,2"/>
-
-                        <Border Name="HuntCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="hunt" Foreground="#ddd"/>
-                                <TextBlock Name="HuntCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="AdventureCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="adventure" Foreground="#ddd"/>
-                                <TextBlock Name="AdventureCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="TrainingCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="training" Foreground="#ddd"/>
-                                <TextBlock Name="TrainingCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="DuelCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="duel" Foreground="#ddd"/>
-                                <TextBlock Name="DuelCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="QuestCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="quest | epic quest" Foreground="#ddd"/>
-                                <TextBlock Name="QuestCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Progress -->
-                        <TextBlock Text="Progress" Foreground="#ccc" Margin="0,6,0,2"/>
-
-                        <Border Name="WorkCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="chop | fish | pickup | mine" Foreground="#ddd"/>
-                                <TextBlock Name="WorkCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="FarmCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="farm" Foreground="#ddd"/>
-                                <TextBlock Name="FarmCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="HorseCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="horse breeding | horse race" Foreground="#ddd"/>
-                                <TextBlock Name="HorseCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="ArenaCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="arena" Foreground="#ddd"/>
-                                <TextBlock Name="ArenaCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Name="DungeonCdRow" Style="{StaticResource CooldownRowBorderStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="dungeon | miniboss" Foreground="#ddd"/>
-                                <TextBlock Name="DungeonCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
+                <controls:CooldownPanelControl x:Name="CooldownVisual" Grid.Row="1" Margin="0,12,0,0"/>
             </Grid>
         </Border>
     </Grid>

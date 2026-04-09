@@ -63,6 +63,18 @@ namespace EpicRPGBot.Tests.Bunny
         }
 
         [Fact]
+        public void Parse_ReturnsStats_ForDragonTierTwoPetPrompt()
+        {
+            var result = _parser.Parse(
+                "SUDDENLY, A DRAGON TIER II IS APPROACHING friendr\nHappiness: 80\nHunger: 0\nUse \"info\" to get information about pets");
+
+            Assert.True(result.IsBunnyPrompt);
+            Assert.True(result.HasReadableStats);
+            Assert.Equal(80, result.Happiness);
+            Assert.Equal(0, result.Hunger);
+        }
+
+        [Fact]
         public void Parse_RejectsPetMessagesWithoutPetFooter()
         {
             var result = _parser.Parse(
