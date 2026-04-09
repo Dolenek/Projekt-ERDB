@@ -103,7 +103,7 @@ namespace EpicRPGBot.UI
             SetStatText(_lootboxCountText, $"Lootbox sent: {_lootboxCount}");
         }
 
-        private static string GetTrackedCommandKey(string command)
+        private string GetTrackedCommandKey(string command)
         {
             if (string.IsNullOrWhiteSpace(command))
             {
@@ -136,10 +136,7 @@ namespace EpicRPGBot.UI
                 return "lootbox";
             }
 
-            if (normalized.StartsWith("rpg chop", System.StringComparison.Ordinal) ||
-                normalized.StartsWith("rpg axe", System.StringComparison.Ordinal) ||
-                normalized.StartsWith("rpg bowsaw", System.StringComparison.Ordinal) ||
-                normalized.StartsWith("rpg chainsaw", System.StringComparison.Ordinal))
+            if (ConfiguredWorkCommandCatalog.IsWorkCommand(normalized, GetCurrentSettings().WorkCommands))
             {
                 return "work";
             }

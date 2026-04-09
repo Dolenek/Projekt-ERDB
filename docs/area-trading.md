@@ -22,6 +22,7 @@ Workflow behavior:
 - The sweep starts with `rpg p` and parses `Area: ... (Max: X)` from the EPIC RPG profile reply.
 - The saved configured area is updated to that live max area when it changes.
 - If the live area is unsupported, the sweep stops without sending trade or dismantle steps.
+- If the live area has no configured trade plan, the sweep logs that it was skipped and does not send trade or dismantle steps.
 - If the engine is running, the app pauses it, waits for the send lane to go idle, runs the sweep exclusively, then resumes the engine and refreshes with `rpg cd`.
 
 Configured plans:

@@ -27,7 +27,7 @@ User-visible behaviors:
 - `Reload` reloads the bot tab even if the player tab is currently selected.
 - `Go To Channel` navigates only the bot tab to the currently saved channel URL.
 - The browser tabs open with `Player tab` selected by default, and the currently selected tab is highlighted light blue.
-- `Complete Dungeon` starts an exclusive dungeon run on the dedicated `Dungeon tab`; while active, the button changes to `Stop Dungeon`.
+- `Complete Dungeon` starts an exclusive run that first performs `Trade area` on the bot tab in its currently open channel, then switches to the dedicated `Dungeon tab` for the listing-channel signup; while active, the button changes to `Stop Dungeon`.
 - `Start Bot` starts the automation engine, then sends `rpg cd` through the bot tab and waits for the cooldown snapshot before scheduling commands.
 - `Stop Bot` stops engine timers but keeps all four tabs open.
 - While the engine is running, `Start Bot` is tinted light green and `Stop Bot` stays white; while the engine is stopped, `Stop Bot` is tinted light red and `Start Bot` stays white.
@@ -42,7 +42,7 @@ User-visible behaviors:
 - If the engine is running when dismantling starts, the UI pauses the engine, waits for the current send lane to go idle, runs the dismantle job exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when area trading starts, the UI pauses the engine, waits for the current send lane to go idle, runs the area-trade sweep exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is running when `Wishing token` starts, the UI pauses the engine, runs the loop exclusively, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
-- If the engine is running when `Complete Dungeon` starts, the UI pauses the engine, runs the dungeon workflow exclusively on the dungeon tab, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
+- If the engine is running when `Complete Dungeon` starts, the UI pauses the engine, runs the mandatory pre-dungeon area trade on the bot tab, continues the dungeon workflow on the dungeon tab, then resumes the engine and refreshes cooldown scheduling with `rpg cd`.
 - If the engine is stopped when `Time cookie` starts, the UI starts it for the workflow and stops it again when the workflow ends; if it was already running, it keeps running throughout the workflow.
 - Any change in the settings window is saved immediately to local settings.
 - The `Work commands` settings modal also auto-saves each per-area command change immediately.

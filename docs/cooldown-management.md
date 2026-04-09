@@ -11,6 +11,7 @@ Persisted baselines:
 Tracked cooldown state:
 - The right panel shows parsed cooldowns for rewards, experience, and progress commands.
 - When a message contains `cooldowns`, the tracker parses entries such as `quest | epic quest (1m 2s)` and maps aliases to canonical labels.
+- The `work` row recognizes both the built-in work aliases and the per-area configured work-command texts from settings, so custom commands such as `rpg dynamite` still map to the same `work` visual row.
 - A 1-second UI timer decrements active labels until they reach `Ready`.
 - The Stats sidebar also shows live counts for currently running cooldowns across all tracked rows and per section (`Rewards`, `Experience`, `Progress`).
 - Rows that are `Ready` get a stable green/light-green background based on fixed row order; active cooldown rows keep the default dark background.
@@ -18,7 +19,8 @@ Tracked cooldown state:
 
 Time-cookie handling:
 - EPIC RPG replies containing `time cookie` plus `X minute(s) ahead` reduce the tracked cooldown state immediately.
-- The reduction is applied to tracked hunt/adventure/training/work/farm/lootbox values in the right panel and floors expired timers to `Ready`.
+- The reduction is applied immediately across the full cooldown panel visual, including reward rows and time-cookie target rows such as `dungeon`, `duel`, and `card hand`, and floors expired timers to `Ready`.
+- Runtime scheduler resync still only uses hunt/adventure/training/work/farm/lootbox.
 - Time-cookie detection does not auto-send `rpg cd`.
 - The dedicated `Time cookie` workflow also watches the untracked `dungeon`, `duel`, or `card hand` row chosen by the user and stops when that selected row becomes `Ready`, without auto-using that target command.
 
@@ -31,7 +33,7 @@ Runtime scheduling:
 
 Alias mapping preserved in the current app:
 - `quest` and `epic quest` map to the same label.
-- `chop`, `fish`, `pickup`, and `mine` map to the work label.
+- Built-in work aliases and configured per-area work-command texts map to the work label.
 - `horse breeding` and `horse race` map to the horse label.
 - `dungeon` and `miniboss` map to the dungeon label.
 

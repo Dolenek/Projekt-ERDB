@@ -28,6 +28,22 @@ namespace EpicRPGBot.UI
             return settings.IsFarmAllowed(10);
         }
 
+        private void HookAppSettings()
+        {
+            _settingsService.SettingsChanged += OnAppSettingsChanged;
+            _cooldownTracker.RefreshWorkAliases(_settingsService.Current.WorkCommands);
+        }
+
+        private void UnhookAppSettings()
+        {
+            _settingsService.SettingsChanged -= OnAppSettingsChanged;
+        }
+
+        private void OnAppSettingsChanged(AppSettingsSnapshot settings)
+        {
+            _cooldownTracker.RefreshWorkAliases(settings?.WorkCommands);
+        }
+
         private int GetConfiguredHuntMs()
         {
             return GetCurrentSettings().GetHuntMsOrDefault(61000);

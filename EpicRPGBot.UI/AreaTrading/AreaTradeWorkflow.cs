@@ -61,7 +61,8 @@ namespace EpicRPGBot.UI.AreaTrading
 
             if (!_planCatalog.TryGet(area.Value, out var steps) || steps.Count == 0)
             {
-                return CraftJobResult.FailedResult($"Area trade stopped: no trade plan exists for area {area.Value}.");
+                report?.Invoke($"Area {area.Value} has no configured trade plan. Skipping area trade.");
+                return CraftJobResult.CompletedResult($"Area trade skipped: no trade plan exists for area {area.Value}.");
             }
 
             report?.Invoke($"Area {area.Value} trade plan ready with {steps.Count} step(s).");

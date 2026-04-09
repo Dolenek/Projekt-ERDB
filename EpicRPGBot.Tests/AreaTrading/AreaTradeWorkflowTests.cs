@@ -59,6 +59,39 @@ namespace EpicRPGBot.Tests.AreaTrading
             }
         }
 
+        [Fact]
+        public async Task UnsupportedArea_SkipsInsteadOfFailing()
+        {
+            var fileName = "area-trade-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var chatClient = new FakeDiscordChatClient(new Dictionary<string, Queue<string>>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["rpg p"] = QueueOf("Area: 12 (Max: 12)")
+                });
+
+                var commandSender = new ConfirmedCommandSender(chatClient);
+                var settingsService = CreateSettingsService(fileName, "12");
+                var workflow = new AreaTradeWorkflow(
+                    commandSender,
+                    new DismantlingWorkflow(commandSender),
+                    settingsService,
+                    settingsService.LoadCurrent);
+                var reports = new List<string>();
+
+                var result = await workflow.RunAsync(reports.Add, CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.Contains("Area trade skipped", result.Summary, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(chatClient.SentCommands, command => !string.Equals(command, "rpg p", StringComparison.OrdinalIgnoreCase));
+                Assert.Contains(reports, message => message.Contains("has no configured trade plan", StringComparison.OrdinalIgnoreCase));
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
+        }
+
         private static AppSettingsService CreateSettingsService(string fileName, string area)
         {
             var service = new AppSettingsService(new LocalSettingsStore(fileName));

@@ -161,6 +161,26 @@ namespace EpicRPGBot.Tests.Dungeon
         }
 
         [Fact]
+        public void DungeonLobbyParser_KeepsHyphenatedDiscordMentionWhenIdsAreUnavailable()
+        {
+            var parser = new DungeonLobbyParser();
+            var snapshots = new[]
+            {
+                new DiscordMessageSnapshot(
+                    "m1",
+                    "Dungeon 2 with eternal partner commands",
+                    "Army Helper",
+                    "@Stuggi - 0711 " + DungeonTestData.TestDisplayMention + " Your dungeon is ready.\nPlayers listed:\n@Stuggi - 0711 - stuggi_0711\n" + DungeonTestData.TestDisplayMention + " - " + DungeonTestData.TestPlayerName + "\nRecommended trades")
+            };
+
+            var partner = parser.FindPartnerMention(snapshots, DungeonTestData.TestPlayerName);
+
+            Assert.NotNull(partner);
+            Assert.Equal("@Stuggi - 0711", partner.Label);
+            Assert.Equal(string.Empty, partner.UserId);
+        }
+
+        [Fact]
         public void DungeonBattleStateParser_DetectsTurnVictoryAndDeletePrompt()
         {
             var parser = new DungeonBattleStateParser();

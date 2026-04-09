@@ -37,7 +37,7 @@ namespace EpicRPGBot.UI
             if (TimeCookieMessageParser.TryParseReduction(snapshot.Text, out var reduction) &&
                 _cooldownTracker.ApplyTimeCookieReduction(reduction))
             {
-                _log.Info($"Time cookie detected: reduced tracked cooldowns by {(int)reduction.TotalMinutes} minute(s).");
+                _log.Info($"Time cookie detected: reduced cooldown visuals by {(int)reduction.TotalMinutes} minute(s).");
                 SyncEngineFromTrackedCooldowns("Tracked cooldowns reduced from time cookie");
             }
 

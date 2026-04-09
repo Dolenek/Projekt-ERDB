@@ -93,6 +93,7 @@ namespace EpicRPGBot.UI
             await InitializeBrowsersAsync();
             await NavigateStartupTabsAsync();
             HookGuildRaidSettings();
+            HookAppSettings();
             await StartGuildRaidWatcherAsync();
             _messagePoller.Start();
         }
@@ -127,6 +128,7 @@ namespace EpicRPGBot.UI
             _wishingTokenCancellation?.Cancel();
             _messagePoller.Stop();
             UnhookGuildRaidSettings();
+            UnhookAppSettings();
             _guildRaidCoordinator.Dispose();
             _engine?.Stop();
             _cooldownTracker.Stop();

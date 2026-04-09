@@ -99,8 +99,7 @@ namespace EpicRPGBot.UI
             CancellationToken cancellationToken)
         {
             SelectBotTab();
-            report?.Invoke("[dungeon] Navigating the bot tab to the default channel URL for pre-dungeon trading.");
-            await _botChatClient.NavigateToChannelAsync(GetCurrentSettings().ResolveChannelUrl());
+            report?.Invoke("[dungeon] Using the current bot tab channel for pre-dungeon trading.");
             return await RunAreaTradeJobAsync(report, cancellationToken);
         }
 

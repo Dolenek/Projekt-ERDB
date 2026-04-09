@@ -116,15 +116,31 @@ namespace EpicRPGBot.UI.Dungeon
                     continue;
                 }
 
-                var hyphenIndex = line.IndexOf('-');
-                var mentionLabel = hyphenIndex > 0 ? line.Substring(0, hyphenIndex).Trim() : line.Trim();
-                var playerName = hyphenIndex > 0 && hyphenIndex + 1 < line.Length
-                    ? line.Substring(hyphenIndex + 1).Trim()
+                var separatorIndex = FindPlayerSeparatorIndex(line);
+                var mentionLabel = separatorIndex > 0 ? line.Substring(0, separatorIndex).Trim() : line.Trim();
+                var playerName = separatorIndex > 0 && separatorIndex + 3 <= line.Length
+                    ? line.Substring(separatorIndex + 3).Trim()
                     : string.Empty;
                 entries.Add(new ListedPlayerEntry(mentionLabel, playerName));
             }
 
             return entries;
+        }
+
+        private static int FindPlayerSeparatorIndex(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                return -1;
+            }
+
+            var spacedSeparatorIndex = line.LastIndexOf(" - ", StringComparison.Ordinal);
+            if (spacedSeparatorIndex >= 0)
+            {
+                return spacedSeparatorIndex;
+            }
+
+            return line.LastIndexOf('-');
         }
 
         private static string NormalizeName(string value)

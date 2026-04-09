@@ -14,7 +14,7 @@ Loop rules:
 - It lets the normal tracked automation batch finish first, including any training prompt handling.
 - If the selected target cooldown is already `Ready`, the loop stops and leaves that target unused for the player.
 - Otherwise it sends `rpg use time cookie`.
-- After the time-cookie reduction is parsed, it lets any newly-ready automated tracked commands finish before the next cycle.
+- After the time-cookie reduction is parsed, the full cooldown panel visual is reduced immediately and then any newly-ready automated tracked commands are allowed to finish before the next cycle.
 - The loop stops instead of guessing when `rpg cd` fails, `rpg use time cookie` fails, or the reply does not contain a recognized `X minute(s) ahead` reduction.
 
 Targets:

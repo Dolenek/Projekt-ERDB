@@ -14,7 +14,6 @@ namespace EpicRPGBot.UI.Services
     {
         private static readonly Brush ReadyBrush = CreateBrush(0x24, 0x63, 0x3C);
         private static readonly Brush AlternateReadyBrush = CreateBrush(0x2F, 0x7A, 0x4A);
-        private static readonly string[] TrackedKeys = { "hunt", "adventure", "training", "work", "farm", "lootbox" };
         private static readonly CooldownDefinition[] Definitions =
         {
             new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", CooldownCategory.Rewards, "daily"),
@@ -27,7 +26,7 @@ namespace EpicRPGBot.UI.Services
             new CooldownDefinition("training", "TrainingCdRow", "TrainingCdText", CooldownCategory.Experience, "training"),
             new CooldownDefinition("duel", "DuelCdRow", "DuelCdText", CooldownCategory.Experience, "duel"),
             new CooldownDefinition("quest", "QuestCdRow", "QuestCdText", CooldownCategory.Experience, "quest", "epic quest"),
-            new CooldownDefinition("work", "WorkCdRow", "WorkCdText", CooldownCategory.Progress, "chop", "fish", "pickup", "mine"),
+            new CooldownDefinition("work", "WorkCdRow", "WorkCdText", CooldownCategory.Progress),
             new CooldownDefinition("farm", "FarmCdRow", "FarmCdText", CooldownCategory.Progress, "farm"),
             new CooldownDefinition("horse", "HorseCdRow", "HorseCdText", CooldownCategory.Progress, "horse breeding", "horse race"),
             new CooldownDefinition("arena", "ArenaCdRow", "ArenaCdText", CooldownCategory.Progress, "arena"),
@@ -36,9 +35,9 @@ namespace EpicRPGBot.UI.Services
 
         private readonly Dictionary<string, CooldownEntry> _entries = new Dictionary<string, CooldownEntry>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _aliasMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _workAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly DispatcherTimer _timer;
         private CooldownStatsSnapshot _lastStats;
-
         public event Action<CooldownStatsSnapshot> StatsChanged;
 
         public CooldownTracker(FrameworkElement root)
@@ -59,11 +58,11 @@ namespace EpicRPGBot.UI.Services
                 }
             }
 
+            RefreshWorkAliases(AreaWorkCommandSettings.DefaultSerializedMap);
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (sender, args) => Tick();
             _lastStats = BuildStatsSnapshot();
         }
-
         public void Start()
         {
             _timer.Start();
@@ -155,6 +154,27 @@ namespace EpicRPGBot.UI.Services
             PublishStatsIfChanged();
         }
 
+        public void RefreshWorkAliases(string serializedSelections)
+        {
+            foreach (var alias in _workAliases)
+            {
+                _aliasMap.Remove(alias);
+            }
+
+            _workAliases.Clear();
+            foreach (var alias in ConfiguredWorkCommandCatalog.BuildCooldownAliases(serializedSelections))
+            {
+                var normalized = NormalizeAlias(alias);
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    continue;
+                }
+
+                _aliasMap[normalized] = "work";
+                _workAliases.Add(normalized);
+            }
+        }
+
         public bool ApplyTimeCookieReduction(TimeSpan reduction)
         {
             if (reduction <= TimeSpan.Zero)
@@ -163,15 +183,14 @@ namespace EpicRPGBot.UI.Services
             }
 
             var changed = false;
-            foreach (var canonical in TrackedKeys)
+            foreach (var entry in _entries.Values.Distinct())
             {
-                if (!_entries.TryGetValue(canonical, out var entry) || !entry.Remaining.HasValue)
+                if (!entry.Remaining.HasValue)
                 {
                     continue;
                 }
 
-                var next = entry.Remaining.Value - reduction;
-                entry.Remaining = next > TimeSpan.Zero ? next : (TimeSpan?)null;
+                entry.Remaining = CooldownReductionCalculator.Reduce(entry.Remaining, reduction);
                 UpdateEntryVisual(entry);
                 changed = true;
             }

@@ -7,6 +7,7 @@ UI behavior:
 - The `Complete Dungeon` button toggles to `Stop Dungeon` while a run is active.
 - Starting the workflow selects the `Dungeon tab` and logs progress to the Console.
 - If the normal engine is running, the app pauses it for the dungeon run and resumes it with `rpg cd` afterward.
+- Before the dungeon signup starts, the workflow switches to the `Bot tab` and runs the normal `Trade area` sweep in the channel that is already open there.
 
 Profile identity:
 - The app caches the player name parsed from the EPIC RPG `rpg p` profile header.
@@ -14,14 +15,19 @@ Profile identity:
 - If the cached name is empty when a dungeon run starts, the dungeon workflow refreshes it with `rpg p` before continuing.
 
 Workflow behavior:
-1. Navigate the `Dungeon tab` to the saved bot channel URL.
-2. Send `rpg p` in the dungeon signup channel.
-3. Navigate to Discord `@me`, open the fixed `Army Helper` DM, and wait up to 15 minutes for a newer message with `Take me there`.
-4. Click the newest `Take me there` button.
-5. In the opened dungeon channel, parse the `Players listed` message, resolve the non-self Discord mention, and send `rpg dung <@partnerId>`.
-6. Click `yes` on the entry prompt.
-7. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
-8. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
+1. Switch to the `Bot tab` and run `Trade area` in the channel that is already open there.
+2. If that required pre-dungeon area-trade phase finds no configured trade plan for the live area, skip trading and continue the dungeon run.
+3. If the pre-dungeon area-trade phase fails for any other reason, stop the dungeon run immediately.
+4. Navigate the `Dungeon tab` to the saved `Dungeon listing channel URL`, or fall back to the default channel URL when the listing URL is empty.
+5. Send `rpg p` in the dungeon listing channel.
+6. Navigate to Discord `@me`, open the fixed `Army Helper` DM, and wait up to 15 minutes for a newer message with `Take me there`.
+7. Click the newest `Take me there` button.
+8. In the opened dungeon channel, parse the `Players listed` message, resolve the non-self Discord mention, and send `rpg dung <@partnerId>`.
+9. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
+10. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
+11. Click `yes` on the entry prompt.
+12. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
+13. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
 
 Battle rules:
 - The workflow treats `ALL PLAYERS WON` and the final `Thanks for using our dungeon system` message as successful completion.
@@ -31,6 +37,8 @@ Battle rules:
 Settings:
 - `Auto delete dungeon channel after a win` controls whether the workflow clicks the red `Delete dungeon channel` button after a successful run.
 - The cached profile name is persisted in settings but is not user-editable.
+- The pre-dungeon trade phase uses whatever channel is currently open on the `Bot tab`.
+- The dungeon signup phase uses `Dungeon listing channel URL`, with fallback to the default `Channel URL`.
 
 Automation IDs:
 - Launcher: `CompleteDungeonButton`
