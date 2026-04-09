@@ -29,6 +29,7 @@ Command send behavior:
 - All bot-originated sends share one global send lane with a 1-second gap between commands.
 - `rpg ...` commands are not considered complete when the composer clears; the bot waits for the outgoing command to appear in chat and then for a newer reply authored by `EPIC RPG` before the next command can enter the lane.
 - Real command sends retry up to 3 times when outgoing registration or the EPIC RPG reply is missing, and later `rpg ...` commands stay blocked behind that retry loop.
+- If an observed EPIC RPG reply says `end your previous command`, the engine stops immediately instead of continuing to queue automation behind a stuck command state.
 - Quick-time/event prompt answers, including training prompt answers, and bot status/help text still use the fast path and do not wait for an EPIC RPG follow-up reply.
 - Bunny catch prompts and post-training pet prompts also use the fast path: the engine parses the `Happiness` / `Hunger` stats from the EPIC RPG message, sends one computed raw reply, and clears the interactive lock after the send attempt finishes.
 - The right-side cooldown panel starts daily/weekly/hunt/adventure/training/work/farm/lootbox when the EPIC RPG confirmation reply is received, without waiting for the next `rpg cd`.

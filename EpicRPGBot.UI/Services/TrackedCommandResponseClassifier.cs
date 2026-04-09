@@ -12,6 +12,11 @@ namespace EpicRPGBot.UI.Services
         {
             var message = snapshot?.Text ?? string.Empty;
             var renderedText = snapshot?.RenderedText ?? string.Empty;
+            if (IsPreviousCommandBusyReply(snapshot))
+            {
+                return false;
+            }
+
             var looksLikeTrainingPrompt = TrainingPromptSignal.LooksLikePrompt(renderedText) ||
                 TrainingPromptSignal.LooksLikePrompt(message);
             if (!looksLikeTrainingPrompt && !HasEpicReplyContext(snapshot, renderedText, message))
@@ -40,6 +45,25 @@ namespace EpicRPGBot.UI.Services
             }
 
             return true;
+        }
+
+        public static bool IsPreviousCommandBusyReply(DiscordMessageSnapshot? snapshot)
+        {
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            var message = snapshot.Text ?? string.Empty;
+            var renderedText = snapshot.RenderedText ?? string.Empty;
+            return HasEpicReplyContext(snapshot, renderedText, message) &&
+                   (ContainsPreviousCommandBusyReply(message) || ContainsPreviousCommandBusyReply(renderedText));
+        }
+
+        public static bool ContainsPreviousCommandBusyReply(string message)
+        {
+            return !string.IsNullOrWhiteSpace(message) &&
+                   message.IndexOf("end your previous command", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         public static bool TryInferKind(string message, out TrackedCommandKind kind)

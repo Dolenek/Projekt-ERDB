@@ -23,12 +23,13 @@ Workflow behavior:
 6. Resume normal bot automation while waiting for matchmaking, then navigate to Discord `@me`, open the fixed `Army Helper` DM, and wait up to 15 minutes for a newer message with `Take me there`.
 7. When the Army Helper invite arrives, pause normal bot automation and click the newest `Take me there` button.
 8. If the dungeon channel already shows the EPIC RPG `ARE YOU SURE YOU WANT TO ENTER?` prompt from the partner's invite, click `yes` immediately without sending a new `rpg dung`.
-9. Otherwise parse the `Players listed` message and resolve the non-self partner target. Use `rpg dung <@partnerId>` when Discord exposes a real mention id; otherwise send a text mention with `@...`, preferring the plain Discord handle from the left side when it is ASCII-safe and falling back to the right-side Army Helper player tag when the display handle uses special styling or other unsupported characters.
-10. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
-11. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
-12. Click `yes` on the entry prompt.
-13. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
-14. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
+9. When the workflow first sees the `Players listed` lobby but not the prompt yet, it re-checks the latest dungeon messages again before every `rpg dung` attempt and treats a newly appeared partner-created prompt as authoritative.
+10. Otherwise parse the `Players listed` message and resolve the non-self partner target. Use `rpg dung <@partnerId>` when Discord exposes a real mention id; otherwise send a text mention with `@...`, preferring the plain Discord handle from the left side when it is ASCII-safe and falling back to the right-side Army Helper player tag when the display handle uses special styling or other unsupported characters.
+11. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
+12. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
+13. Click `yes` on the entry prompt.
+14. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
+15. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
 
 Battle rules:
 - The workflow treats `ALL PLAYERS WON` and the final `Thanks for using our dungeon system` message as successful completion.

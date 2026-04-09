@@ -114,6 +114,28 @@ namespace EpicRPGBot.Tests.Dungeon
         }
 
         [Fact]
+        public async Task RunAsync_AcceptsLatePartnerEntryPromptWithoutSendingDungeonCommand()
+        {
+            var fileName = "dungeon-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var settingsService = CreateSettingsService(fileName);
+                var chatClient = new FakeDungeonChatClient(delayedPartnerEntryPrompt: true);
+                var workflow = CreateWorkflow(chatClient, settingsService);
+
+                var result = await workflow.RunAsync(_ => { }, CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.DoesNotContain(chatClient.SentCommands, command => command.StartsWith("rpg dung ", StringComparison.OrdinalIgnoreCase));
+                Assert.Contains("bite", chatClient.SentMessages);
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
+        }
+
+        [Fact]
         public void DungeonLobbyParser_ResolvesNonSelfPartnerMention()
         {
             var parser = new DungeonLobbyParser();

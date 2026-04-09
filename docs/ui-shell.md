@@ -49,6 +49,7 @@ User-visible behaviors:
 - Any change in the settings window is saved immediately to local settings.
 - The `Work commands` settings modal also auto-saves each per-area command change immediately.
 - The guild watcher stays active while the app is open and sends `rpg guild raid` from the guild tab when a watched message matches the configured rule.
+- After a guild-raid send, the watcher keeps the guild tab under a temporary EPIC GUARD/result watch and blocks further watched sends until one of those replies arrives.
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - `Inicialize` also refreshes the cached profile player name from `rpg p`.
 - If the bot detects the EPIC GUARD captcha while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.

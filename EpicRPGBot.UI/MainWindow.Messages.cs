@@ -28,6 +28,11 @@ namespace EpicRPGBot.UI
                 _last.Add(snapshot.Text);
             }
 
+            if (TryStopEngineForPreviousCommandBusy(snapshot))
+            {
+                return;
+            }
+
             var trackerUpdated = _cooldownTracker.ApplyMessage(snapshot.Text);
             if (trackerUpdated)
             {
@@ -57,6 +62,20 @@ namespace EpicRPGBot.UI
                 _processedMessageIds.Remove(_processedMessageOrder.Dequeue());
             }
 
+            return true;
+        }
+
+        private bool TryStopEngineForPreviousCommandBusy(DiscordMessageSnapshot snapshot)
+        {
+            if (_engine == null ||
+                !_engine.IsRunning ||
+                !TrackedCommandResponseClassifier.IsPreviousCommandBusyReply(snapshot))
+            {
+                return false;
+            }
+
+            _engine.Stop();
+            _log.Engine("Engine stopped: EPIC RPG said to end the previous command first.");
             return true;
         }
 

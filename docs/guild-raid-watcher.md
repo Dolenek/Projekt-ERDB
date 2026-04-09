@@ -19,6 +19,9 @@ Match behavior:
 Send behavior:
 - When a new matching message appears, the watcher sends `rpg guild raid`.
 - The command is sent through the same guild tab and same channel being watched.
+- After sending `rpg guild raid`, the watcher temporarily suppresses further trigger sends while it waits for either an EPIC GUARD prompt or the raid result message from EPIC RPG.
+- If EPIC GUARD appears on the guild tab during that watch window, the app logs it, switches to the Guild tab, and shows the same desktop guard alert used by the main bot tab.
+- The temporary guard watch ends when the raid result message is seen.
 - If settings become incomplete or the guild URL is invalid, the watcher goes idle without affecting the main bot engine.
 
 Settings:

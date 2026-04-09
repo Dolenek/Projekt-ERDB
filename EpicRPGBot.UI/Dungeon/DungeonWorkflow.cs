@@ -26,6 +26,7 @@ namespace EpicRPGBot.UI.Dungeon
         private readonly DungeonBattleStateParser _battleStateParser;
         private readonly DungeonInviteWatcher _inviteWatcher;
         private readonly DungeonEntryReplyParser _entryReplyParser;
+        private readonly DungeonEntryPromptWatcher _entryPromptWatcher;
         private readonly Func<int, CancellationToken, Task> _waitAsync;
 
         public DungeonWorkflow(
@@ -86,6 +87,7 @@ namespace EpicRPGBot.UI.Dungeon
             _inviteWatcher = inviteWatcher ?? throw new ArgumentNullException(nameof(inviteWatcher));
             _entryReplyParser = entryReplyParser ?? throw new ArgumentNullException(nameof(entryReplyParser));
             _waitAsync = waitAsync ?? throw new ArgumentNullException(nameof(waitAsync));
+            _entryPromptWatcher = new DungeonEntryPromptWatcher(_chatClient, _waitAsync);
         }
 
         public Task<DungeonRunResult> RunAsync(Action<string> report, CancellationToken cancellationToken)
@@ -170,7 +172,12 @@ namespace EpicRPGBot.UI.Dungeon
                         }
                     }
 
-                    confirmationPrompt ??= await WaitForButtonPromptAsync("yes", EncounterTimeoutMs, cancellationToken);
+                    confirmationPrompt ??= await _entryPromptWatcher.WaitForButtonPromptAsync(
+                        "yes",
+                        ResultScanCount,
+                        EncounterTimeoutMs,
+                        BattlePollDelayMs,
+                        cancellationToken);
                     if (confirmationPrompt == null ||
                         !await ClickButtonByLabelAsync(confirmationPrompt, "yes", cancellationToken))
                     {
@@ -224,7 +231,7 @@ namespace EpicRPGBot.UI.Dungeon
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
-                var confirmationPrompt = FindEntryConfirmationPrompt(snapshots);
+                var confirmationPrompt = DungeonEntryPromptWatcher.FindEntryConfirmationPrompt(snapshots);
                 if (confirmationPrompt != null)
                 {
                     report?.Invoke("Existing dungeon entry prompt detected.");
@@ -243,17 +250,6 @@ namespace EpicRPGBot.UI.Dungeon
             }
 
             return null;
-        }
-
-        private static DiscordMessageSnapshot FindEntryConfirmationPrompt(
-            IReadOnlyList<DiscordMessageSnapshot> snapshots)
-        {
-            return DungeonMessageInteraction.FindMessageAfter(
-                snapshots,
-                string.Empty,
-                snapshot => DungeonMessageInteraction.HasButton(snapshot, "yes") &&
-                            (snapshot.RenderedText?.IndexOf("ARE YOU SURE YOU WANT TO ENTER", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                             snapshot.Text?.IndexOf("ARE YOU SURE YOU WANT TO ENTER", StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
         private async Task<DungeonEntryAttemptResult> TryEnterDungeonAsync(
@@ -315,10 +311,17 @@ namespace EpicRPGBot.UI.Dungeon
             var maxAttempts = PartnerBusyRetryCount + 1;
             for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
+                if (await TryUseExistingEntryPromptAsync(report, cancellationToken))
+                {
+                    return DungeonEntryAttemptResult.Confirmed;
+                }
+
                 var entryResult = await _confirmedCommandSender.SendAsync(entryCommand, cancellationToken: cancellationToken);
                 if (!entryResult.IsConfirmed)
                 {
-                    return DungeonEntryAttemptResult.Failed;
+                    return await TryUseExistingEntryPromptAsync(report, cancellationToken)
+                        ? DungeonEntryAttemptResult.Confirmed
+                        : DungeonEntryAttemptResult.Failed;
                 }
 
                 var replyKind = _entryReplyParser.Parse(entryResult.ReplyMessage);
@@ -330,7 +333,9 @@ namespace EpicRPGBot.UI.Dungeon
 
                 if (replyKind != DungeonEntryReplyKind.PartnerBusy)
                 {
-                    return DungeonEntryAttemptResult.Failed;
+                    return await TryUseExistingEntryPromptAsync(report, cancellationToken)
+                        ? DungeonEntryAttemptResult.Confirmed
+                        : DungeonEntryAttemptResult.Failed;
                 }
 
                 if (attempt >= maxAttempts)
@@ -346,30 +351,18 @@ namespace EpicRPGBot.UI.Dungeon
             return DungeonEntryAttemptResult.Failed;
         }
 
-        private async Task<DiscordMessageSnapshot> WaitForButtonPromptAsync(
-            string buttonLabel,
-            int timeoutMs,
+        private async Task<bool> TryUseExistingEntryPromptAsync(
+            Action<string> report,
             CancellationToken cancellationToken)
         {
-            var waitedMs = 0;
-            while (waitedMs < timeoutMs)
+            var prompt = await _entryPromptWatcher.FindVisibleEntryConfirmationPromptAsync(ResultScanCount, cancellationToken);
+            if (prompt == null)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
-                var prompt = DungeonMessageInteraction.FindMessageAfter(
-                    snapshots,
-                    string.Empty,
-                    snapshot => DungeonMessageInteraction.HasButton(snapshot, buttonLabel));
-                if (prompt != null)
-                {
-                    return prompt;
-                }
-
-                await Task.Delay(BattlePollDelayMs, cancellationToken);
-                waitedMs += BattlePollDelayMs;
+                return false;
             }
 
-            return null;
+            report?.Invoke("Partner entry prompt detected. Accepting the dungeon without sending a new invite.");
+            return true;
         }
 
         private async Task<bool> WaitForEncounterAsync(CancellationToken cancellationToken)
@@ -450,7 +443,12 @@ namespace EpicRPGBot.UI.Dungeon
                 return;
             }
 
-            var prompt = deletePrompt ?? await WaitForButtonPromptAsync("Delete dungeon channel", DeletePromptTimeoutMs, cancellationToken);
+            var prompt = deletePrompt ?? await _entryPromptWatcher.WaitForButtonPromptAsync(
+                "Delete dungeon channel",
+                ResultScanCount,
+                DeletePromptTimeoutMs,
+                BattlePollDelayMs,
+                cancellationToken);
             if (prompt == null || !await ClickButtonByLabelAsync(prompt, "Delete dungeon channel", cancellationToken))
             {
                 report?.Invoke("Auto delete skipped: delete button was not available.");

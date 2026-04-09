@@ -92,6 +92,7 @@
     <Compile Include="Dungeon\DungeonBattleState.cs" />
     <Compile Include="Dungeon\DungeonBattleStateParser.cs" />
     <Compile Include="Dungeon\DungeonEntryPreparation.cs" />
+    <Compile Include="Dungeon\DungeonEntryPromptWatcher.cs" />
     <Compile Include="Dungeon\DungeonEntryReplyKind.cs" />
     <Compile Include="Dungeon\DungeonEntryReplyParser.cs" />
     <Compile Include="Dungeon\DungeonInviteWatcher.cs" />
@@ -153,7 +154,9 @@
     <Compile Include="Services\DiscordChatClient.Sidebar.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
     <Compile Include="Services\DiscordScriptParsing.cs" />
+    <Compile Include="Services\GuildRaidOutcomeWatch.cs" />
     <Compile Include="Services\GuildRaidCoordinator.cs" />
+    <Compile Include="Services\GuildRaidResponseClassifier.cs" />
     <Compile Include="Services\GuildRaidMatchModes.cs" />
     <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />

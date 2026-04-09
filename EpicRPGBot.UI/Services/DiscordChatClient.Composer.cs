@@ -148,6 +148,11 @@ namespace EpicRPGBot.UI.Services
     document.execCommand('insertText', false, ""{message}"");
     editor.dispatchEvent(new InputEvent('input', {{ bubbles:true, cancelable:true, inputType:'insertText', data:""{message}"" }}));
     await sleep(100);
+    const escapeDown = new KeyboardEvent('keydown', {{ key:'Escape', code:'Escape', keyCode:27, which:27, bubbles:true, cancelable:true }});
+    const escapeUp = new KeyboardEvent('keyup', {{ key:'Escape', code:'Escape', keyCode:27, which:27, bubbles:true, cancelable:true }});
+    editor.dispatchEvent(escapeDown);
+    editor.dispatchEvent(escapeUp);
+    await sleep(50);
     const eDown = new KeyboardEvent('keydown', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
     const ePress = new KeyboardEvent('keypress', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
     const eUp = new KeyboardEvent('keyup', {{ key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true, cancelable:true }});
@@ -173,8 +178,14 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.insertText", $"{{\"text\":\"{message}\"}}");
+                const string escapeDown = "{\"type\":\"keyDown\",\"key\":\"Escape\",\"code\":\"Escape\",\"windowsVirtualKeyCode\":27,\"nativeVirtualKeyCode\":27}";
+                const string escapeUp = "{\"type\":\"keyUp\",\"key\":\"Escape\",\"code\":\"Escape\",\"windowsVirtualKeyCode\":27,\"nativeVirtualKeyCode\":27}";
                 const string keyDown = "{\"type\":\"keyDown\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
                 const string keyUp = "{\"type\":\"keyUp\",\"key\":\"Enter\",\"code\":\"Enter\",\"windowsVirtualKeyCode\":13,\"nativeVirtualKeyCode\":13}";
+                await Task.Delay(50);
+                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", escapeDown);
+                await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", escapeUp);
+                await Task.Delay(50);
                 await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyDown);
                 await _web.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", keyUp);
                 return true;

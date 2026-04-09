@@ -9,6 +9,7 @@ namespace EpicRPGBot.UI.Services
     {
         private readonly IDiscordChatClient _chatClient;
         private readonly Func<AppSettingsSnapshot> _getCurrentSettings;
+        private readonly GuildRaidOutcomeWatch _outcomeWatch = new GuildRaidOutcomeWatch();
         private readonly ChatMessagePoller _poller;
         private readonly GuildRaidTriggerProcessor _processor = new GuildRaidTriggerProcessor();
         private readonly SemaphoreSlim _sendGate = new SemaphoreSlim(1, 1);
@@ -31,6 +32,7 @@ namespace EpicRPGBot.UI.Services
         }
 
         public event Action<string> OnInfo;
+        public event Action<GuardAlertNotification> OnGuardNotification;
 
         public async Task StartAsync()
         {
@@ -62,6 +64,7 @@ namespace EpicRPGBot.UI.Services
             {
                 _activeChannelUrl = string.Empty;
                 _processor.Reset();
+                _outcomeWatch.Reset();
                 await _poller.CaptureCurrentMessageAsBaselineAsync();
                 ReportState("idle-incomplete", "Guild raid watcher idle: channel URL and trigger text are required.");
                 return;
@@ -71,6 +74,7 @@ namespace EpicRPGBot.UI.Services
             {
                 _activeChannelUrl = string.Empty;
                 _processor.Reset();
+                _outcomeWatch.Reset();
                 await _poller.CaptureCurrentMessageAsBaselineAsync();
                 ReportState("idle-invalid-url", "Guild raid watcher idle: enter a Discord channel URL.");
                 return;
@@ -81,6 +85,7 @@ namespace EpicRPGBot.UI.Services
                 await _chatClient.NavigateToChannelAsync(channelUrl);
                 _activeChannelUrl = channelUrl;
                 _processor.Reset();
+                _outcomeWatch.Reset();
                 _poller.ResetCursor();
                 _poller.SkipNextDetectedMessage();
             }
@@ -119,6 +124,11 @@ namespace EpicRPGBot.UI.Services
                     return;
                 }
 
+                if (TryHandlePendingOutcome(snapshot))
+                {
+                    return;
+                }
+
                 if (!_processor.ShouldTrigger(_currentSettings, snapshot))
                 {
                     return;
@@ -127,7 +137,8 @@ namespace EpicRPGBot.UI.Services
                 var sent = await _chatClient.SendMessageAsync("rpg guild raid");
                 if (sent)
                 {
-                    OnInfo?.Invoke($"Matched message {snapshot.Id} and sent 'rpg guild raid'.");
+                    _outcomeWatch.Arm();
+                    OnInfo?.Invoke($"Matched message {snapshot.Id} and sent 'rpg guild raid'; watching for guard or raid confirmation.");
                     return;
                 }
 
@@ -148,6 +159,26 @@ namespace EpicRPGBot.UI.Services
 
             _watchState = state;
             OnInfo?.Invoke(message);
+        }
+
+        private bool TryHandlePendingOutcome(DiscordMessageSnapshot snapshot)
+        {
+            switch (_outcomeWatch.Observe(snapshot))
+            {
+                case GuildRaidOutcomeState.Inactive:
+                    return false;
+                case GuildRaidOutcomeState.Guarded:
+                    OnInfo?.Invoke("EPIC GUARD detected on the Guild tab after 'rpg guild raid'.");
+                    OnGuardNotification?.Invoke(new GuardAlertNotification(
+                        GuardAlertKind.FirstDetected,
+                        "EPIC GUARD detected on the Guild tab after 'rpg guild raid'."));
+                    return true;
+                case GuildRaidOutcomeState.Confirmed:
+                    OnInfo?.Invoke("Guild raid confirmation received; guard watch cleared.");
+                    return true;
+                default:
+                    return true;
+            }
         }
     }
 }

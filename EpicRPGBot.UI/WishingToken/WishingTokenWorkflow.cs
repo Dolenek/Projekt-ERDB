@@ -160,7 +160,7 @@ namespace EpicRPGBot.UI.WishingToken
 
         private static bool IsPreviousCommandBusy(DiscordMessageSnapshot snapshot)
         {
-            return (snapshot?.Text ?? string.Empty).IndexOf("end your previous command", StringComparison.OrdinalIgnoreCase) >= 0;
+            return TrackedCommandResponseClassifier.IsPreviousCommandBusyReply(snapshot);
         }
 
         private DiscordMessageSnapshot FindWishMenuAfterOutgoing(

@@ -20,6 +20,7 @@ Retries and timing:
 - The bot retries a failed or unconfirmed `rpg ...` command up to 3 total attempts.
 - Retries wait 1 second between attempts.
 - The existing global 1-second gap between bot-originated sends is still enforced.
+- Before the send lane presses `Enter`, it now dispatches `Escape` once to close Discord mention/autocomplete popovers so raw text targets such as `rpg dung @handle` can send as plain text instead of getting stuck in the composer.
 
 Runtime effects:
 - Tracked command timers still re-arm from the EPIC RPG confirmation message, not from the local send timestamp.

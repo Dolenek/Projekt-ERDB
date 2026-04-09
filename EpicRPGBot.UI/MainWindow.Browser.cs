@@ -107,6 +107,11 @@ namespace EpicRPGBot.UI
             SelectBrowserTab(DungeonBrowserTab);
         }
 
+        private void SelectGuildTab()
+        {
+            SelectBrowserTab(GuildBrowserTab);
+        }
+
         private void SelectBrowserTab(TabItem tab)
         {
             if (BrowserTabs == null || tab == null)

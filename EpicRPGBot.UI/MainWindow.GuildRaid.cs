@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
 {
@@ -9,12 +10,14 @@ namespace EpicRPGBot.UI
         private void HookGuildRaidSettings()
         {
             _guildRaidCoordinator.OnInfo += OnGuildRaidInfo;
+            _guildRaidCoordinator.OnGuardNotification += OnGuildRaidGuardNotification;
             _settingsService.SettingsChanged += OnSettingsChanged;
         }
 
         private void UnhookGuildRaidSettings()
         {
             _guildRaidCoordinator.OnInfo -= OnGuildRaidInfo;
+            _guildRaidCoordinator.OnGuardNotification -= OnGuildRaidGuardNotification;
             _settingsService.SettingsChanged -= OnSettingsChanged;
         }
 
@@ -50,6 +53,33 @@ namespace EpicRPGBot.UI
             }
 
             _log.Info("[guild] " + message);
+        }
+
+        private void OnGuildRaidGuardNotification(GuardAlertNotification notification)
+        {
+            if (notification == null)
+            {
+                return;
+            }
+
+            UiDispatcher.OnUI(() =>
+            {
+                if (notification.Kind == GuardAlertKind.FirstDetected)
+                {
+                    _log.Warning("[guild][guard] " + notification.Message);
+                }
+                else
+                {
+                    _log.Info("[guild][guard] " + notification.Message);
+                }
+
+                if (notification.ShouldBringToFront)
+                {
+                    SelectGuildTab();
+                }
+
+                _alertService.ShowGuardAlert(this, notification);
+            });
         }
     }
 }

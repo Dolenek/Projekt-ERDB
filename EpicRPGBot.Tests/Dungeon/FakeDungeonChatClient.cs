@@ -37,17 +37,20 @@ Area: 7 (Max: 7)";
         private readonly List<string> _sentMessages = new List<string>();
         private readonly Queue<string> _dungeonEntryReplies;
         private readonly bool _inviteAlreadyVisible;
+        private readonly bool _delayedPartnerEntryPrompt;
         private readonly bool _partnerInitiatesEntryPrompt;
         private readonly bool _usePlainHandleFallback;
         private readonly bool _usePlayerTagFallback;
         private readonly bool _useSnowflakeIds;
         private bool _shouldQueueReinvite;
         private int _armyHelperReadCount;
+        private int _dungeonReadCount;
         private int _messageSequence;
         private string _location = "signup";
 
         public FakeDungeonChatClient(
             bool inviteAlreadyVisible = false,
+            bool delayedPartnerEntryPrompt = false,
             bool partnerInitiatesEntryPrompt = false,
             bool usePlainHandleFallback = false,
             bool usePlayerTagFallback = false,
@@ -55,6 +58,7 @@ Area: 7 (Max: 7)";
             IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;
+            _delayedPartnerEntryPrompt = delayedPartnerEntryPrompt;
             _partnerInitiatesEntryPrompt = partnerInitiatesEntryPrompt;
             _usePlainHandleFallback = usePlainHandleFallback;
             _usePlayerTagFallback = usePlayerTagFallback;
@@ -112,6 +116,12 @@ Area: 7 (Max: 7)";
                     _armyHelperMessages.Add(CreateTakeMeThereMessage());
                     messages = GetVisibleMessages();
                 }
+            }
+            else if (_location == DungeonChannel)
+            {
+                _dungeonReadCount++;
+                MaybeQueueDelayedEntryPrompt();
+                messages = GetVisibleMessages();
             }
 
             return Task.FromResult<IReadOnlyList<DiscordMessageSnapshot>>(messages.TakeLast(maxCount).ToArray());
@@ -263,15 +273,7 @@ Area: 7 (Max: 7)";
                         }));
                 if (_partnerInitiatesEntryPrompt)
                 {
-                    _dungeonMessages.Add(CreateSnapshot(
-                        "EPIC RPG",
-                        "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
-                        "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
-                        new[]
-                        {
-                            new DiscordMessageButton("yes", 0, 0),
-                            new DiscordMessageButton("no", 0, 1)
-                        }));
+                    _dungeonMessages.Add(CreateEntryPromptSnapshot());
                 }
                 return Task.FromResult(true);
             }
@@ -346,6 +348,29 @@ Area: 7 (Max: 7)";
                 "Your dungeon partner is waiting for you.",
                 "Your dungeon partner is waiting for you.",
                 new[] { new DiscordMessageButton("Take me there", 0, 0) });
+        }
+
+        private void MaybeQueueDelayedEntryPrompt()
+        {
+            if (!_delayedPartnerEntryPrompt || _partnerInitiatesEntryPrompt || _dungeonReadCount != 2)
+            {
+                return;
+            }
+
+            _dungeonMessages.Add(CreateEntryPromptSnapshot());
+        }
+
+        private DiscordMessageSnapshot CreateEntryPromptSnapshot()
+        {
+            return CreateSnapshot(
+                "EPIC RPG",
+                "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
+                "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
+                new[]
+                {
+                    new DiscordMessageButton("yes", 0, 0),
+                    new DiscordMessageButton("no", 0, 1)
+                });
         }
 
         private DiscordMessageSnapshot CreateSnapshot(

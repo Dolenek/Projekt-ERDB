@@ -44,6 +44,7 @@
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonBattleStateParser.cs" Link="Dungeon\DungeonBattleStateParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\CompleteDungeonRunCoordinator.cs" Link="Dungeon\CompleteDungeonRunCoordinator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryPreparation.cs" Link="Dungeon\DungeonEntryPreparation.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryPromptWatcher.cs" Link="Dungeon\DungeonEntryPromptWatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyKind.cs" Link="Dungeon\DungeonEntryReplyKind.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyParser.cs" Link="Dungeon\DungeonEntryReplyParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonInviteWatcher.cs" Link="Dungeon\DungeonInviteWatcher.cs" />
@@ -62,6 +63,8 @@
     <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfiguredWorkCommandCatalog.cs" Link="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\CooldownReductionCalculator.cs" Link="Services\CooldownReductionCalculator.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidOutcomeWatch.cs" Link="Services\GuildRaidOutcomeWatch.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidResponseClassifier.cs" Link="Services\GuildRaidResponseClassifier.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidMatchModes.cs" Link="Services\GuildRaidMatchModes.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
