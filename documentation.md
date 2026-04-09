@@ -15,6 +15,7 @@ Canonical pages:
 - [Cooldown management](docs/cooldown-management.md)
 - [Training automation](docs/training-automation.md)
 - [Bunny automation](docs/bunny-automation.md)
+- [Pet automation](docs/pet-automation.md)
 - [Wishing token](docs/wishing-token.md)
 - [Time cookie](docs/time-cookie.md)
 - [Captcha solver](docs/captcha-solver.md)

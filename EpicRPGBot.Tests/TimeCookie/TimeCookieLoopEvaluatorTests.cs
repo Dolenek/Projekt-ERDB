@@ -13,6 +13,8 @@ namespace EpicRPGBot.Tests.TimeCookie
             var status = TimeCookieLoopEvaluator.Evaluate(
                 null,
                 CreateTrackedSnapshot(
+                    daily: TimeSpan.FromMinutes(7),
+                    weekly: TimeSpan.FromMinutes(8),
                     hunt: TimeSpan.FromMinutes(1),
                     adventure: TimeSpan.FromMinutes(2),
                     training: TimeSpan.FromMinutes(3),
@@ -31,6 +33,8 @@ namespace EpicRPGBot.Tests.TimeCookie
             var status = TimeCookieLoopEvaluator.Evaluate(
                 TimeSpan.FromMinutes(10),
                 CreateTrackedSnapshot(
+                    daily: TimeSpan.FromMinutes(7),
+                    weekly: TimeSpan.FromMinutes(8),
                     hunt: TimeSpan.FromMinutes(1),
                     adventure: TimeSpan.FromMinutes(2),
                     training: TimeSpan.FromMinutes(3),
@@ -50,6 +54,8 @@ namespace EpicRPGBot.Tests.TimeCookie
             var status = TimeCookieLoopEvaluator.Evaluate(
                 null,
                 CreateTrackedSnapshot(
+                    daily: TimeSpan.FromMinutes(7),
+                    weekly: TimeSpan.FromMinutes(8),
                     hunt: null,
                     adventure: TimeSpan.FromMinutes(2),
                     training: TimeSpan.FromMinutes(3),
@@ -69,6 +75,8 @@ namespace EpicRPGBot.Tests.TimeCookie
             var status = TimeCookieLoopEvaluator.Evaluate(
                 TimeSpan.FromMinutes(10),
                 CreateTrackedSnapshot(
+                    daily: TimeSpan.FromMinutes(7),
+                    weekly: TimeSpan.FromMinutes(8),
                     hunt: TimeSpan.FromMinutes(1),
                     adventure: TimeSpan.FromMinutes(2),
                     training: TimeSpan.FromMinutes(3),
@@ -81,7 +89,29 @@ namespace EpicRPGBot.Tests.TimeCookie
             Assert.True(status.CanUseTimeCookie);
         }
 
+        [Fact]
+        public void Evaluate_DailyReady_BlocksCookieUntilAutomatedBatchFinishes()
+        {
+            var status = TimeCookieLoopEvaluator.Evaluate(
+                TimeSpan.FromMinutes(10),
+                CreateTrackedSnapshot(
+                    daily: null,
+                    weekly: TimeSpan.FromHours(1),
+                    hunt: TimeSpan.FromMinutes(1),
+                    adventure: TimeSpan.FromMinutes(2),
+                    training: TimeSpan.FromMinutes(3),
+                    work: TimeSpan.FromMinutes(4),
+                    farm: TimeSpan.FromMinutes(5),
+                    lootbox: TimeSpan.FromMinutes(6)),
+                farmEnabled: true);
+
+            Assert.True(status.HasReadyAutomatedCommands);
+            Assert.False(status.CanUseTimeCookie);
+        }
+
         private static TrackedCooldownSnapshot CreateTrackedSnapshot(
+            TimeSpan? daily,
+            TimeSpan? weekly,
             TimeSpan? hunt,
             TimeSpan? adventure,
             TimeSpan? training,
@@ -89,7 +119,7 @@ namespace EpicRPGBot.Tests.TimeCookie
             TimeSpan? farm,
             TimeSpan? lootbox)
         {
-            return new TrackedCooldownSnapshot(hunt, adventure, training, work, farm, lootbox);
+            return new TrackedCooldownSnapshot(daily, weekly, hunt, adventure, training, work, farm, lootbox);
         }
     }
 }

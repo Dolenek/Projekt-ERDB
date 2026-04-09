@@ -43,6 +43,7 @@
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonBattleState.cs" Link="Dungeon\DungeonBattleState.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonBattleStateParser.cs" Link="Dungeon\DungeonBattleStateParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\CompleteDungeonRunCoordinator.cs" Link="Dungeon\CompleteDungeonRunCoordinator.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryPreparation.cs" Link="Dungeon\DungeonEntryPreparation.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyKind.cs" Link="Dungeon\DungeonEntryReplyKind.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyParser.cs" Link="Dungeon\DungeonEntryReplyParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonInviteWatcher.cs" Link="Dungeon\DungeonInviteWatcher.cs" />

@@ -23,8 +23,10 @@ namespace EpicRPGBot.UI.TimeCookie
             TrackedCooldownSnapshot trackedCooldowns,
             bool farmEnabled)
         {
-            var snapshot = trackedCooldowns ?? new TrackedCooldownSnapshot(null, null, null, null, null, null);
+            var snapshot = trackedCooldowns ?? new TrackedCooldownSnapshot(null, null, null, null, null, null, null, null);
             var hasReadyAutomatedCommands =
+                IsReady(snapshot.Daily) ||
+                IsReady(snapshot.Weekly) ||
                 IsReady(snapshot.Hunt) ||
                 IsReady(snapshot.Adventure) ||
                 IsReady(snapshot.Training) ||

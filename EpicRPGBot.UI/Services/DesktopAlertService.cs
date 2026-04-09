@@ -64,7 +64,7 @@ namespace EpicRPGBot.UI.Services
                 return;
             }
 
-            ShowWarningBalloon("Bunny prompt issue", message);
+            ShowWarningBalloon("Pet prompt issue", message);
         }
 
         private static void PlayAlertSound()

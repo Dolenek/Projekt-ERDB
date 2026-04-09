@@ -32,6 +32,7 @@ Area: 7 (Max: 7)";
         private readonly List<string> _sentMessages = new List<string>();
         private readonly Queue<string> _dungeonEntryReplies;
         private readonly bool _inviteAlreadyVisible;
+        private readonly bool _partnerInitiatesEntryPrompt;
         private readonly bool _useSnowflakeIds;
         private bool _shouldQueueReinvite;
         private int _armyHelperReadCount;
@@ -40,10 +41,12 @@ Area: 7 (Max: 7)";
 
         public FakeDungeonChatClient(
             bool inviteAlreadyVisible = false,
+            bool partnerInitiatesEntryPrompt = false,
             bool useSnowflakeIds = false,
             IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;
+            _partnerInitiatesEntryPrompt = partnerInitiatesEntryPrompt;
             _useSnowflakeIds = useSnowflakeIds;
             _dungeonEntryReplies = new Queue<string>(dungeonEntryReplies ?? Array.Empty<string>());
             _armyHelperMessages.Add(CreateSnapshot("Army Helper", "waiting", "Old invite placeholder"));
@@ -190,6 +193,18 @@ Area: 7 (Max: 7)";
                         new DiscordMessageMention(DungeonTestData.TestDisplayMention, "111"),
                         new DiscordMessageMention("@partner", "222")
                     }));
+                if (_partnerInitiatesEntryPrompt)
+                {
+                    _dungeonMessages.Add(CreateSnapshot(
+                        "EPIC RPG",
+                        "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
+                        "Dungeon 6 | players: 2 ~ 4 | partner, testplayer\nARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'\nSay 'no' to cancel.",
+                        new[]
+                        {
+                            new DiscordMessageButton("yes", 0, 0),
+                            new DiscordMessageButton("no", 0, 1)
+                        }));
+                }
                 return Task.FromResult(true);
             }
 

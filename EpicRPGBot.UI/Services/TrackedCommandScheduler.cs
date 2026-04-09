@@ -7,6 +7,8 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed partial class TrackedCommandScheduler
     {
+        private const int DailyCooldownMs = 86400000;
+        private const int WeeklyCooldownMs = 604800000;
         private const int MinimumDelayMs = 500;
         private const int RetryBufferMs = 1500;
 
@@ -29,6 +31,8 @@ namespace EpicRPGBot.UI.Services
         private readonly int _workCooldown;
         private readonly int _farmCooldown;
         private readonly int _lootboxCooldown;
+        private readonly DispatcherTimer _dailyTimer;
+        private readonly DispatcherTimer _weeklyTimer;
         private readonly DispatcherTimer _huntTimer;
         private readonly DispatcherTimer _adventureTimer;
         private readonly DispatcherTimer _trainingTimer;
@@ -37,12 +41,16 @@ namespace EpicRPGBot.UI.Services
         private readonly DispatcherTimer _lootboxTimer;
         private readonly List<PendingCommand> _pendingCommands = new List<PendingCommand>();
 
+        private DateTime? _dailyDueUtc;
+        private DateTime? _weeklyDueUtc;
         private DateTime? _huntDueUtc;
         private DateTime? _adventureDueUtc;
         private DateTime? _trainingDueUtc;
         private DateTime? _workDueUtc;
         private DateTime? _farmDueUtc;
         private DateTime? _lootboxDueUtc;
+        private TimeSpan? _pausedDailyDelay;
+        private TimeSpan? _pausedWeeklyDelay;
         private TimeSpan? _pausedHuntDelay;
         private TimeSpan? _pausedAdventureDelay;
         private TimeSpan? _pausedTrainingDelay;
@@ -61,6 +69,8 @@ namespace EpicRPGBot.UI.Services
             _workCooldown = workCooldown;
             _farmCooldown = farmCooldown;
             _lootboxCooldown = lootboxCooldown;
+            _dailyTimer = CreateCommandTimer(DailyCooldownMs, () => onTimerElapsed(TrackedCommandKind.Daily));
+            _weeklyTimer = CreateCommandTimer(WeeklyCooldownMs, () => onTimerElapsed(TrackedCommandKind.Weekly));
             _huntTimer = CreateCommandTimer(huntCooldown, () => onTimerElapsed(TrackedCommandKind.Hunt));
             _adventureTimer = CreateCommandTimer(adventureCooldown, () => onTimerElapsed(TrackedCommandKind.Adventure));
             _trainingTimer = CreateCommandTimer(trainingCooldown, () => onTimerElapsed(TrackedCommandKind.Training));
@@ -101,6 +111,8 @@ namespace EpicRPGBot.UI.Services
 
         public void StopAll()
         {
+            Stop(TrackedCommandKind.Daily);
+            Stop(TrackedCommandKind.Weekly);
             Stop(TrackedCommandKind.Hunt);
             Stop(TrackedCommandKind.Adventure);
             Stop(TrackedCommandKind.Training);
@@ -116,6 +128,8 @@ namespace EpicRPGBot.UI.Services
 
         public void PauseAll()
         {
+            Pause(TrackedCommandKind.Daily);
+            Pause(TrackedCommandKind.Weekly);
             Pause(TrackedCommandKind.Hunt);
             Pause(TrackedCommandKind.Adventure);
             Pause(TrackedCommandKind.Training);
@@ -126,6 +140,8 @@ namespace EpicRPGBot.UI.Services
 
         public void ResumeAll(bool isRunning)
         {
+            Resume(TrackedCommandKind.Daily, isRunning);
+            Resume(TrackedCommandKind.Weekly, isRunning);
             Resume(TrackedCommandKind.Hunt, isRunning);
             Resume(TrackedCommandKind.Adventure, isRunning);
             Resume(TrackedCommandKind.Training, isRunning);
@@ -245,6 +261,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: return _dailyTimer;
+                case TrackedCommandKind.Weekly: return _weeklyTimer;
                 case TrackedCommandKind.Hunt: return _huntTimer;
                 case TrackedCommandKind.Adventure: return _adventureTimer;
                 case TrackedCommandKind.Training: return _trainingTimer;
@@ -258,6 +276,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: return DailyCooldownMs;
+                case TrackedCommandKind.Weekly: return WeeklyCooldownMs;
                 case TrackedCommandKind.Hunt: return _huntCooldown;
                 case TrackedCommandKind.Adventure: return _adventureCooldown;
                 case TrackedCommandKind.Training: return _trainingCooldown;
@@ -271,6 +291,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: return _dailyDueUtc;
+                case TrackedCommandKind.Weekly: return _weeklyDueUtc;
                 case TrackedCommandKind.Hunt: return _huntDueUtc;
                 case TrackedCommandKind.Adventure: return _adventureDueUtc;
                 case TrackedCommandKind.Training: return _trainingDueUtc;
@@ -284,6 +306,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: _dailyDueUtc = value; break;
+                case TrackedCommandKind.Weekly: _weeklyDueUtc = value; break;
                 case TrackedCommandKind.Hunt: _huntDueUtc = value; break;
                 case TrackedCommandKind.Adventure: _adventureDueUtc = value; break;
                 case TrackedCommandKind.Training: _trainingDueUtc = value; break;
@@ -297,6 +321,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: return _pausedDailyDelay;
+                case TrackedCommandKind.Weekly: return _pausedWeeklyDelay;
                 case TrackedCommandKind.Hunt: return _pausedHuntDelay;
                 case TrackedCommandKind.Adventure: return _pausedAdventureDelay;
                 case TrackedCommandKind.Training: return _pausedTrainingDelay;
@@ -310,6 +336,8 @@ namespace EpicRPGBot.UI.Services
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: _pausedDailyDelay = value; break;
+                case TrackedCommandKind.Weekly: _pausedWeeklyDelay = value; break;
                 case TrackedCommandKind.Hunt: _pausedHuntDelay = value; break;
                 case TrackedCommandKind.Adventure: _pausedAdventureDelay = value; break;
                 case TrackedCommandKind.Training: _pausedTrainingDelay = value; break;

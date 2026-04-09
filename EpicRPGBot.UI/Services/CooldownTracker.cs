@@ -127,6 +127,8 @@ namespace EpicRPGBot.UI.Services
         public TrackedCooldownSnapshot GetTrackedSnapshot()
         {
             return new TrackedCooldownSnapshot(
+                GetRemaining("daily"),
+                GetRemaining("weekly"),
                 GetRemaining("hunt"),
                 GetRemaining("adventure"),
                 GetRemaining("training"),

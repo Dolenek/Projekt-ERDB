@@ -22,12 +22,13 @@ Workflow behavior:
 5. Send `rpg p` in the dungeon listing channel.
 6. Navigate to Discord `@me`, open the fixed `Army Helper` DM, and wait up to 15 minutes for a newer message with `Take me there`.
 7. Click the newest `Take me there` button.
-8. In the opened dungeon channel, parse the `Players listed` message, resolve the non-self Discord mention, and send `rpg dung <@partnerId>`.
-9. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
-10. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
-11. Click `yes` on the entry prompt.
-12. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
-13. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
+8. If the dungeon channel already shows the EPIC RPG `ARE YOU SURE YOU WANT TO ENTER?` prompt from the partner's invite, click `yes` immediately without sending a new `rpg dung`.
+9. Otherwise parse the `Players listed` message, resolve the non-self Discord mention, and send `rpg dung <@partnerId>`.
+10. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
+11. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
+12. Click `yes` on the entry prompt.
+13. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
+14. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
 
 Battle rules:
 - The workflow treats `ALL PLAYERS WON` and the final `Thanks for using our dungeon system` message as successful completion.

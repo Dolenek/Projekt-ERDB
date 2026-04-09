@@ -15,19 +15,19 @@ Tracked cooldown state:
 - A 1-second UI timer decrements active labels until they reach `Ready`.
 - The Stats sidebar also shows live counts for currently running cooldowns across all tracked rows and per section (`Rewards`, `Experience`, `Progress`).
 - Rows that are `Ready` get a stable green/light-green background based on fixed row order; active cooldown rows keep the default dark background.
-- For hunt, adventure, training, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
+- For daily, weekly, hunt, adventure, training, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
 
 Time-cookie handling:
 - EPIC RPG replies containing `time cookie` plus `X minute(s) ahead` reduce the tracked cooldown state immediately.
 - The reduction is applied immediately across the full cooldown panel visual, including reward rows and time-cookie target rows such as `dungeon`, `duel`, and `card hand`, and floors expired timers to `Ready`.
-- Runtime scheduler resync still only uses hunt/adventure/training/work/farm/lootbox.
+- Runtime scheduler resync also includes daily/weekly reward commands.
 - Time-cookie detection does not auto-send `rpg cd`.
 - The dedicated `Time cookie` workflow also watches the untracked `dungeon`, `duel`, or `card hand` row chosen by the user and stops when that selected row becomes `Ready`, without auto-using that target command.
 
 Runtime scheduling:
-- The bot still arms hunt/adventure/training/work/farm/lootbox labels immediately when it sends those commands, using the configured settings baseline.
+- The bot still arms daily/weekly labels with fixed EPIC RPG cooldowns and hunt/adventure/training/work/farm/lootbox labels with the configured settings baseline when it sends those commands.
 - If EPIC RPG replies with `wait at least ...`, the engine retries after that reported remaining time plus a small safety buffer.
-- After a parsed `rpg cd` snapshot or time-cookie reduction, hunt/adventure/training/work/farm/lootbox scheduling is resynced from the tracked cooldown state.
+- After a parsed `rpg cd` snapshot or time-cookie reduction, daily/weekly/hunt/adventure/training/work/farm/lootbox scheduling is resynced from the tracked cooldown state.
 - The `Time cookie` workflow reuses that same tracked scheduling so normal automated commands can finish before and after each `rpg use time cookie`.
 - Incoming Discord messages are deduplicated by message id so cooldown snapshots and time-cookie reductions are only applied once.
 
@@ -39,7 +39,7 @@ Alias mapping preserved in the current app:
 
 `Inicialize` workflow:
 1. Send one opening `rpg cd` and parse it before any command-specific initialization starts.
-2. If hunt, adventure, training, work, farm, or lootbox already has remaining time in that opening snapshot, skip that command and leave its saved setting unchanged.
+2. If hunt, adventure, training, work, farm, or lootbox already has remaining time in that opening snapshot, skip that command and leave its saved setting unchanged. Daily and weekly use fixed cooldown baselines and are not part of `Inicialize`.
 3. For commands that were ready in the opening snapshot, send the command, wait 2 seconds, send `rpg cd`, parse the refreshed remaining time, and persist the corresponding `*_ms` value.
 4. Add a fixed 4-second safety overhead to the parsed remaining time before saving.
 5. The next settings-window open reflects the saved milliseconds only for commands that were actually initialized.

@@ -129,31 +129,41 @@ namespace EpicRPGBot.UI.Dungeon
                     }
 
                     report?.Invoke("Invite accepted. Waiting for dungeon channel.");
-                    var partner = await WaitForPartnerAsync(playerName, report, cancellationToken);
-                    if (partner == null)
+                    var entryPreparation = await WaitForEntryPreparationAsync(playerName, report, cancellationToken);
+                    if (entryPreparation == null)
                     {
-                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to resolve the dungeon partner mention.");
+                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to resolve the dungeon partner mention or entry prompt.");
                     }
 
-                    var entryResult = await TryEnterDungeonAsync(partner, report, cancellationToken);
-                    if (entryResult == DungeonEntryAttemptResult.WaitForNextInvite)
+                    DiscordMessageSnapshot confirmationPrompt = null;
+                    if (entryPreparation.HasConfirmationPrompt)
                     {
-                        report?.Invoke("Partner is busy. Waiting for a fresh dungeon invite.");
-                        continue;
+                        report?.Invoke("Partner entry prompt detected. Accepting the dungeon without sending a new invite.");
+                        confirmationPrompt = entryPreparation.ConfirmationPrompt;
+                    }
+                    else
+                    {
+                        var entryResult = await TryEnterDungeonAsync(entryPreparation.Partner, report, cancellationToken);
+                        if (entryResult == DungeonEntryAttemptResult.WaitForNextInvite)
+                        {
+                            report?.Invoke("Partner is busy. Waiting for a fresh dungeon invite.");
+                            continue;
+                        }
+
+                        if (entryResult == DungeonEntryAttemptResult.Failed)
+                        {
+                            return DungeonRunResult.FailedResult("Dungeon stopped: 'rpg dung' did not confirm.");
+                        }
                     }
 
-                    if (entryResult == DungeonEntryAttemptResult.Failed)
+                    confirmationPrompt ??= await WaitForButtonPromptAsync("yes", EncounterTimeoutMs, cancellationToken);
+                    if (confirmationPrompt == null ||
+                        !await ClickButtonByLabelAsync(confirmationPrompt, "yes", cancellationToken))
                     {
-                        return DungeonRunResult.FailedResult("Dungeon stopped: 'rpg dung' did not confirm.");
+                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to confirm the dungeon entry prompt.");
                     }
 
                     break;
-                }
-
-                var confirmationPrompt = await WaitForButtonPromptAsync("yes", EncounterTimeoutMs, cancellationToken);
-                if (confirmationPrompt == null || !await ClickButtonByLabelAsync(confirmationPrompt, "yes", cancellationToken))
-                {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: failed to confirm the dungeon entry prompt.");
                 }
 
                 report?.Invoke("Entry confirmed. Waiting for battle start.");
@@ -190,7 +200,7 @@ namespace EpicRPGBot.UI.Dungeon
             return parsedName;
         }
 
-        private async Task<DiscordMessageMention> WaitForPartnerAsync(
+        private async Task<DungeonEntryPreparation> WaitForEntryPreparationAsync(
             string playerName,
             Action<string> report,
             CancellationToken cancellationToken)
@@ -200,11 +210,18 @@ namespace EpicRPGBot.UI.Dungeon
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
+                var confirmationPrompt = FindEntryConfirmationPrompt(snapshots);
+                if (confirmationPrompt != null)
+                {
+                    report?.Invoke("Existing dungeon entry prompt detected.");
+                    return DungeonEntryPreparation.ForConfirmationPrompt(confirmationPrompt);
+                }
+
                 var partner = _lobbyParser.FindPartnerMention(snapshots, playerName);
                 if (partner != null)
                 {
                     report?.Invoke($"Partner resolved as {partner.Label}.");
-                    return partner;
+                    return DungeonEntryPreparation.ForPartner(partner);
                 }
 
                 await Task.Delay(BattlePollDelayMs, cancellationToken);
@@ -212,6 +229,17 @@ namespace EpicRPGBot.UI.Dungeon
             }
 
             return null;
+        }
+
+        private static DiscordMessageSnapshot FindEntryConfirmationPrompt(
+            IReadOnlyList<DiscordMessageSnapshot> snapshots)
+        {
+            return DungeonMessageInteraction.FindMessageAfter(
+                snapshots,
+                string.Empty,
+                snapshot => DungeonMessageInteraction.HasButton(snapshot, "yes") &&
+                            (snapshot.RenderedText?.IndexOf("ARE YOU SURE YOU WANT TO ENTER", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             snapshot.Text?.IndexOf("ARE YOU SURE YOU WANT TO ENTER", StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
         private async Task<DungeonEntryAttemptResult> TryEnterDungeonAsync(

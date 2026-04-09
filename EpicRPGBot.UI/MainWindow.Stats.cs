@@ -116,6 +116,16 @@ namespace EpicRPGBot.UI
                 return "hunt";
             }
 
+            if (normalized.StartsWith("rpg daily", System.StringComparison.Ordinal))
+            {
+                return "daily";
+            }
+
+            if (normalized.StartsWith("rpg weekly", System.StringComparison.Ordinal))
+            {
+                return "weekly";
+            }
+
             if (normalized.StartsWith("rpg adv", System.StringComparison.Ordinal))
             {
                 return "adventure";

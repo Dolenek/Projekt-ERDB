@@ -152,6 +152,8 @@ namespace EpicRPGBot.UI
         }
 
         public bool TryInitializeFromCooldownSnapshot(
+            TimeSpan? dailyRemaining,
+            TimeSpan? weeklyRemaining,
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
             TimeSpan? trainingRemaining,
@@ -165,11 +167,13 @@ namespace EpicRPGBot.UI
             }
 
             _awaitingStartupCooldownSnapshot = false;
-            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
             return true;
         }
 
         public void SyncTrackedCooldowns(
+            TimeSpan? dailyRemaining,
+            TimeSpan? weeklyRemaining,
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
             TimeSpan? trainingRemaining,
@@ -182,10 +186,12 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            ApplyTrackedCooldownSnapshot(huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
         }
 
         private void ApplyTrackedCooldownSnapshot(
+            TimeSpan? dailyRemaining,
+            TimeSpan? weeklyRemaining,
             TimeSpan? huntRemaining,
             TimeSpan? adventureRemaining,
             TimeSpan? trainingRemaining,
@@ -194,6 +200,8 @@ namespace EpicRPGBot.UI
             TimeSpan? lootboxRemaining)
         {
             _scheduler.ClearPending();
+            ScheduleFromRemaining(TrackedCommandKind.Daily, dailyRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.Weekly, weeklyRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Hunt, huntRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Adventure, adventureRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Training, trainingRemaining);

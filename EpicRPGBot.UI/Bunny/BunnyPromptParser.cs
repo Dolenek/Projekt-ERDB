@@ -28,7 +28,7 @@ namespace EpicRPGBot.UI.Bunny
                     true,
                     happiness,
                     hunger,
-                    $"Bunny prompt recognized with Happiness {happiness} and Hunger {hunger}.");
+                    $"Catch prompt recognized with Happiness {happiness} and Hunger {hunger}.");
             }
 
             return new BunnyPromptParseResult(
@@ -36,7 +36,7 @@ namespace EpicRPGBot.UI.Bunny
                 false,
                 0,
                 0,
-                "Bunny prompt recognized, but numeric Happiness/Hunger values were unreadable.");
+                "Catch prompt recognized, but numeric Happiness/Hunger values were unreadable.");
         }
 
         private static bool LooksLikeBunnyPrompt(string message)
@@ -46,9 +46,15 @@ namespace EpicRPGBot.UI.Bunny
                 return false;
             }
 
-            var hasFooter =
+            var hasBunnyFooter =
                 message.IndexOf("How to get a bunny", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 message.IndexOf("rpg egg info bunny", StringComparison.OrdinalIgnoreCase) >= 0;
+            var hasPetFooter = message.IndexOf("Use \"info\" to get information about pets", StringComparison.OrdinalIgnoreCase) >= 0;
+            var hasPetTier =
+                message.IndexOf("DOG TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                message.IndexOf("CAT TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                message.IndexOf("DRAGON TIER IS APPROACHING", StringComparison.OrdinalIgnoreCase) >= 0;
+            var hasFooter = hasBunnyFooter || (hasPetFooter && hasPetTier);
             if (!hasFooter)
             {
                 return false;

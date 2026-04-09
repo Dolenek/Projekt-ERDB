@@ -46,6 +46,28 @@ namespace EpicRPGBot.UI.Services
         {
             var msg = (message ?? string.Empty).ToLowerInvariant();
 
+            if (msg.Contains("daily") &&
+                (msg.Contains("ready") ||
+                 msg.Contains("claimed") ||
+                 msg.Contains("claim") ||
+                 msg.Contains("rewards") ||
+                 msg.Contains("wait at least")))
+            {
+                kind = TrackedCommandKind.Daily;
+                return true;
+            }
+
+            if (msg.Contains("weekly") &&
+                (msg.Contains("ready") ||
+                 msg.Contains("claimed") ||
+                 msg.Contains("claim") ||
+                 msg.Contains("rewards") ||
+                 msg.Contains("wait at least")))
+            {
+                kind = TrackedCommandKind.Weekly;
+                return true;
+            }
+
             if (msg.Contains("looked around") ||
                 msg.Contains("found and killed") ||
                 msg.Contains("defenseless monster") ||

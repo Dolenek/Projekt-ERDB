@@ -27,7 +27,7 @@ namespace EpicRPGBot.UI.Bunny
                     false,
                     FallbackReplyText,
                     true,
-                    $"Bunny prompt stats were unreadable; sent fallback '{FallbackReplyText}'.");
+                    $"Catch prompt stats were unreadable; sent fallback '{FallbackReplyText}'.");
             }
 
             var guaranteedCandidate = FindGuaranteedCandidate(parseResult.Happiness, parseResult.Hunger);
@@ -39,7 +39,7 @@ namespace EpicRPGBot.UI.Bunny
                     true,
                     BuildReply(candidate.Feeds, candidate.Pats),
                     false,
-                    $"Sent '{BuildReply(candidate.Feeds, candidate.Pats)}' for bunny prompt (happy {parseResult.Happiness}, hunger {parseResult.Hunger}, guaranteed score {candidate.GuaranteedScore}).");
+                    $"Sent '{BuildReply(candidate.Feeds, candidate.Pats)}' for catch prompt (happy {parseResult.Happiness}, hunger {parseResult.Hunger}, guaranteed score {candidate.GuaranteedScore}).");
             }
 
             var heuristicCandidate = FindHeuristicCandidate(parseResult.Happiness, parseResult.Hunger);
@@ -48,7 +48,7 @@ namespace EpicRPGBot.UI.Bunny
                 true,
                 BuildReply(heuristicCandidate.Feeds, heuristicCandidate.Pats),
                 false,
-                $"Sent '{BuildReply(heuristicCandidate.Feeds, heuristicCandidate.Pats)}' for bunny prompt (happy {parseResult.Happiness}, hunger {parseResult.Hunger}, expected score {heuristicCandidate.ExpectedScore}, guaranteed score {heuristicCandidate.GuaranteedScore}).");
+                $"Sent '{BuildReply(heuristicCandidate.Feeds, heuristicCandidate.Pats)}' for catch prompt (happy {parseResult.Happiness}, hunger {parseResult.Hunger}, expected score {heuristicCandidate.ExpectedScore}, guaranteed score {heuristicCandidate.GuaranteedScore}).");
         }
 
         private static ActionCandidate? FindGuaranteedCandidate(int happiness, int hunger)

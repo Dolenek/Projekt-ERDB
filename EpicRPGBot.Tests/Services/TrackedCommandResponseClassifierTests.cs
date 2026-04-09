@@ -29,5 +29,31 @@ namespace EpicRPGBot.Tests.Services
 
             Assert.False(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));
         }
+
+        [Fact]
+        public void DailyReply_IsTrackedAsDaily()
+        {
+            var snapshot = new DiscordMessageSnapshot(
+                "m3",
+                "EPIC RPG\nYou claimed your daily rewards successfully.",
+                "EPIC RPG");
+
+            Assert.True(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));
+            Assert.True(TrackedCommandResponseClassifier.TryInferKind(snapshot.Text, out var kind));
+            Assert.Equal(TrackedCommandKind.Daily, kind);
+        }
+
+        [Fact]
+        public void WeeklyReply_IsTrackedAsWeekly()
+        {
+            var snapshot = new DiscordMessageSnapshot(
+                "m4",
+                "EPIC RPG\nYou claimed your weekly rewards successfully.",
+                "EPIC RPG");
+
+            Assert.True(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));
+            Assert.True(TrackedCommandResponseClassifier.TryInferKind(snapshot.Text, out var kind));
+            Assert.Equal(TrackedCommandKind.Weekly, kind);
+        }
     }
 }

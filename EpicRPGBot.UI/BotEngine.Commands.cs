@@ -114,6 +114,8 @@ namespace EpicRPGBot.UI
         {
             switch (kind)
             {
+                case TrackedCommandKind.Daily: return "rpg daily";
+                case TrackedCommandKind.Weekly: return "rpg weekly";
                 case TrackedCommandKind.Hunt: return _hunt;
                 case TrackedCommandKind.Adventure: return _adventure;
                 case TrackedCommandKind.Training: return _training;

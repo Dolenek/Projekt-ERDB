@@ -37,5 +37,39 @@ namespace EpicRPGBot.Tests.Bunny
             Assert.True(result.IsBunnyPrompt);
             Assert.False(result.HasReadableStats);
         }
+
+        [Fact]
+        public void Parse_ReturnsStats_ForCatPetPrompt()
+        {
+            var result = _parser.Parse(
+                "SUDDENLY, A CAT TIER IS APPROACHING friendr\nHappiness: 64\nHunger: 50\nUse \"info\" to get information about pets");
+
+            Assert.True(result.IsBunnyPrompt);
+            Assert.True(result.HasReadableStats);
+            Assert.Equal(64, result.Happiness);
+            Assert.Equal(50, result.Hunger);
+        }
+
+        [Fact]
+        public void Parse_ReturnsStats_ForDragonPetPrompt()
+        {
+            var result = _parser.Parse(
+                "SUDDENLY, A DRAGON TIER IS APPROACHING friendr\nHappiness: 34\nHunger: 53\nUse \"info\" to get information about pets");
+
+            Assert.True(result.IsBunnyPrompt);
+            Assert.True(result.HasReadableStats);
+            Assert.Equal(34, result.Happiness);
+            Assert.Equal(53, result.Hunger);
+        }
+
+        [Fact]
+        public void Parse_RejectsPetMessagesWithoutPetFooter()
+        {
+            var result = _parser.Parse(
+                "SUDDENLY, A DOG TIER IS APPROACHING friendr\nHappiness: 40\nHunger: 30");
+
+            Assert.False(result.IsBunnyPrompt);
+            Assert.False(result.HasReadableStats);
+        }
     }
 }

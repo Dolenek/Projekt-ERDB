@@ -145,6 +145,12 @@ namespace EpicRPGBot.UI
         {
             switch (GetTrackedCommandKey(command))
             {
+                case "daily":
+                    _cooldownTracker.SetCooldown("daily", 86400000);
+                    break;
+                case "weekly":
+                    _cooldownTracker.SetCooldown("weekly", 604800000);
+                    break;
                 case "hunt":
                     _cooldownTracker.SetCooldown("hunt", GetConfiguredHuntMs());
                     break;

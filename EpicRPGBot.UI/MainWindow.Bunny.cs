@@ -8,14 +8,14 @@ namespace EpicRPGBot.UI
         {
             engine.OnBunnyInfo += message =>
             {
-                UiDispatcher.OnUI(() => _log.Info("[bunny] " + message));
+                UiDispatcher.OnUI(() => _log.Info("[pet] " + message));
             };
 
             engine.OnBunnyAlert += message =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    _log.Warning("[bunny] " + message);
+                    _log.Warning("[pet] " + message);
                     _alertService.ShowBunnyAlert(this, message);
                 });
             };
