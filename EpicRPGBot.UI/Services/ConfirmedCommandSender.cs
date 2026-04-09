@@ -189,6 +189,7 @@ namespace EpicRPGBot.UI.Services
                    text.IndexOf("you traded", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("you don't have enough items to trade this", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("don't have enough", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   text.IndexOf("middle of a command", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("successfully crafted", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("You don't have enough items to craft this", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    text.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;

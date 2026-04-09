@@ -35,6 +35,7 @@ namespace EpicRPGBot.UI
         private readonly LogCraftingWorkflow _logCraftingWorkflow;
         private readonly DismantlingWorkflow _dismantlingWorkflow;
         private readonly AreaTradeWorkflow _areaTradeWorkflow;
+        private readonly CompleteDungeonRunCoordinator _completeDungeonRunCoordinator;
         private readonly DungeonWorkflow _dungeonWorkflow;
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
@@ -68,6 +69,7 @@ namespace EpicRPGBot.UI
             _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
             _dismantlingWorkflow = new DismantlingWorkflow(_confirmedCommandSender);
             _areaTradeWorkflow = new AreaTradeWorkflow(_confirmedCommandSender, _dismantlingWorkflow, _settingsService, GetCurrentSettings);
+            _completeDungeonRunCoordinator = new CompleteDungeonRunCoordinator();
             _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
             _captchaSelfTestRunner = new CaptchaSelfTestRunner();

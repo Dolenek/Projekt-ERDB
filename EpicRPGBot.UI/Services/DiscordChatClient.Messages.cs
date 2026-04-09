@@ -109,6 +109,7 @@ namespace EpicRPGBot.UI.Services
       normalizedText.includes('you traded') ||
       normalizedText.includes(""you don't have enough items to trade this"") ||
       normalizedText.includes(""don't have enough"") ||
+      normalizedText.includes('middle of a command') ||
       normalizedText.includes(""you don't have enough items to craft this"") ||
       normalizedText.includes('successfully crafted') ||
       normalizedText.includes('wait at least');

@@ -42,6 +42,10 @@
     <Compile Include="..\EpicRPGBot.UI\Dismantling\DismantlingWorkflow.cs" Link="Dismantling\DismantlingWorkflow.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonBattleState.cs" Link="Dungeon\DungeonBattleState.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonBattleStateParser.cs" Link="Dungeon\DungeonBattleStateParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\CompleteDungeonRunCoordinator.cs" Link="Dungeon\CompleteDungeonRunCoordinator.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyKind.cs" Link="Dungeon\DungeonEntryReplyKind.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonEntryReplyParser.cs" Link="Dungeon\DungeonEntryReplyParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonInviteWatcher.cs" Link="Dungeon\DungeonInviteWatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonLobbyParser.cs" Link="Dungeon\DungeonLobbyParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonMessageInteraction.cs" Link="Dungeon\DungeonMessageInteraction.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonRunResult.cs" Link="Dungeon\DungeonRunResult.cs" />

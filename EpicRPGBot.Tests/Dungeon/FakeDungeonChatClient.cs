@@ -19,6 +19,7 @@ namespace EpicRPGBot.Tests.Dungeon
         private const string ArmyHelperDm = "army-helper-dm";
         private const string DungeonChannel = "dungeon-channel";
         private const string HomeUrl = "https://discord.com/channels/@me";
+        private const string EntryConfirmationText = "ARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'";
         private const string ProfileReplyText = @"testplayer — profile
 this is the best title
 PROGRESS
@@ -29,16 +30,22 @@ Area: 7 (Max: 7)";
         private readonly Dictionary<string, string> _commandsByOutgoingId = new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly List<string> _sentCommands = new List<string>();
         private readonly List<string> _sentMessages = new List<string>();
+        private readonly Queue<string> _dungeonEntryReplies;
         private readonly bool _inviteAlreadyVisible;
         private readonly bool _useSnowflakeIds;
+        private bool _shouldQueueReinvite;
         private int _armyHelperReadCount;
         private int _messageSequence;
         private string _location = "signup";
 
-        public FakeDungeonChatClient(bool inviteAlreadyVisible = false, bool useSnowflakeIds = false)
+        public FakeDungeonChatClient(
+            bool inviteAlreadyVisible = false,
+            bool useSnowflakeIds = false,
+            IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;
             _useSnowflakeIds = useSnowflakeIds;
+            _dungeonEntryReplies = new Queue<string>(dungeonEntryReplies ?? Array.Empty<string>());
             _armyHelperMessages.Add(CreateSnapshot("Army Helper", "waiting", "Old invite placeholder"));
             if (_inviteAlreadyVisible)
             {
@@ -48,6 +55,7 @@ Area: 7 (Max: 7)";
 
         public bool IsReady => true;
         public bool DeleteClicked { get; private set; }
+        public int TakeMeThereClickCount { get; private set; }
         public IReadOnlyList<string> SentCommands => _sentCommands;
         public IReadOnlyList<string> SentMessages => _sentMessages;
 
@@ -79,7 +87,13 @@ Area: 7 (Max: 7)";
             if (_location == ArmyHelperDm)
             {
                 _armyHelperReadCount++;
-                if (!_inviteAlreadyVisible && _armyHelperReadCount == 2)
+                if (_shouldQueueReinvite)
+                {
+                    _armyHelperMessages.Add(CreateTakeMeThereMessage());
+                    _shouldQueueReinvite = false;
+                    messages = GetVisibleMessages();
+                }
+                else if (!_inviteAlreadyVisible && _armyHelperReadCount == 2)
                 {
                     _armyHelperMessages.Add(CreateTakeMeThereMessage());
                     messages = GetVisibleMessages();
@@ -105,16 +119,23 @@ Area: 7 (Max: 7)";
 
             if (string.Equals(command, "rpg dung <@222>", StringComparison.OrdinalIgnoreCase))
             {
+                var replyText = _dungeonEntryReplies.Count > 0
+                    ? _dungeonEntryReplies.Dequeue()
+                    : EntryConfirmationText;
+                var isBusyReply = replyText.IndexOf("middle of a command", StringComparison.OrdinalIgnoreCase) >= 0;
                 var reply = CreateSnapshot(
                     "EPIC RPG",
-                    "ARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'",
-                    "ARE YOU SURE YOU WANT TO ENTER?\nAll players have to say 'yes'",
-                    new[]
-                    {
-                        new DiscordMessageButton("yes", 0, 0),
-                        new DiscordMessageButton("no", 0, 1)
-                    });
+                    replyText,
+                    replyText,
+                    isBusyReply
+                        ? null
+                        : new[]
+                        {
+                            new DiscordMessageButton("yes", 0, 0),
+                            new DiscordMessageButton("no", 0, 1)
+                        });
                 _dungeonMessages.Add(reply);
+                _shouldQueueReinvite |= isBusyReply;
                 return Task.FromResult(reply);
             }
 
@@ -158,6 +179,7 @@ Area: 7 (Max: 7)";
             var label = snapshot?.Buttons?.FirstOrDefault(button => button.RowIndex == rowIndex && button.ColumnIndex == columnIndex)?.Label ?? string.Empty;
             if (string.Equals(label, "Take me there", StringComparison.OrdinalIgnoreCase))
             {
+                TakeMeThereClickCount++;
                 _location = DungeonChannel;
                 _dungeonMessages.Add(CreateSnapshot(
                     "Army Helper",

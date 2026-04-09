@@ -86,8 +86,12 @@
     <Compile Include="Dismantling\DismantleRequest.cs" />
     <Compile Include="Dismantling\DismantleWindow.xaml.cs" />
     <Compile Include="Dismantling\DismantlingWorkflow.cs" />
+    <Compile Include="Dungeon\CompleteDungeonRunCoordinator.cs" />
     <Compile Include="Dungeon\DungeonBattleState.cs" />
     <Compile Include="Dungeon\DungeonBattleStateParser.cs" />
+    <Compile Include="Dungeon\DungeonEntryReplyKind.cs" />
+    <Compile Include="Dungeon\DungeonEntryReplyParser.cs" />
+    <Compile Include="Dungeon\DungeonInviteWatcher.cs" />
     <Compile Include="Dungeon\DungeonLobbyParser.cs" />
     <Compile Include="Dungeon\DungeonMessageInteraction.cs" />
     <Compile Include="Dungeon\DungeonRunResult.cs" />

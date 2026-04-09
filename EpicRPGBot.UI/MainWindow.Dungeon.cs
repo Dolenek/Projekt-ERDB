@@ -27,6 +27,12 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            if (!_botChatClient.IsReady)
+            {
+                _log.Info("Bot tab not ready");
+                return;
+            }
+
             if (!TryBeginExclusiveBotOperation("Complete Dungeon"))
             {
                 return;
@@ -72,7 +78,11 @@ namespace EpicRPGBot.UI
 
             try
             {
-                return await _dungeonWorkflow.RunAsync(message => report?.Invoke("[dungeon] " + message), cancellationToken);
+                return await _completeDungeonRunCoordinator.RunAsync(
+                    RunPreDungeonAreaTradeAsync,
+                    RunDungeonListingPhaseAsync,
+                    report,
+                    cancellationToken);
             }
             finally
             {
@@ -82,6 +92,24 @@ namespace EpicRPGBot.UI
                     await StartEngineAndRequestCooldownSnapshotAsync("Engine resumed after dungeon automation");
                 }
             }
+        }
+
+        private async Task<Crafting.CraftJobResult> RunPreDungeonAreaTradeAsync(
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            SelectBotTab();
+            report?.Invoke("[dungeon] Navigating the bot tab to the default channel URL for pre-dungeon trading.");
+            await _botChatClient.NavigateToChannelAsync(GetCurrentSettings().ResolveChannelUrl());
+            return await RunAreaTradeJobAsync(report, cancellationToken);
+        }
+
+        private async Task<Dungeon.DungeonRunResult> RunDungeonListingPhaseAsync(
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            SelectDungeonTab();
+            return await _dungeonWorkflow.RunAsync(message => report?.Invoke("[dungeon] " + message), cancellationToken);
         }
 
         private void SetDungeonRunning(bool isRunning)

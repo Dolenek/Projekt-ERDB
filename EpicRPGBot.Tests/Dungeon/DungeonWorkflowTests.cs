@@ -20,11 +20,7 @@ namespace EpicRPGBot.Tests.Dungeon
             {
                 var settingsService = CreateSettingsService(fileName);
                 var chatClient = new FakeDungeonChatClient();
-                var workflow = new DungeonWorkflow(
-                    chatClient,
-                    new ConfirmedCommandSender(chatClient),
-                    settingsService,
-                    settingsService.LoadCurrent);
+                var workflow = CreateWorkflow(chatClient, settingsService);
                 var reports = new List<string>();
 
                 var result = await workflow.RunAsync(reports.Add, CancellationToken.None);
@@ -51,16 +47,43 @@ namespace EpicRPGBot.Tests.Dungeon
             {
                 var settingsService = CreateSettingsService(fileName);
                 var chatClient = new FakeDungeonChatClient(inviteAlreadyVisible: true, useSnowflakeIds: true);
-                var workflow = new DungeonWorkflow(
-                    chatClient,
-                    new ConfirmedCommandSender(chatClient),
-                    settingsService,
-                    settingsService.LoadCurrent);
+                var workflow = CreateWorkflow(chatClient, settingsService);
 
                 var result = await workflow.RunAsync(_ => { }, CancellationToken.None);
 
                 Assert.True(result.Completed);
                 Assert.Contains("bite", chatClient.SentMessages);
+            }
+            finally
+            {
+                DeleteSettingsFile(fileName);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_RetriesBusyPartnerAndWaitsForFreshInvite()
+        {
+            var fileName = "dungeon-test-" + Guid.NewGuid().ToString("N") + ".ini";
+            try
+            {
+                var settingsService = CreateSettingsService(fileName);
+                var chatClient = new FakeDungeonChatClient(
+                    dungeonEntryReplies: new[]
+                    {
+                        "You can't enter a dungeon while you or one of your partners is in the middle of a command!",
+                        "You can't enter a dungeon while you or one of your partners is in the middle of a command!",
+                        "You can't enter a dungeon while you or one of your partners is in the middle of a command!"
+                    });
+                var reports = new List<string>();
+                var workflow = CreateWorkflow(chatClient, settingsService);
+
+                var result = await workflow.RunAsync(reports.Add, CancellationToken.None);
+
+                Assert.True(result.Completed);
+                Assert.Equal(4, CountCommand(chatClient.SentCommands, "rpg dung <@222>"));
+                Assert.Equal(2, chatClient.TakeMeThereClickCount);
+                Assert.Contains(reports, message => message.Contains("Waiting 5 seconds before retry 2/3", StringComparison.OrdinalIgnoreCase));
+                Assert.Contains(reports, message => message.Contains("Waiting for a fresh dungeon invite", StringComparison.OrdinalIgnoreCase));
             }
             finally
             {
@@ -177,6 +200,34 @@ namespace EpicRPGBot.Tests.Dungeon
                 .WithChannelUrl("https://discord.com/channels/713541415099170836/1145038338630373407")
                 .WithAutoDeleteDungeonChannel(true));
             return service;
+        }
+
+        private static DungeonWorkflow CreateWorkflow(FakeDungeonChatClient chatClient, AppSettingsService settingsService)
+        {
+            return new DungeonWorkflow(
+                chatClient,
+                new ConfirmedCommandSender(chatClient),
+                settingsService,
+                settingsService.LoadCurrent,
+                new DungeonLobbyParser(),
+                new DungeonBattleStateParser(),
+                new DungeonInviteWatcher(chatClient),
+                new DungeonEntryReplyParser(),
+                (_, __) => Task.CompletedTask);
+        }
+
+        private static int CountCommand(IReadOnlyList<string> commands, string expectedCommand)
+        {
+            var count = 0;
+            for (var i = 0; i < commands.Count; i++)
+            {
+                if (string.Equals(commands[i], expectedCommand, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private static void DeleteSettingsFile(string fileName)

@@ -13,11 +13,9 @@ namespace EpicRPGBot.UI.Dungeon
         private const int BattlePollDelayMs = 1000;
         private const int BattleInactivityTimeoutMs = 60000;
         private const int DeletePromptTimeoutMs = 30000;
-        private const int InviteRaceToleranceMs = 10000;
-        private const long DiscordEpochMs = 1420070400000L;
-        private const int DmPollDelayMs = 3000;
-        private const int DmTimeoutMs = 900000;
         private const int EncounterTimeoutMs = 30000;
+        private const int EntryRetryDelayMs = 5000;
+        private const int PartnerBusyRetryCount = 2;
         private const int ResultScanCount = 20;
 
         private readonly IDiscordChatClient _chatClient;
@@ -26,6 +24,9 @@ namespace EpicRPGBot.UI.Dungeon
         private readonly Func<AppSettingsSnapshot> _getCurrentSettings;
         private readonly DungeonLobbyParser _lobbyParser;
         private readonly DungeonBattleStateParser _battleStateParser;
+        private readonly DungeonInviteWatcher _inviteWatcher;
+        private readonly DungeonEntryReplyParser _entryReplyParser;
+        private readonly Func<int, CancellationToken, Task> _waitAsync;
 
         public DungeonWorkflow(
             IDiscordChatClient chatClient,
@@ -38,7 +39,10 @@ namespace EpicRPGBot.UI.Dungeon
                 settingsService,
                 getCurrentSettings,
                 new DungeonLobbyParser(),
-                new DungeonBattleStateParser())
+                new DungeonBattleStateParser(),
+                new DungeonInviteWatcher(chatClient),
+                new DungeonEntryReplyParser(),
+                Task.Delay)
         {
         }
 
@@ -49,6 +53,29 @@ namespace EpicRPGBot.UI.Dungeon
             Func<AppSettingsSnapshot> getCurrentSettings,
             DungeonLobbyParser lobbyParser,
             DungeonBattleStateParser battleStateParser)
+            : this(
+                chatClient,
+                confirmedCommandSender,
+                settingsService,
+                getCurrentSettings,
+                lobbyParser,
+                battleStateParser,
+                new DungeonInviteWatcher(chatClient),
+                new DungeonEntryReplyParser(),
+                Task.Delay)
+        {
+        }
+
+        public DungeonWorkflow(
+            IDiscordChatClient chatClient,
+            ConfirmedCommandSender confirmedCommandSender,
+            AppSettingsService settingsService,
+            Func<AppSettingsSnapshot> getCurrentSettings,
+            DungeonLobbyParser lobbyParser,
+            DungeonBattleStateParser battleStateParser,
+            DungeonInviteWatcher inviteWatcher,
+            DungeonEntryReplyParser entryReplyParser,
+            Func<int, CancellationToken, Task> waitAsync)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _confirmedCommandSender = confirmedCommandSender ?? throw new ArgumentNullException(nameof(confirmedCommandSender));
@@ -56,6 +83,9 @@ namespace EpicRPGBot.UI.Dungeon
             _getCurrentSettings = getCurrentSettings ?? throw new ArgumentNullException(nameof(getCurrentSettings));
             _lobbyParser = lobbyParser ?? throw new ArgumentNullException(nameof(lobbyParser));
             _battleStateParser = battleStateParser ?? throw new ArgumentNullException(nameof(battleStateParser));
+            _inviteWatcher = inviteWatcher ?? throw new ArgumentNullException(nameof(inviteWatcher));
+            _entryReplyParser = entryReplyParser ?? throw new ArgumentNullException(nameof(entryReplyParser));
+            _waitAsync = waitAsync ?? throw new ArgumentNullException(nameof(waitAsync));
         }
 
         public async Task<DungeonRunResult> RunAsync(Action<string> report, CancellationToken cancellationToken)
@@ -78,37 +108,48 @@ namespace EpicRPGBot.UI.Dungeon
                     return DungeonRunResult.FailedResult("Dungeon stopped: signup 'rpg p' did not confirm.");
                 }
 
-                var dmBaselineId = await CaptureDirectMessageBaselineAsync(report, cancellationToken);
+                var dmBaselineId = await _inviteWatcher.CaptureDirectMessageBaselineAsync(report, cancellationToken);
                 report?.Invoke("Waiting for Army Helper DM.");
-                var inviteMessage = await WaitForInviteAsync(dmBaselineId, signupSentAtUtc, report, cancellationToken);
-                if (inviteMessage == null)
+                while (true)
                 {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: no Army Helper invite arrived within 15 minutes.");
+                    var inviteMessage = await _inviteWatcher.WaitForInviteAsync(
+                        dmBaselineId,
+                        signupSentAtUtc,
+                        report,
+                        cancellationToken);
+                    if (inviteMessage == null)
+                    {
+                        return DungeonRunResult.FailedResult("Dungeon stopped: no Army Helper invite arrived within 15 minutes.");
+                    }
+
+                    dmBaselineId = inviteMessage.Id;
+                    if (!await ClickButtonByLabelAsync(inviteMessage, "Take me there", cancellationToken))
+                    {
+                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to click the latest 'Take me there' button.");
+                    }
+
+                    report?.Invoke("Invite accepted. Waiting for dungeon channel.");
+                    var partner = await WaitForPartnerAsync(playerName, report, cancellationToken);
+                    if (partner == null)
+                    {
+                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to resolve the dungeon partner mention.");
+                    }
+
+                    var entryResult = await TryEnterDungeonAsync(partner, report, cancellationToken);
+                    if (entryResult == DungeonEntryAttemptResult.WaitForNextInvite)
+                    {
+                        report?.Invoke("Partner is busy. Waiting for a fresh dungeon invite.");
+                        continue;
+                    }
+
+                    if (entryResult == DungeonEntryAttemptResult.Failed)
+                    {
+                        return DungeonRunResult.FailedResult("Dungeon stopped: 'rpg dung' did not confirm.");
+                    }
+
+                    break;
                 }
 
-                if (!await ClickButtonByLabelAsync(inviteMessage, "Take me there", cancellationToken))
-                {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: failed to click the latest 'Take me there' button.");
-                }
-
-                report?.Invoke("Invite accepted. Waiting for dungeon channel.");
-                var partner = await WaitForPartnerAsync(playerName, report, cancellationToken);
-                if (partner == null)
-                {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: failed to resolve the dungeon partner mention.");
-                }
-
-                var partnerToken = string.IsNullOrWhiteSpace(partner.UserId)
-                    ? partner.Label
-                    : $"<@{partner.UserId}>";
-                var entryCommand = $"rpg dung {partnerToken}";
-                var entryResult = await _confirmedCommandSender.SendAsync(entryCommand, cancellationToken: cancellationToken);
-                if (!entryResult.IsConfirmed)
-                {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: 'rpg dung' did not confirm.");
-                }
-
-                report?.Invoke($"Sent {entryCommand}");
                 var confirmationPrompt = await WaitForButtonPromptAsync("yes", EncounterTimeoutMs, cancellationToken);
                 if (confirmationPrompt == null || !await ClickButtonByLabelAsync(confirmationPrompt, "yes", cancellationToken))
                 {
@@ -149,106 +190,6 @@ namespace EpicRPGBot.UI.Dungeon
             return parsedName;
         }
 
-        private async Task<string> CaptureDirectMessageBaselineAsync(Action<string> report, CancellationToken cancellationToken)
-        {
-            if (!await _chatClient.OpenDirectMessageAsync("Army Helper", cancellationToken))
-            {
-                report?.Invoke("Army Helper DM is not visible yet. Waiting for a new invite.");
-                return string.Empty;
-            }
-
-            var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
-            return snapshots.LastOrDefault()?.Id ?? string.Empty;
-        }
-
-        private async Task<DiscordMessageSnapshot> WaitForInviteAsync(
-            string baselineMessageId,
-            DateTimeOffset signupSentAtUtc,
-            Action<string> report,
-            CancellationToken cancellationToken)
-        {
-            var waitedMs = 0;
-            var baselineId = baselineMessageId ?? string.Empty;
-            var dmOpened = false;
-            while (waitedMs < DmTimeoutMs)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!dmOpened)
-                {
-                    dmOpened = await _chatClient.OpenDirectMessageAsync("Army Helper", cancellationToken);
-                    if (!dmOpened)
-                    {
-                        report?.Invoke("Army Helper DM still unavailable.");
-                        await Task.Delay(DmPollDelayMs, cancellationToken);
-                        waitedMs += DmPollDelayMs;
-                        continue;
-                    }
-                }
-
-                var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
-                if (string.IsNullOrWhiteSpace(baselineId))
-                {
-                    baselineId = snapshots.LastOrDefault()?.Id ?? string.Empty;
-                }
-
-                var invite = ResolveInviteMessage(snapshots, baselineId, signupSentAtUtc);
-                if (invite != null)
-                {
-                    return invite;
-                }
-
-                await Task.Delay(DmPollDelayMs, cancellationToken);
-                waitedMs += DmPollDelayMs;
-            }
-
-            return null;
-        }
-
-        private static DiscordMessageSnapshot ResolveInviteMessage(
-            IReadOnlyList<DiscordMessageSnapshot> snapshots,
-            string baselineMessageId,
-            DateTimeOffset signupSentAtUtc)
-        {
-            var invite = DungeonMessageInteraction.FindMessageAfter(snapshots, baselineMessageId, HasTakeMeThereButton);
-            if (invite != null)
-            {
-                return invite;
-            }
-
-            var latestVisibleInvite = snapshots?.LastOrDefault(HasTakeMeThereButton);
-            var inviteCreatedAtUtc = TryParseSnowflakeTimestampUtc(latestVisibleInvite?.Id);
-            return inviteCreatedAtUtc.HasValue &&
-                   inviteCreatedAtUtc.Value >= signupSentAtUtc.AddMilliseconds(-InviteRaceToleranceMs)
-                ? latestVisibleInvite
-                : null;
-        }
-
-        private static DateTimeOffset? TryParseSnowflakeTimestampUtc(string messageId)
-        {
-            var candidate = ExtractSnowflakeToken(messageId);
-            if (!ulong.TryParse(candidate, out var snowflake))
-            {
-                return null;
-            }
-
-            var unixTimeMs = (long)(snowflake >> 22) + DiscordEpochMs;
-            return DateTimeOffset.FromUnixTimeMilliseconds(unixTimeMs);
-        }
-
-        private static string ExtractSnowflakeToken(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-
-            var trimmed = value.Trim();
-            var dashIndex = trimmed.LastIndexOf('-');
-            return dashIndex >= 0 && dashIndex + 1 < trimmed.Length
-                ? trimmed.Substring(dashIndex + 1)
-                : trimmed;
-        }
-
         private async Task<DiscordMessageMention> WaitForPartnerAsync(
             string playerName,
             Action<string> report,
@@ -271,6 +212,43 @@ namespace EpicRPGBot.UI.Dungeon
             }
 
             return null;
+        }
+
+        private async Task<DungeonEntryAttemptResult> TryEnterDungeonAsync(
+            DiscordMessageMention partner,
+            Action<string> report,
+            CancellationToken cancellationToken)
+        {
+            var partnerToken = string.IsNullOrWhiteSpace(partner.UserId)
+                ? partner.Label
+                : $"<@{partner.UserId}>";
+            var entryCommand = $"rpg dung {partnerToken}";
+            var maxAttempts = PartnerBusyRetryCount + 1;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                var entryResult = await _confirmedCommandSender.SendAsync(entryCommand, cancellationToken: cancellationToken);
+                if (!entryResult.IsConfirmed)
+                {
+                    return DungeonEntryAttemptResult.Failed;
+                }
+
+                if (_entryReplyParser.Parse(entryResult.ReplyMessage.Text) != DungeonEntryReplyKind.PartnerBusy)
+                {
+                    report?.Invoke($"Sent {entryCommand}");
+                    return DungeonEntryAttemptResult.Confirmed;
+                }
+
+                if (attempt >= maxAttempts)
+                {
+                    return DungeonEntryAttemptResult.WaitForNextInvite;
+                }
+
+                report?.Invoke(
+                    $"Partner is in the middle of a command. Waiting 5 seconds before retry {attempt + 1}/{maxAttempts}.");
+                await _waitAsync(EntryRetryDelayMs, cancellationToken);
+            }
+
+            return DungeonEntryAttemptResult.Failed;
         }
 
         private async Task<DiscordMessageSnapshot> WaitForButtonPromptAsync(
@@ -401,10 +379,11 @@ namespace EpicRPGBot.UI.Dungeon
             return button != null &&
                    await _chatClient.ClickMessageButtonAsync(snapshot.Id, button.RowIndex, button.ColumnIndex, cancellationToken);
         }
-
-        private static bool HasTakeMeThereButton(DiscordMessageSnapshot snapshot)
+        private enum DungeonEntryAttemptResult
         {
-            return DungeonMessageInteraction.HasButton(snapshot, "Take me there");
+            Failed = 0,
+            Confirmed = 1,
+            WaitForNextInvite = 2
         }
     }
 }
