@@ -12,7 +12,7 @@ namespace EpicRPGBot.UI
 
         public async Task<bool> SendImmediateAsync(string text)
         {
-            var ok = await SendAndEmitAsync(text, null);
+            var ok = await SendAndEmitAsync(text, null, false);
             return ok;
         }
 
@@ -38,9 +38,9 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            if (IsGuardSolveActive)
+            if (IsGuardIncidentActive)
             {
-                ReportSolverInfo($"Skipped scheduled command '{command}' while guard solve is active.");
+                ReportSolverInfo($"Skipped scheduled command '{command}' while EPIC GUARD incident is active.");
                 _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
                 return;
             }
@@ -85,13 +85,13 @@ namespace EpicRPGBot.UI
                     return;
                 }
 
-                if (IsGuardSolveActive)
+                if (IsGuardIncidentActive)
                 {
-                    ReportSolverInfo("Skipped queued 'rpg cd' while guard solve is active.");
+                    ReportSolverInfo("Skipped queued 'rpg cd' while EPIC GUARD incident is active.");
                     return;
                 }
 
-                await SendConfirmedCommandWithGlobalCooldownAsync("rpg cd", () => OnCommandSent?.Invoke("rpg cd"));
+                await SendConfirmedCommandWithGlobalCooldownAsync("rpg cd", () => OnCommandSent?.Invoke("rpg cd"), null, false);
             }
             finally
             {
@@ -127,23 +127,30 @@ namespace EpicRPGBot.UI
 
         internal async Task<bool> SendImmediateAsync(string text, Action<Models.DiscordMessageSnapshot> onOutgoingRegistered)
         {
-            var ok = await SendAndEmitAsync(text, onOutgoingRegistered);
+            var ok = await SendAndEmitAsync(text, onOutgoingRegistered, false);
             return ok;
         }
 
         private async Task<bool> SendAndEmitAsync(
             string text,
-            Action<Models.DiscordMessageSnapshot> onOutgoingRegistered = null)
+            Action<Models.DiscordMessageSnapshot> onOutgoingRegistered = null,
+            bool allowDuringGuard = false)
         {
+            if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+            {
+                return false;
+            }
+
             if (ConfirmedCommandSender.RequiresReplyConfirmation(text))
             {
                 return await SendConfirmedCommandWithGlobalCooldownAsync(
                     text,
                     () => OnCommandSent?.Invoke(text),
-                    onOutgoingRegistered);
+                    onOutgoingRegistered,
+                    allowDuringGuard);
             }
 
-            var ok = await SendRawWithGlobalCooldownAsync(text);
+            var ok = await SendRawWithGlobalCooldownAsync(text, allowDuringGuard);
             if (ok)
             {
                 OnCommandSent?.Invoke(text);
@@ -161,22 +168,30 @@ namespace EpicRPGBot.UI
         private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(
             string text,
             Action onOutgoingRegistered,
-            Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
+            Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
+            bool allowDuringGuard = false)
         {
             var result = await SendConfirmedCommandWithGlobalCooldownCoreAsync(
                 text,
                 onOutgoingRegistered,
-                onOutgoingSnapshotRegistered);
+                onOutgoingSnapshotRegistered,
+                allowDuringGuard);
             return result.IsConfirmed;
         }
 
         private async Task<ConfirmedCommandSendResult> SendConfirmedCommandWithGlobalCooldownCoreAsync(
             string text,
             Action onOutgoingRegistered,
-            Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
+            Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
+            bool allowDuringGuard = false)
         {
             while (true)
             {
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return new ConfirmedCommandSendResult(null, null, 0);
+                }
+
                 if (!await WaitForInteractivePromptWindowAsync())
                 {
                     return new ConfirmedCommandSendResult(null, null, 0);
@@ -191,6 +206,13 @@ namespace EpicRPGBot.UI
                     return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
+                if (ShouldBlockOutgoingForGuard(allowDuringGuard))
+                {
+                    _sendGate.Release();
+                    ReportSolverInfo($"Blocked '{text}' while EPIC GUARD incident is active.");
+                    return new ConfirmedCommandSendResult(null, null, 0);
+                }
+
                 if (!IsInteractivePromptPending())
                 {
                     break;
@@ -201,7 +223,17 @@ namespace EpicRPGBot.UI
 
             try
             {
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return new ConfirmedCommandSendResult(null, null, 0);
+                }
+
                 await RespectMinimumCommandGapAsync();
+
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return new ConfirmedCommandSendResult(null, null, 0);
+                }
 
                 var result = await _confirmedCommandSender.SendAsync(
                     text,
@@ -233,10 +265,15 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task<bool> SendRawWithGlobalCooldownAsync(string text)
+        private async Task<bool> SendRawWithGlobalCooldownAsync(string text, bool allowDuringGuard = false)
         {
             while (true)
             {
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return false;
+                }
+
                 if (!await WaitForInteractivePromptWindowAsync())
                 {
                     return false;
@@ -251,6 +288,13 @@ namespace EpicRPGBot.UI
                     return false;
                 }
 
+                if (ShouldBlockOutgoingForGuard(allowDuringGuard))
+                {
+                    _sendGate.Release();
+                    ReportSolverInfo($"Blocked '{text}' while EPIC GUARD incident is active.");
+                    return false;
+                }
+
                 if (!IsInteractivePromptPending())
                 {
                     break;
@@ -261,7 +305,18 @@ namespace EpicRPGBot.UI
 
             try
             {
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return false;
+                }
+
                 await RespectMinimumCommandGapAsync();
+
+                if (ReportBlockedOutgoingForGuard(text, allowDuringGuard))
+                {
+                    return false;
+                }
+
                 var ok = await _chatClient.SendMessageAsync(text, _stopCancellation.Token);
                 if (ok)
                 {

@@ -9,6 +9,8 @@ namespace EpicRPGBot.UI.Services
         private DateTime _lastAlertUtc = DateTime.MinValue;
         private bool _isActive;
 
+        public bool IsActive => _isActive;
+
         public static bool ContainsGuardPrompt(string message)
         {
             if (string.IsNullOrWhiteSpace(message))

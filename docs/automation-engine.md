@@ -53,6 +53,7 @@ Reaction behavior currently implemented:
 - Event phrases such as zombie horde, megarace boost, epic tree, megalodon, raining coins, NPC trade, lootbox summoning, and legendary boss keep their existing one-line responses.
 - Bunny catch prompts are handled before the generic phrase-based event responses.
 - EPIC GUARD incidents are tracked as an active alert state: the first detection shows a full alert, reminders are rate-limited to once every 10 seconds, and the incident clears when the `Everything seems fine ... keep playing` message is seen.
+- While the incident is active, the engine blocks regular outgoing bot sends across the shared send lane, not just scheduled tracked commands.
 - That clear message also resumes tracked timers immediately and cancels the active captcha solve attempt.
 
 Special cases:

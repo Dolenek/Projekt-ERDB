@@ -13,7 +13,7 @@ namespace EpicRPGBot.UI
         private bool _guardSolveStartedForIncident;
 
         private bool IsGuardSolveActive => !string.IsNullOrWhiteSpace(_activeGuardMessageId);
-        private bool IsGuardIncidentActive => _guardSolveStartedForIncident || !string.IsNullOrWhiteSpace(_activeGuardMessageId);
+        private bool IsGuardIncidentActive => _guardIncidentTracker.IsActive || _guardSolveStartedForIncident || IsGuardSolveActive;
 
         private string ResolveGuardTargetMessageId(bool latestHasGuard, bool previousHasGuard)
         {
@@ -82,6 +82,22 @@ namespace EpicRPGBot.UI
             _guardSolveStartedForIncident = false;
             _processedGuardMessageIds.Clear();
             _processedGuardMessageOrder.Clear();
+        }
+
+        private bool ShouldBlockOutgoingForGuard(bool allowDuringGuard)
+        {
+            return IsGuardIncidentActive && !allowDuringGuard;
+        }
+
+        private bool ReportBlockedOutgoingForGuard(string text, bool allowDuringGuard)
+        {
+            if (!ShouldBlockOutgoingForGuard(allowDuringGuard))
+            {
+                return false;
+            }
+
+            ReportSolverInfo($"Blocked '{text}' while EPIC GUARD incident is active.");
+            return true;
         }
 
         private void RememberProcessedGuardMessage(string messageId)
