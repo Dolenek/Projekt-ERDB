@@ -176,6 +176,7 @@ namespace EpicRPGBot.UI
             }
 
             ReportSolverInfo(detectionInfo);
+            _scheduler.PauseAll();
             if (!TryBeginGuardSolve(targetMessageId))
             {
                 return;
@@ -259,7 +260,7 @@ namespace EpicRPGBot.UI
                     targetMessageId,
                     _lastMessageId,
                     _previousMessageId,
-                    text => SendAndEmitAsync(text),
+                    text => SendAndEmitAsync(text, null, true),
                     _scheduler.PauseAll,
                     () => _scheduler.ResumeAll(_running),
                     ReportSolverInfo);

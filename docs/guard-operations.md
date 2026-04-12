@@ -20,7 +20,9 @@ Console visibility:
   - whether the answer was sent to chat.
 
 Chat send behavior:
-- While a guard solve is active, scheduled tracked commands and queued cooldown snapshot sends are skipped so they do not occupy the Discord send lane.
+- As soon as a guard prompt is detected, the tracked scheduler is paused before solver startup continues.
+- While a guard incident is active, normal outgoing bot sends are blocked across the shared send lane even if the solver cannot start or later fails.
+- While a guard incident is active, scheduled tracked commands and queued cooldown snapshot sends are skipped so they do not occupy the Discord send lane.
 - While a guard incident is active, other event-triggered fast replies such as `CUT`, `LURE`, `CATCH`, or coin/NPC reactions are suppressed until the clear message arrives.
 - When the model returns a valid catalog match, the bot sends that exact item name back to Discord.
 - If the solver is uncertain or the send fails, the console logs that outcome instead of silently doing nothing.

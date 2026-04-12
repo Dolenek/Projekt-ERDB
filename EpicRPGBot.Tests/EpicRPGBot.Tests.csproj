@@ -58,11 +58,13 @@
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageButton.cs" Link="Models\DiscordMessageButton.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageMention.cs" Link="Models\DiscordMessageMention.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageSnapshot.cs" Link="Models\DiscordMessageSnapshot.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\GuardAlertNotification.cs" Link="Models\GuardAlertNotification.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AreaWorkCommandSettings.cs" Link="Services\AreaWorkCommandSettings.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AppSettingsService.cs" Link="Services\AppSettingsService.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfiguredWorkCommandCatalog.cs" Link="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\CooldownReductionCalculator.cs" Link="Services\CooldownReductionCalculator.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuardIncidentTracker.cs" Link="Services\GuardIncidentTracker.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidOutcomeWatch.cs" Link="Services\GuildRaidOutcomeWatch.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidResponseClassifier.cs" Link="Services\GuildRaidResponseClassifier.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidMatchModes.cs" Link="Services\GuildRaidMatchModes.cs" />

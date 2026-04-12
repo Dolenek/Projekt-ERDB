@@ -18,12 +18,13 @@ Solve flow:
 7. Load or reuse the OpenAI captcha answer provider.
 8. Send the image and the fixed item catalog to OpenAI and require a strict JSON answer with a catalog index or `unknown`.
 9. For full-color captchas, treat color as a strong signal together with shape; only fall back to grayscale cues when the captcha is clearly desaturated, grayscale, or black-and-white.
-10. If a guard solve is active, scheduled tracked commands and queued `rpg cd` sends are skipped so the answer lane stays reserved for the guard reply.
-11. If the first OpenAI answer is invalid or `unknown`, retry once with the configured retry model and an enlarged retry image.
-12. If the result is confident, send the matched canonical item name back to Discord.
-13. If the provider is uncertain, skip sending instead of guessing.
-14. Resume timers after the attempt completes.
-15. Show one desktop alert on first detection, then at most one reminder every 10 seconds while the same guard incident stays active.
+10. As soon as the guard incident is active, normal outgoing bot sends are blocked so no regular command can slip through the shared send lane.
+11. Scheduled tracked commands and queued `rpg cd` sends are skipped while the incident is active so the answer lane stays reserved for the guard reply.
+12. If the first OpenAI answer is invalid or `unknown`, retry once with the configured retry model and an enlarged retry image.
+13. If the result is confident, send the matched canonical item name back to Discord.
+14. If the provider is uncertain, skip sending instead of guessing.
+15. Resume timers after the attempt completes.
+16. Show one desktop alert on first detection, then at most one reminder every 10 seconds while the same guard incident stays active.
 
 Configuration:
 - `CAPTCHA_OPENAI_API_KEY`
