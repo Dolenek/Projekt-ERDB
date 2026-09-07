@@ -127,6 +127,7 @@ namespace EpicRPGBot.UI
             _startupCutoffMessageId = string.Empty;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
+            _captchaSolver.Dispose();
             _stopCancellation.Cancel();
             _scheduler.StopAll();
             _scheduler.ClearPending();

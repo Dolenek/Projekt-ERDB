@@ -29,8 +29,8 @@ internal static class Program
             Console.WriteLine("method=" + result.Method);
             Console.WriteLine("detail=" + result.Detail);
             Console.WriteLine("items_file=" + settings.ItemNamesFile);
-            Console.WriteLine("model=" + settings.OpenAiModel);
-            Console.WriteLine("retry_model=" + settings.OpenAiRetryModel);
+            Console.WriteLine("configuration=" + provider.DescribeConfiguration());
+            Console.WriteLine("automatic_submission_allowed=" + result.AutomaticSubmissionAllowed);
             return result.IsMatch ? 0 : 1;
         }
         catch (Exception ex)

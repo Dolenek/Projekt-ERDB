@@ -2,6 +2,17 @@
 
 `EpicRPGBot.Mcp` is a Windows-only MCP sidecar for local end-to-end testing of `EpicRPGBot.UI`.
 
+Codex connection from WSL:
+- Build the Windows server from the repository root:
+  `'/mnt/c/Program Files/dotnet/dotnet.exe' build EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Release`.
+- Register the stdio server with:
+  `codex mcp add epicrpg -- '/mnt/c/Program Files/dotnet/dotnet.exe' 'C:\Programming\Projekt-ERDB\EpicRPGBot.Mcp\bin\Release\net8.0-windows\EpicRPGBot.Mcp.dll'`.
+- This registration is stored in the user's `~/.codex/config.toml`; adjust the repository path for other checkouts.
+- Verify registration with `codex mcp get epicrpg`. Start a new Codex session if the current session does not expose the tools.
+- The server uses Windows .NET 8 and the interactive Windows desktop. Starting the server alone does not launch the bot; `launch_app` starts its managed instance.
+- Rebuild the server after changing its source. Keep its build output inside this checkout so repository discovery can locate the solution.
+- Connection reference: [Codex MCP configuration](https://developers.openai.com/codex/mcp).
+
 Runtime model:
 - The MCP server is a separate `net8.0-windows` process.
 - It builds and launches `EpicRPGBot.UI` itself instead of attaching to an arbitrary running app.
@@ -69,6 +80,9 @@ Current assumptions:
 - Discord authentication is still manual; the MCP server automates the already-logged-in embedded session.
 - Live Discord actions are allowed; there is no dedicated safe-mode channel restriction in the current implementation.
 - When two Discord tabs are open, MCP DevTools selection resolves the bot page via an injected tab-role marker instead of assuming the first Discord target is correct.
+
+Shared-profile constraint:
+- Close the regular UI instance before launching the MCP-managed UI. Both currently use the same WebView2 user-data folder. Different debugging options on simultaneous instances can cause initialization failure `0x8007139F`. Restart the MCP-managed instance after releasing the profile.
 
 Common recovery steps:
 - If the WebView looks blank, call `read_webview_debug_state` first; if the URL/title are valid, prefer WebView message tools over relying on the window screenshot alone.

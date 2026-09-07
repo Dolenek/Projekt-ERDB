@@ -1,0 +1,26 @@
+{
+  "Pipeline": "template-correlation-v1",
+  "MinimumScore": 0.65000000000000002,
+  "MinimumMargin": 0.025000000000000001,
+  "ValidatedFingerprint": "e77e1aa5a3480af65b780f7923e7ebb4fa6a15fd7b59d5259aaf343f12ac4b03",
+  "TestTotal": 100,
+  "TestCorrect": 90,
+  "TestWrong": 0,
+  "TestClassCounts": {
+    "apple": 8,
+    "banana": 7,
+    "chip": 5,
+    "coin": 9,
+    "dragon scale": 5,
+    "epic coin": 7,
+    "epic fish": 7,
+    "golden fish": 7,
+    "life potion": 7,
+    "mermaid hair": 7,
+    "normie fish": 9,
+    "ruby": 6,
+    "unicorn horn": 5,
+    "wolf skin": 5,
+    "zombie eye": 6
+  }
+}

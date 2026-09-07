@@ -260,9 +260,9 @@ namespace EpicRPGBot.UI
                     targetMessageId,
                     _lastMessageId,
                     _previousMessageId,
-                    text => SendAndEmitAsync(text, null, true),
+                    (text, token) => SendCaptchaAnswerAsync(targetMessageId, text, token),
                     _scheduler.PauseAll,
-                    () => _scheduler.ResumeAll(_running),
+                    () => IsCurrentCaptcha(targetMessageId),
                     ReportSolverInfo);
             }
             finally

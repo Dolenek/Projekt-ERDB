@@ -20,6 +20,7 @@ Canonical pages:
 - [Time cookie](docs/time-cookie.md)
 - [Sleepy potion](docs/sleepy-potion.md)
 - [Captcha solver](docs/captcha-solver.md)
+- [Captcha validation](docs/captcha-validation.md)
 - [Guard operations](docs/guard-operations.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)

@@ -1,0 +1,6 @@
+[
+{"index":1000,"messageId":"user-example-1","image":"images/user-example-1.png","sha256":"44549ca804b52be5f596c816ced55e725449f03a1e2b55b49967c1d964c86640","expected":"coin","lines":false,"grayscale":false},
+{"index":1001,"messageId":"user-example-2","image":"images/user-example-2.png","sha256":"de7f30ce4052e5fa0f8d114619c69690c4a32900fb19b32d0e46e2eac79bbeec","expected":"life potion","lines":false,"grayscale":false},
+{"index":1002,"messageId":"user-example-3","image":"images/user-example-3.png","sha256":"e9fb37dd05b80f8877c2ca2ae3962571ca440928036dd7d5b998bbf0818201ac","expected":"epic fish","lines":true,"grayscale":false},
+{"index":1003,"messageId":"user-example-4","image":"images/user-example-4.png","sha256":"7a43515752acd05af7471e712467683d3b86133fd1c31f9091f728da74c33ff5","expected":"apple","lines":false,"grayscale":true}
+]

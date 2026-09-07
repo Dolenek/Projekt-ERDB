@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Reference Include="System.Net.Http" />
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260627" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -60,6 +61,11 @@
     <Compile Include="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="Bunny\BunnyPromptParser.cs" />
+    <Compile Include="Captcha\Local\*.cs" />
+    <Compile Include="Services\CaptchaImageSource.cs" />
+    <Compile Include="Services\ICaptchaAnswerChatClient.cs" />
+    <Compile Include="Services\DiscordChatClient.CaptchaAnswer.cs" />
+    <Compile Include="BotEngine.Captcha.cs" />
     <Compile Include="Captcha\CaptchaAnswerResult.cs" />
     <Compile Include="Captcha\CaptchaCatalogItem.cs" />
     <Compile Include="Captcha\CaptchaImageMediaTypeDetector.cs" />
@@ -190,5 +196,10 @@
     <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
     <Compile Include="WishingToken\WishingTokenReplyParser.cs" />
     <Compile Include="WishingToken\WishingTokenWorkflow.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Items\*.webp" Link="Items\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\items.json" Link="items.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\captcha-local.json" Link="captcha-local.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

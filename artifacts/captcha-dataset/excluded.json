@@ -1,0 +1,12 @@
+[
+{"messageId":"1406304234621636759","image":"images/1406304234621636759.png","sha256":"cff212674c30d8be79329002b669bf32a7350905decc1fdb83e4b58cdafbe3ad","index":74,"expected":"chip","lines":true,"reason":"duplicate"},
+{"messageId":"1406303668894171147","image":"images/1406303668894171147.png","sha256":"cff212674c30d8be79329002b669bf32a7350905decc1fdb83e4b58cdafbe3ad","index":75,"expected":"chip","lines":true,"reason":"duplicate"},
+{"messageId":"1406302503544422421","image":"images/1406302503544422421.png","sha256":"efc0c4b11020912a96b4431ec55dc36fa9ad7566e45952b55c9ab98c5d9bf0fa","index":76,"expected":"dragon scale","lines":false,"reason":"icon-only"},
+{"messageId":"1406302232663822498","image":"images/1406302232663822498.png","sha256":"cff212674c30d8be79329002b669bf32a7350905decc1fdb83e4b58cdafbe3ad","index":77,"expected":"chip","lines":true,"reason":"duplicate"},
+{"messageId":"1406300279237771406","image":"images/1406300279237771406.png","sha256":"002f3f376135277024fb7285c2002cf74c507c9c631d0fe056f4d4815be12c35","index":78,"expected":"key","lines":false,"reason":"icon-only"},
+{"messageId":"1406296758174224545","image":"images/1406296758174224545.png","sha256":"002f3f376135277024fb7285c2002cf74c507c9c631d0fe056f4d4815be12c35","index":79,"expected":"key","lines":false,"reason":"icon-only"},
+{"messageId":"1406295923751125092","image":"images/1406295923751125092.png","sha256":"002f3f376135277024fb7285c2002cf74c507c9c631d0fe056f4d4815be12c35","index":80,"expected":"key","lines":false,"reason":"icon-only"},
+{"messageId":"1406295520149770261","image":"images/1406295520149770261.png","sha256":"002f3f376135277024fb7285c2002cf74c507c9c631d0fe056f4d4815be12c35","index":81,"expected":"key","lines":false,"reason":"icon-only"},
+{"messageId":"1406294819453665331","image":"images/1406294819453665331.png","sha256":"cff212674c30d8be79329002b669bf32a7350905decc1fdb83e4b58cdafbe3ad","index":82,"expected":"chip","lines":true,"reason":"duplicate"},
+{"messageId":"1490724698789777590","image":"images/1490724698789777590.png","sha256":"a7b1bb0e14538a5574b9bad38f01b821914b3264c896136de5bc6ede49f492ff","index":39,"expected":"wolf skin","lines":true,"reason":"same icon crop as calibration 38"}
+]

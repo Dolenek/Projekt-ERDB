@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Captcha;
 
@@ -8,86 +9,48 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed class CaptchaSelfTestRunner
     {
-        public async Task RunAsync(Action<string> logInfo)
+        public async Task RunAsync(Action<string> log)
         {
-            await Task.Yield();
-
             try
             {
                 var settings = CaptchaSettings.LoadDefault();
-                await RunReplaySelfTestAsync(settings, logInfo);
+                if (!Directory.Exists(settings.SelfTestReplayDirectory))
+                {
+                    log?.Invoke("[selftest] Set CAPTCHA_SELFTEST_REPLAY_DIR to a directory of labeled attachments.");
+                    return;
+                }
+                var provider = await Task.Run(() => new CaptchaProviderFactory().Create(settings));
+                try { await ReplayAsync(settings, provider, log); }
+                finally { (provider as IDisposable)?.Dispose(); }
             }
-            catch (Exception ex)
-            {
-                logInfo?.Invoke("[selftest] Error: " + ex.Message);
-            }
+            catch (Exception ex) { log?.Invoke("[selftest] Error: " + ex.Message); }
         }
 
-        private static async Task RunReplaySelfTestAsync(CaptchaSettings settings, Action<string> logInfo)
+        private static async Task ReplayAsync(CaptchaSettings settings, ICaptchaAnswerProvider provider, Action<string> log)
         {
-            await Task.Yield();
-
-            if (string.IsNullOrWhiteSpace(settings.SelfTestReplayDirectory))
-            {
-                logInfo?.Invoke("[selftest] CAPTCHA_SELFTEST_REPLAY_DIR is required for OpenAI replay self-test.");
-                return;
-            }
-
-            if (!Directory.Exists(settings.SelfTestReplayDirectory))
-            {
-                logInfo?.Invoke($"[selftest] Replay dir not found: {settings.SelfTestReplayDirectory}");
-                return;
-            }
-
             var catalog = CaptchaItemCatalog.Load(settings.ItemNamesFile);
-            var provider = new CaptchaProviderFactory().Create(settings);
-            var files = EnumerateImageFiles(settings.SelfTestReplayDirectory);
-            var passed = 0;
-            var evaluated = 0;
-
-            logInfo?.Invoke($"[selftest] Found {files.Count} replay images in {settings.SelfTestReplayDirectory}.");
-
-            foreach (var file in files)
+            var correct = 0; var wrong = 0; var rejected = 0; var errors = 0;
+            foreach (var file in EnumerateImages(settings.SelfTestReplayDirectory))
             {
-                if (!catalog.TryResolveExpectedLabelFromFileName(file, out var expected))
-                {
-                    logInfo?.Invoke($"[selftest] Skipping {Path.GetFileName(file)}: filename does not map to a catalog item.");
-                    continue;
-                }
-
+                if (!catalog.TryResolveExpectedLabelFromFileName(file, out var expected)) continue;
                 try
                 {
-                    evaluated++;
                     var result = await provider.SolveAsync(File.ReadAllBytes(file), default);
-                    var predicted = result.IsMatch ? result.Label : "<none>";
-                    var outcome = result.IsMatch && string.Equals(result.Label, expected, StringComparison.OrdinalIgnoreCase)
-                        ? "PASS"
-                        : "FAIL";
-
-                    if (outcome == "PASS")
-                    {
-                        passed++;
-                    }
-
-                    logInfo?.Invoke($"[selftest] {Path.GetFileName(file)} => expected='{expected}', predicted='{predicted}', outcome={outcome}, detail={result.Detail}");
+                    if (!result.IsMatch) rejected++;
+                    else if (string.Equals(result.Label, expected, StringComparison.OrdinalIgnoreCase)) correct++;
+                    else wrong++;
+                    log?.Invoke("[selftest] " + Path.GetFileName(file) + " => " +
+                        (result.IsMatch ? result.Label : "<rejected>") + "; " + result.Detail);
                 }
-                catch (Exception ex)
-                {
-                    evaluated++;
-                    logInfo?.Invoke($"[selftest] {Path.GetFileName(file)} => expected='{expected}', predicted='<error>', outcome=FAIL, detail={ex.Message}");
-                }
+                catch (Exception ex) { errors++; log?.Invoke("[selftest] " + Path.GetFileName(file) + ": " + ex.Message); }
             }
-
-            logInfo?.Invoke($"[selftest] Replay summary: {passed}/{evaluated} passed.");
+            log?.Invoke($"[selftest] correct={correct}, wrong={wrong}, rejected={rejected}, errors={errors}.");
         }
 
-        private static List<string> EnumerateImageFiles(string directory)
+        private static IEnumerable<string> EnumerateImages(string directory)
         {
-            var files = new List<string>();
-            files.AddRange(Directory.EnumerateFiles(directory, "*.png", SearchOption.TopDirectoryOnly));
-            files.AddRange(Directory.EnumerateFiles(directory, "*.jpg", SearchOption.TopDirectoryOnly));
-            files.AddRange(Directory.EnumerateFiles(directory, "*.jpeg", SearchOption.TopDirectoryOnly));
-            return files;
+            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".webp" };
+            return Directory.EnumerateFiles(directory).Where(path => extensions.Contains(Path.GetExtension(path)));
         }
     }
 }

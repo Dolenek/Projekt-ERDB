@@ -86,4 +86,20 @@
     <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptResolution.cs" Link="Training\TrainingPromptResolution.cs" />
     <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptSignal.cs" Link="Training\TrainingPromptSignal.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaAnswerResult.cs" Link="Captcha/CaptchaAnswerResult.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/ICaptchaAnswerProvider.cs" Link="Captcha/ICaptchaAnswerProvider.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaItemCatalog.cs" Link="Captcha/CaptchaItemCatalog.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaCatalogItem.cs" Link="Captcha/CaptchaCatalogItem.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaSettings.cs" Link="Captcha/CaptchaSettings.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaProviderFactory.cs" Link="Captcha/CaptchaProviderFactory.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaImageMediaTypeDetector.cs" Link="Captcha/CaptchaImageMediaTypeDetector.cs" />
+    <Compile Include="../EpicRPGBot.UI/Captcha/Local/*.cs" Link="Captcha/Local/*.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/CaptchaSolverService.cs" Link="Services/CaptchaSolverService.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/CaptchaImageSource.cs" Link="Services/CaptchaImageSource.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/CaptchaDebugArtifactWriter.cs" Link="Services/CaptchaDebugArtifactWriter.cs" />
+    <Compile Include="../EpicRPGBot.UI/Env.cs" Link="Env.cs" />
+  </ItemGroup>
 </Project>

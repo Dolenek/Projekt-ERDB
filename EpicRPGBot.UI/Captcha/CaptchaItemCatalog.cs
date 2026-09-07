@@ -30,7 +30,7 @@ namespace EpicRPGBot.UI.Captcha
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("CAPTCHA_ITEM_NAMES_FILE is required for OpenAI captcha solving.", nameof(path));
+                throw new ArgumentException("CAPTCHA_ITEM_NAMES_FILE is required for captcha solving.", nameof(path));
             }
 
             if (!File.Exists(path))

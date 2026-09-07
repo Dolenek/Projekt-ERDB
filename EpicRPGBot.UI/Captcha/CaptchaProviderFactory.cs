@@ -1,4 +1,5 @@
 using System;
+using EpicRPGBot.UI.Captcha.Local;
 
 namespace EpicRPGBot.UI.Captcha
 {
@@ -6,19 +7,9 @@ namespace EpicRPGBot.UI.Captcha
     {
         public ICaptchaAnswerProvider Create(CaptchaSettings settings)
         {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
-
-            var catalog = CaptchaItemCatalog.Load(settings.ItemNamesFile);
-            return new OpenAiCaptchaAnswerProvider(
-                new OpenAiChatCompletionApiClient(
-                    settings.OpenAiApiKey,
-                    TimeSpan.FromSeconds(settings.ApiTimeoutSeconds)),
-                catalog,
-                settings.OpenAiModel,
-                settings.OpenAiRetryModel);
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            return new LocalCaptchaAnswerProvider(settings.TemplateDirectory,
+                CaptchaItemCatalog.Load(settings.ItemNamesFile), LocalCaptchaPolicy.Load(settings.PolicyFile));
         }
     }
 }
