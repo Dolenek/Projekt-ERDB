@@ -21,6 +21,7 @@ Canonical pages:
 - [Sleepy potion](docs/sleepy-potion.md)
 - [Captcha solver](docs/captcha-solver.md)
 - [Captcha validation](docs/captcha-validation.md)
+- [Captcha recognition evaluation](docs/captcha-recognition.md)
 - [Guard operations](docs/guard-operations.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)

@@ -2,12 +2,13 @@
 
 `EpicRPGBot.Mcp` is a Windows-only MCP sidecar for local end-to-end testing of `EpicRPGBot.UI`.
 
-Codex connection from WSL:
+Codex connection from Windows PowerShell:
 - Build the Windows server from the repository root:
-  `'/mnt/c/Program Files/dotnet/dotnet.exe' build EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Release`.
+  `dotnet build EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Release`.
 - Register the stdio server with:
-  `codex mcp add epicrpg -- '/mnt/c/Program Files/dotnet/dotnet.exe' 'C:\Programming\Projekt-ERDB\EpicRPGBot.Mcp\bin\Release\net8.0-windows\EpicRPGBot.Mcp.dll'`.
+  `codex mcp add epicrpg -- 'C:\Program Files\dotnet\dotnet.exe' 'C:\ERPGBOT\EpicRPGBotCSHARP\EpicRPGBot.Mcp\bin\Release\net8.0-windows\EpicRPGBot.Mcp.dll'`.
 - This registration is stored in the user's `~/.codex/config.toml`; adjust the repository path for other checkouts.
+- Codex desktop and CLI share this configuration. Restart Codex after registration to load the server tools.
 - Verify registration with `codex mcp get epicrpg`. Start a new Codex session if the current session does not expose the tools.
 - The server uses Windows .NET 8 and the interactive Windows desktop. Starting the server alone does not launch the bot; `launch_app` starts its managed instance.
 - Rebuild the server after changing its source. Keep its build output inside this checkout so repository discovery can locate the solution.

@@ -41,6 +41,35 @@ public sealed class LocalCaptchaPolicyTests
         Assert.False(ValidPolicy().AllowsAutomaticAnswers("templates", new[] { "apple", "coin" }));
     }
 
+    [Fact]
+    public void PipelineChange_InvalidatesFingerprint()
+    {
+        var policy = ValidPolicy();
+        policy.Pipeline = LocalCaptchaPolicy.RefinedPipeline;
+        Assert.False(policy.AllowsAutomaticAnswers("templates", new[] { "apple" }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void InvalidThresholds_CannotBeSealed(double score)
+    {
+        var policy = ValidPolicy();
+        policy.MinimumScore = score;
+        policy.ValidatedFingerprint = policy.Fingerprint("templates");
+        Assert.False(policy.AllowsAutomaticAnswers("templates", new[] { "apple" }));
+    }
+
+    [Fact]
+    public void UnexpectedClassCoverage_IsNotValidated()
+    {
+        var policy = ValidPolicy();
+        policy.TestClassCounts = new Dictionary<string, int> { ["apple"] = 95, ["extra"] = 5 };
+        Assert.False(policy.AllowsAutomaticAnswers("templates", new[] { "apple" }));
+    }
+
     private static LocalCaptchaPolicy ValidPolicy()
     {
         var policy = new LocalCaptchaPolicy

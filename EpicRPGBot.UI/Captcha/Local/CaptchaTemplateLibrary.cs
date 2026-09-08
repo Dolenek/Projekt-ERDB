@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI.Captcha.Local
             "unicorn horn", "wolf skin", "zombie eye"
         };
         private readonly List<CaptchaTemplateVariant> _variants = new List<CaptchaTemplateVariant>();
+        private readonly Dictionary<string, OpenCvSharp.Mat> _originals = new Dictionary<string, OpenCvSharp.Mat>();
         public IReadOnlyList<CaptchaTemplateVariant> Variants => _variants;
         public string Fingerprint { get; private set; }
 
@@ -53,18 +54,27 @@ namespace EpicRPGBot.UI.Captcha.Local
 
         private void AddVariants(string directory, string label)
         {
-            using (var original = CaptchaTemplateTransforms.ReadTemplate(Path.Combine(directory, label + ".webp")))
-                foreach (var aspect in new[] { 0.65, 1.0, 1.5 })
+            var original = CaptchaTemplateTransforms.ReadTemplate(Path.Combine(directory, label + ".webp"));
+            _originals.Add(label, original);
+            foreach (var aspect in new[] { 0.65, 1.0, 1.5 })
                 for (var angle = -30; angle <= 30; angle += 15)
                     for (var length = 12; length <= 56; length += 4)
                         using (var transformed = CaptchaTemplateTransforms.Transform(original, angle, length, aspect))
-                            _variants.Add(new CaptchaTemplateVariant(label, transformed));
+                            _variants.Add(new CaptchaTemplateVariant(label, transformed, angle, length, aspect));
+        }
+
+        public CaptchaTemplateVariant Refine(CaptchaTemplateVariant seed, int angle, int length, double aspect)
+        {
+            using (var transformed = CaptchaTemplateTransforms.Transform(_originals[seed.Label], angle, length, aspect))
+                return new CaptchaTemplateVariant(seed.Label, transformed, angle, length, aspect);
         }
 
         public void Dispose()
         {
             foreach (var variant in _variants) variant.Dispose();
             _variants.Clear();
+            foreach (var original in _originals.Values) original.Dispose();
+            _originals.Clear();
         }
     }
 }

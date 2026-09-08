@@ -97,6 +97,10 @@
     <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaProviderFactory.cs" Link="Captcha/CaptchaProviderFactory.cs" />
     <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaImageMediaTypeDetector.cs" Link="Captcha/CaptchaImageMediaTypeDetector.cs" />
     <Compile Include="../EpicRPGBot.UI/Captcha/Local/*.cs" Link="Captcha/Local/*.cs" />
+    <Compile Include="../tools/CaptchaReplay/ReplayDataset.cs" Link="Captcha/ReplayDataset.cs" />
+    <Compile Include="../tools/CaptchaReplay/ReplayRecord.cs" Link="Captcha/ReplayRecord.cs" />
+    <Compile Include="../tools/CaptchaReplay/ReplayOptions.cs" Link="Captcha/ReplayOptions.cs" />
+    <Compile Include="../tools/CaptchaReplay/ReplayPolicyValidation.cs" Link="Captcha/ReplayPolicyValidation.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/CaptchaSolverService.cs" Link="Services/CaptchaSolverService.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/CaptchaImageSource.cs" Link="Services/CaptchaImageSource.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/CaptchaDebugArtifactWriter.cs" Link="Services/CaptchaDebugArtifactWriter.cs" />

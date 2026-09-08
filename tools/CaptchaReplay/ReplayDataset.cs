@@ -14,7 +14,11 @@ namespace CaptchaReplay
         {
             var records = JsonSerializer.Deserialize<List<ReplayRecord>>(File.ReadAllText(manifest), JsonOptions);
             if (records == null || records.Count == 0) throw new InvalidDataException("Empty replay manifest.");
-            if (records.Select(record => record.Sha256).Distinct().Count() != records.Count)
+            if (records.Any(record => record == null || string.IsNullOrWhiteSpace(record.Expected) ||
+                string.IsNullOrWhiteSpace(record.Image) || record.Sha256 == null || record.Sha256.Length != 64 ||
+                record.Sha256.Any(character => !Uri.IsHexDigit(character))))
+                throw new InvalidDataException("Replay records require a label, image path and SHA-256.");
+            if (records.Select(record => record.Sha256).Distinct(StringComparer.OrdinalIgnoreCase).Count() != records.Count)
                 throw new InvalidDataException("Duplicate images in replay manifest.");
             return records;
         }
@@ -25,7 +29,8 @@ namespace CaptchaReplay
             using (var hash = SHA256.Create())
             {
                 var actual = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
-                if (actual != record.Sha256) throw new InvalidDataException("Image hash mismatch: " + record.Image);
+                if (!string.Equals(actual, record.Sha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Image hash mismatch: " + record.Image);
             }
             return bytes;
         }
@@ -34,7 +39,7 @@ namespace CaptchaReplay
         {
             if (Path.GetFileName(manifest) != "holdout.json") throw new InvalidOperationException("Validation requires holdout.json.");
             var calibration = Read(Path.Combine(Path.GetDirectoryName(manifest), "calibration.json"));
-            var hashes = new HashSet<string>(calibration.Select(record => record.Sha256));
+            var hashes = new HashSet<string>(calibration.Select(record => record.Sha256), StringComparer.OrdinalIgnoreCase);
             if (records.Any(record => hashes.Contains(record.Sha256)))
                 throw new InvalidDataException("Calibration/holdout overlap.");
         }

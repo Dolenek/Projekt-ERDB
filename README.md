@@ -41,14 +41,8 @@ Local settings:
 
 Captcha `.env`:
 - Only captcha-related configuration stays in `.env` at the repository root.
-- Supported keys:
-  - `CAPTCHA_OPENAI_API_KEY`
-  - `CAPTCHA_OPENAI_MODEL`
-  - `CAPTCHA_OPENAI_RETRY_MODEL`
-  - `CAPTCHA_ITEM_NAMES_FILE`
-  - `CAPTCHA_API_TIMEOUT_SECONDS`
-  - `CAPTCHA_SELFTEST`
-  - `CAPTCHA_SELFTEST_REPLAY_DIR`
+- Recognition uses local templates and needs no API key.
+- See [captcha configuration and runtime contract](docs/captcha-solver.md) for supported keys.
 
 Notes:
 - `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.

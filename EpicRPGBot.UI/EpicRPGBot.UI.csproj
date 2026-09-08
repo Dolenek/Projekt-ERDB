@@ -69,15 +69,10 @@
     <Compile Include="Captcha\CaptchaAnswerResult.cs" />
     <Compile Include="Captcha\CaptchaCatalogItem.cs" />
     <Compile Include="Captcha\CaptchaImageMediaTypeDetector.cs" />
-    <Compile Include="Captcha\CaptchaImagePreprocessor.cs" />
     <Compile Include="Captcha\CaptchaItemCatalog.cs" />
     <Compile Include="Captcha\CaptchaProviderFactory.cs" />
     <Compile Include="Captcha\CaptchaSettings.cs" />
-    <Compile Include="Captcha\CaptchaVisionPromptBuilder.cs" />
     <Compile Include="Captcha\ICaptchaAnswerProvider.cs" />
-    <Compile Include="Captcha\OpenAiCaptchaAnswerProvider.cs" />
-    <Compile Include="Captcha\OpenAiChatCompletionApiClient.cs" />
-    <Compile Include="Captcha\OpenAiChatCompletionDtos.cs" />
     <Compile Include="Controls\CooldownPanelControl.xaml.cs" />
     <Compile Include="Crafting\CraftItemCatalog.cs" />
     <Compile Include="Crafting\CraftItemDefinition.cs" />

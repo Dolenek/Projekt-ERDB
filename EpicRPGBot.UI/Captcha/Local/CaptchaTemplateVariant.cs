@@ -7,9 +7,12 @@ namespace EpicRPGBot.UI.Captcha.Local
     internal sealed class CaptchaTemplateVariant : IDisposable
     {
         private readonly List<ColorReference> _colorReferences = new List<ColorReference>();
-        public CaptchaTemplateVariant(string label, Mat colors)
+        public CaptchaTemplateVariant(string label, Mat colors, int angle = 0, int length = 0, double aspect = 1)
         {
             Label = label;
+            Angle = angle;
+            Length = length;
+            Aspect = aspect;
             Gray = new Mat();
             Cv2.CvtColor(colors, Gray, ColorConversionCodes.BGR2GRAY);
             Binary = CaptchaForeground.CreateMask(colors);
@@ -20,6 +23,9 @@ namespace EpicRPGBot.UI.Captcha.Local
                     AddReference(colors.At<Vec3b>(y, x), x, y);
         }
         public string Label { get; }
+        public int Angle { get; }
+        public int Length { get; }
+        public double Aspect { get; }
         public Mat Gray { get; }
         public Mat Binary { get; }
         public double ForegroundArea { get; }

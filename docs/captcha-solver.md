@@ -20,6 +20,15 @@ inference service is used. Discord attachment downloads still require a connecti
   runner-up in `captcha-local.json`. Scores are similarities, not probabilities.
 - Recognition and template preparation run outside the UI thread. Templates are
   cached and provider calls serialized.
+- The shipped pipeline is `template-correlation-v1`. The optional
+  `template-refinement-v2` adds a finer geometric search for every class.
+  Its separate policy is `tools/captcha/refined-policy.json`; it has no validation seal.
+- `ILocalCaptchaRecognizer` is the injectable, synchronous recognition contract;
+  `TemplateCaptchaRecognizer` owns the OpenCV template library and scene decoding.
+  `LocalCaptchaAnswerProvider` owns the injected recognizer, serializes calls,
+  applies a snapshot of thresholds and requires matching pipeline identity.
+  Injected implementations must return finite scores in descending order for
+  distinct canonical labels and honor cancellation; scores are not probabilities.
 
 ## Incident lifecycle
 
@@ -41,7 +50,7 @@ inference service is used. Discord attachment downloads still require a connecti
 The shipped policy contains the tested pipeline/template/threshold fingerprint.
 Automatic answers require at least 100 independent held-out examples, at least
 five per target, zero wrong accepted answers, and at least 90% correct answers.
-Changing thresholds or template bytes invalidates that fingerprint.
+Changing pipeline, thresholds or template bytes invalidates that fingerprint.
 `CAPTCHA_AUTO_SEND=0` additionally forces observation mode.
 A failed validation keeps automatic answers disabled.
 
@@ -62,4 +71,5 @@ The app output includes the original templates, item catalog, policy and Windows
 native dependencies. Diagnostic captures are opt-in; routine logs show the best
 candidates, scores, elapsed time and the reason for withholding an answer.
 
-See [dataset and reproducible validation](captcha-validation.md).
+See [dataset and reproducible validation](captcha-validation.md) and
+[recognition evaluation and limitations](captcha-recognition.md).

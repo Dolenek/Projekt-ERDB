@@ -34,6 +34,8 @@ namespace CaptchaReplay
         {
             Fingerprint = fingerprint, Total = predictions.Count,
             Correct = predictions.Count(prediction => prediction.Correct),
+            TopCandidateCorrect = predictions.Count(prediction =>
+                prediction.Candidates.Count > 0 && prediction.Candidates[0].Label == prediction.Expected),
             Wrong = predictions.Count(prediction => prediction.Accepted && !prediction.Correct),
             Rejected = predictions.Count(prediction => !prediction.Accepted),
             MeanMilliseconds = predictions.Average(prediction => prediction.Milliseconds),
@@ -41,6 +43,8 @@ namespace CaptchaReplay
                 .ElementAt((int)Math.Ceiling(predictions.Count * 0.95) - 1).Milliseconds,
             ByItem = predictions.GroupBy(prediction => prediction.Expected).Select(SummarizeGroup),
             ByGrayscale = predictions.GroupBy(prediction => prediction.Grayscale ? "grayscale" : "color").Select(SummarizeGroup),
+            ByCondition = predictions.GroupBy(prediction => (prediction.Grayscale ? "grayscale" : "color") +
+                (prediction.Lines ? "/lines" : "/no-lines")).Select(SummarizeGroup),
             ByLines = predictions.GroupBy(prediction => prediction.Lines ? "lines" : "no-lines").Select(SummarizeGroup)
         };
 
