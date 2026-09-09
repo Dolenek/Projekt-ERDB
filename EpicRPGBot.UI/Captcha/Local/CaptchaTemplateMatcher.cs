@@ -7,34 +7,36 @@ namespace EpicRPGBot.UI.Captcha.Local
     internal sealed class CaptchaTemplateMatcher
     {
         public IReadOnlyList<CaptchaCandidate> Rank(CaptchaScene scene,
-            CaptchaTemplateLibrary library, CancellationToken cancellationToken, bool refine = false)
+            CaptchaTemplateLibrary library, CancellationToken cancellationToken, bool refine = false, bool spectral = false,
+            bool fine = false)
         {
-            using (var search = new CaptchaTemplateSearch(scene))
+            using (var search = new CaptchaTemplateSearch(scene, spectral))
             {
                 foreach (var variant in library.Variants)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     search.Evaluate(variant);
                 }
-                if (refine) Refine(search, library, cancellationToken);
+                if (refine) Refine(search, library, cancellationToken, 7, 2, .15, fine);
+                if (fine) Refine(search, library, cancellationToken, 3, 1, .05, false);
                 return search.Candidates.OrderByDescending(candidate => candidate.Score).Take(3).ToArray();
             }
         }
 
         private static void Refine(CaptchaTemplateSearch search, CaptchaTemplateLibrary library,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, int angleStep, int lengthStep, double aspectStep, bool retainSeed)
         {
             // Every class receives the same refinement budget, including the runner-up.
             foreach (var seed in search.Seeds.ToArray())
-                foreach (var angleOffset in new[] { -7, 0, 7 })
-                    foreach (var lengthOffset in new[] { -2, 0, 2 })
-                        foreach (var aspectOffset in new[] { -0.15, 0, 0.15 })
+                foreach (var angleOffset in new[] { -angleStep, 0, angleStep })
+                    foreach (var lengthOffset in new[] { -lengthStep, 0, lengthStep })
+                        foreach (var aspectOffset in new[] { -aspectStep, 0, aspectStep })
                         {
                             cancellationToken.ThrowIfCancellationRequested();
                             if (angleOffset == 0 && lengthOffset == 0 && aspectOffset == 0) continue;
                             using (var variant = library.Refine(seed, seed.Angle + angleOffset,
                                 seed.Length + lengthOffset, seed.Aspect + aspectOffset))
-                                search.Evaluate(variant, retainSeed: false);
+                                search.Evaluate(variant, retainSeed);
                         }
         }
     }

@@ -25,7 +25,11 @@ namespace CaptchaReplay
                     Lines = record.Lines, Grayscale = record.Grayscale, Milliseconds = watch.ElapsedMilliseconds,
                     Candidates = result.Candidates, Detail = result.Detail
                 });
-                if (predictions.Count % 25 == 0) Console.WriteLine("Evaluated " + predictions.Count);
+                if (!predictions[predictions.Count - 1].Correct)
+                    Console.WriteLine("Review index=" + record.Index + ", expected=" + record.Expected +
+                        ", accepted=" + result.IsMatch + ", prediction=" + result.Label);
+                if (predictions.Count % 25 == 0) Console.WriteLine("Evaluated " + predictions.Count +
+                    ", correct=" + predictions.Count(prediction => prediction.Correct));
             }
             return predictions;
         }

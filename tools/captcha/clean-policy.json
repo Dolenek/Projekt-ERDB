@@ -1,0 +1,6 @@
+{
+  "Pipeline": "template-clean-v3",
+  "MinimumScore": 0.65,
+  "MinimumMargin": 0.025,
+  "ValidatedFingerprint": ""
+}

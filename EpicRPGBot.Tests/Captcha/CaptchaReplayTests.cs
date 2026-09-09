@@ -63,6 +63,16 @@ public sealed class CaptchaReplayTests : IDisposable
         Assert.Throws<ArgumentException>(() => ReplayOptions.Parse(new[] { _directory, "calibration.json", "results.json", "--policy" }));
     }
 
+    [Fact]
+    public void UnsupportedDiagnostics_CannotEnableValidation()
+    {
+        var options = ReplayOptions.Parse(new[] { _directory, "unsupported.json", "results.json", "--allow-unsupported" });
+        Assert.True(options.AllowUnsupported);
+        Assert.False(options.Validate);
+        Assert.Throws<ArgumentException>(() => ReplayOptions.Parse(new[]
+            { _directory, "unsupported.json", "results.json", "--allow-unsupported", "--validate" }));
+    }
+
     private string WriteManifest(string name, params ReplayRecord[] records)
     {
         var path = Path.Combine(_directory, name);

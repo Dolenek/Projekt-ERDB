@@ -1,12 +1,13 @@
-# Captcha recognition evaluation
+# Legacy captcha recognition evaluation
 
 ## Reproducible evidence
 
-The repository provides two local pipelines using the same 15 templates and
+The legacy v1/v2 pipelines use the same 15 templates and
 the same acceptance thresholds (score 0.65, margin 0.025).
-`template-correlation-v1` is the shipped, validated pipeline.
+`template-correlation-v1` has its separate policy in `tools/captcha/legacy-policy.json`.
 `template-refinement-v2` is an optional evaluation pipeline without a validation seal.
 The runtime contract and configuration live in [captcha-solver.md](captcha-solver.md).
+The shipped v9 results live in [trained evaluation](captcha-trained-evaluation.md).
 
 Calibration replay covers 257 labeled attachments:
 
@@ -77,4 +78,7 @@ same-color items and does not solve grayscale ambiguity.
 The optional v2 policy has no automatic-submission eligibility. Existing holdout
 replays are regression comparisons; promoting a changed pipeline requires fresh
 independent evidence under [the validation procedure](captcha-validation.md).
-The shipped v1 policy and its limits remain unchanged.
+The legacy v1 policy retains its original limits and validation fingerprint.
+
+See [the additional 500-image evaluation](captcha-expansion-results.md) for current
+out-of-catalog diagnostics and measurements on the separate new holdout.

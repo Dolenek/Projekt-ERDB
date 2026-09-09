@@ -20,7 +20,8 @@ namespace EpicRPGBot.UI.Captcha.Local
         public Mat Binary { get; }
         public double ForegroundArea { get; }
 
-        public static CaptchaScene Decode(byte[] bytes)
+        public static CaptchaScene Decode(byte[] bytes, bool clean = false, bool adaptive = false, bool crossingLines = false,
+            bool fine = false)
         {
             if (bytes == null || bytes.Length == 0 || bytes.Length > 8 * 1024 * 1024)
                 throw new ArgumentException("Empty or oversized captcha attachment.");
@@ -35,6 +36,7 @@ namespace EpicRPGBot.UI.Captcha.Local
                 {
                     var height = tall ? 200 : 85;
                     Cv2.Resize(source, normalized, new Size((int)Math.Round(source.Width * (double)height / source.Height), height));
+                    if (clean) return CreateCleanScene(normalized, tall, adaptive, crossingLines, fine);
                     var bounds = tall ? new Rect(0, 12, Math.Min(normalized.Width, 145), 176)
                         : new Rect(0, 0, Math.Min(normalized.Width, 100), 85);
                     using (var region = new Mat(normalized, bounds))
@@ -48,5 +50,12 @@ namespace EpicRPGBot.UI.Captcha.Local
         }
 
         public void Dispose() { Gray.Dispose(); Colors.Dispose(); Binary.Dispose(); }
+
+        private static CaptchaScene CreateCleanScene(Mat normalized, bool tall, bool adaptive, bool crossingLines, bool fine)
+        {
+            ICaptchaInterferenceFilter filter = crossingLines ? (ICaptchaInterferenceFilter)new CaptchaCrossingLineFilter(fine ? 1.5 : 3)
+                : new CaptchaColoredLineFilter();
+            return new CaptchaScene(new CaptchaCardPreprocessor(filter).Prepare(normalized, tall, adaptive, fine));
+        }
     }
 }

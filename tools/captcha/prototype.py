@@ -6,10 +6,10 @@ def foreground(image):
     if rgba.shape[2]==3: return rgba
     alpha=rgba[:,:,3:4]/255.
     return np.uint8(rgba[:,:,:3]*alpha+34*(1-alpha))
-def variants():
+def variants(include_key=False):
     choices=[]
     for path in sorted((ROOT/"Items").glob("*.webp")):
-        if path.stem=="key":continue
+        if path.stem=="key" and not include_key:continue
         original=foreground(path)
         mask=np.max(abs(original.astype(float)-34),axis=2)>8
         y,x=np.where(mask);original=original[y.min():y.max()+1,x.min():x.max()+1]

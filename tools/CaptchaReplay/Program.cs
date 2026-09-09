@@ -14,7 +14,7 @@ namespace CaptchaReplay
         {
             if (args.Length < 3)
             {
-                Console.Error.WriteLine("Usage: CaptchaReplay.exe <repository> <manifest> <output-json> [--validate] [--policy <path>]");
+                Console.Error.WriteLine("Usage: CaptchaReplay.exe <repository> <manifest> <output-json> [--validate] [--policy <path>] [--allow-unsupported]");
                 return 2;
             }
             try { return await RunAsync(args); }
@@ -35,10 +35,10 @@ namespace CaptchaReplay
             using (var provider = new LocalCaptchaAnswerProvider(Path.Combine(root, "Items"),
                 CaptchaItemCatalog.Load(Path.Combine(root, "items.json")), policy))
             {
-                if (records.Any(record => !provider.Labels.Contains(record.Expected)))
+                if (!options.AllowUnsupported && records.Any(record => !provider.Labels.Contains(record.Expected)))
                     throw new InvalidDataException("Replay manifest contains an unsupported target label.");
                 var predictions = await ReplayEvaluation.RunAsync(manifest, records, provider);
-                File.WriteAllText(options.Output, "[\n" + string.Join(",\n", predictions.Select(prediction => JsonSerializer.Serialize(prediction))) + "\n]\n");
+                ReplayReportWriter.Write(options.Output, predictions);
                 var summary = JsonSerializer.Serialize(ReplayEvaluation.Summary(predictions, provider.Fingerprint));
                 File.WriteAllText(Path.ChangeExtension(options.Output, ".summary.json"), summary + "\n");
                 Console.WriteLine(summary);

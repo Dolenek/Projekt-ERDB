@@ -12,6 +12,13 @@ namespace EpicRPGBot.UI.Captcha.Local
     {
         public const string CurrentPipeline = "template-correlation-v1";
         public const string RefinedPipeline = "template-refinement-v2";
+        public const string CleanPipeline = "template-clean-v3";
+        public const string AdaptivePipeline = "template-adaptive-v4";
+        public const string SpectralPipeline = "template-spectral-v5";
+        public const string CrossingPipeline = "template-crossing-v6";
+        public const string TrainedPipeline = "template-trained-v7";
+        public const string CroppedTrainingPipeline = "template-trained-v8";
+        public const string FinePipeline = "template-fine-v9";
         public string Pipeline { get; set; } = CurrentPipeline;
         public double MinimumScore { get; set; } = 0.8;
         public double MinimumMargin { get; set; } = 0.08;
@@ -58,6 +65,8 @@ namespace EpicRPGBot.UI.Captcha.Local
 
         private static bool IsUnitValue(double value) => !double.IsNaN(value) && value > 0 && value <= 1;
         public static bool IsSupportedPipeline(string pipeline) =>
-            pipeline == CurrentPipeline || pipeline == RefinedPipeline;
+            pipeline == CurrentPipeline || pipeline == RefinedPipeline || pipeline == CleanPipeline ||
+            pipeline == AdaptivePipeline || pipeline == SpectralPipeline || pipeline == CrossingPipeline ||
+            pipeline == TrainedPipeline || pipeline == CroppedTrainingPipeline || pipeline == FinePipeline;
     }
 }

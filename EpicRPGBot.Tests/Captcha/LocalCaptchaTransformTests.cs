@@ -12,7 +12,7 @@ public sealed class LocalCaptchaTransformTests
     {
         var root = RepositoryRoot();
         var catalog = CaptchaItemCatalog.Load(Path.Combine(root, "items.json"));
-        var policy = LocalCaptchaPolicy.Load(Path.Combine(root, "captcha-local.json"));
+        var policy = LocalCaptchaPolicy.Load(Path.Combine(root, "tools/captcha/legacy-policy.json"));
         var attachment = File.ReadAllBytes(Path.Combine(root,
             "artifacts/captcha-dataset/images/1491830499985850439.png"));
         using (var baseline = new LocalCaptchaAnswerProvider(Path.Combine(root, "Items"), catalog, policy))
@@ -62,6 +62,8 @@ public sealed class LocalCaptchaTransformTests
         using var card = new Mat(200, 500, MatType.CV_8UC3, Scalar.All(34));
         using (var destination = new Mat(card, new Rect(40 + shift, 75 + shift, icon.Width, icon.Height)))
             icon.CopyTo(destination);
+        Cv2.PutText(card, "what is this item?", new Point(145, 100),
+            HersheyFonts.HersheySimplex, 0.8, Scalar.White, 2);
         if (grayscale)
         {
             using var gray = new Mat();

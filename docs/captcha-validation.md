@@ -1,6 +1,16 @@
 # Captcha dataset and validation
 
+The shipped v9 policy and its frozen 100/100 independent result are documented
+in [trained evaluation](captcha-trained-evaluation.md). Its reproduction directory
+is `artifacts/captcha-validation-20260909`.
+
 ## Dataset
+
+The [additional attachment batch](captcha-dataset-expansion.md) provides 500
+visually labeled images, including a separate 100-example holdout with
+[fixed-pipeline evaluation results](captcha-expansion-results.md).
+The [16-class batch](captcha-training-dataset.md) adds 744 unique labeled images
+and reserves a new 100-image holdout, including key targets.
 
 `artifacts/captcha-dataset` contains original historical attachments obtained
 through EpicRPGBot.Mcp and manually verified labels. Only attachment images and
@@ -35,7 +45,8 @@ All paths may be absolute. Calibration uses `calibration.json`; final validation
 uses `holdout.json`. The executable invokes the production provider in the UI
 assembly without starting the UI or sending Discord messages.
 
-The output is a JSON array with one prediction per line. The companion
+The output is a JSON array; large reports pack multiple predictions per line to
+respect the repository file-length limit. The companion
 `.summary.json` reports correct, wrong and rejected counts, top-candidate accuracy
 before rejection, item/condition breakdowns, mean time and p95. Image checksums,
 labels and duplicate hashes are checked. Validation additionally rejects hash
@@ -43,11 +54,13 @@ overlap with the calibration manifest. Visual/crop deduplication remains a datas
 curation responsibility; different bytes do not prove independence.
 
 `--policy` selects an alternate policy without changing the repository default.
+`--allow-unsupported` evaluates out-of-catalog targets as rejection diagnostics;
+an accepted answer counts as wrong. It cannot be combined with `--validate`.
 For v2 evaluation, pass `--policy tools/captcha/refined-policy.json` and omit
 `--validate`; the existing holdout is regression evidence, not a fresh validation set.
 
 `--validate` writes measured evidence to the selected policy (default `captcha-local.json`).
-It enables eligibility only with at least 100 examples, all 15 classes represented
+It enables eligibility only with at least 100 examples, every pipeline class represented
 at least five times, zero wrong accepted answers and at least 90% correct answers.
 It clears the old seal before reading the dataset, so a hash error or interrupted
 run cannot leave stale eligibility. An insufficient measured result returns exit

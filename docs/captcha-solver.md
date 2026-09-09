@@ -1,7 +1,9 @@
 # Local captcha solver
 
-The UI recognizes the 15 item icons locally using OpenCvSharp on Windows x64.
-`key` is a button distractor, not a supported target. No OpenAI key or remote
+The UI recognizes item icons locally using OpenCvSharp on Windows x64.
+The shipped `template-fine-v9` pipeline recognizes all 16 catalog entries,
+including `key`, using original templates and two local grayscale references.
+See [trained recognition](captcha-trained-recognition.md). No OpenAI key or remote
 inference service is used. Discord attachment downloads still require a connection.
 
 ## Recognition
@@ -20,9 +22,10 @@ inference service is used. Discord attachment downloads still require a connecti
   runner-up in `captcha-local.json`. Scores are similarities, not probabilities.
 - Recognition and template preparation run outside the UI thread. Templates are
   cached and provider calls serialized.
-- The shipped pipeline is `template-correlation-v1`. The optional
-  `template-refinement-v2` adds a finer geometric search for every class.
-  Its separate policy is `tools/captcha/refined-policy.json`; it has no validation seal.
+- The shipped pipeline adaptively locates the item region, removes colored
+  interference, handles grayscale structure and performs two-stage geometric
+  refinement. [Independent validation](captcha-trained-evaluation.md) covers
+  100 held-out examples; development replay covers another 1,601 examples.
 - `ILocalCaptchaRecognizer` is the injectable, synchronous recognition contract;
   `TemplateCaptchaRecognizer` owns the OpenCV template library and scene decoding.
   `LocalCaptchaAnswerProvider` owns the injected recognizer, serializes calls,
@@ -67,7 +70,7 @@ A failed validation keeps automatic answers disabled.
   or another canonical label; PNG, JPEG and WebP are accepted.
 - Legacy `CAPTCHA_OPENAI_*` values are ignored by the local runtime.
 
-The app output includes the original templates, item catalog, policy and Windows
+The app output includes original and trained templates, item catalog, policy and Windows
 native dependencies. Diagnostic captures are opt-in; routine logs show the best
 candidates, scores, elapsed time and the reason for withholding an answer.
 
