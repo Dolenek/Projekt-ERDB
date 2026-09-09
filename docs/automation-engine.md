@@ -55,9 +55,9 @@ Reaction behavior currently implemented:
 - Bunny catch prompts are handled before the generic phrase-based event responses.
 - EPIC GUARD incidents are tracked as an active alert state: the first detection shows a full alert, reminders are rate-limited to once every 10 seconds, and the incident clears when the `Everything seems fine ... keep playing` message is seen.
 - While the incident is active, the engine blocks regular outgoing bot sends across the shared send lane, not just scheduled tracked commands.
-- That clear message also resumes tracked timers immediately and cancels the active captcha solve attempt.
+- That clear message also resumes tracked timers immediately and cancels the active puzzle solve attempt.
 
 Special cases:
 - Coin and NPC prompts respond with the first matching option already present in the message text.
 - Some event replies are sent directly and intentionally do not raise `OnCommandSent`, matching the current behavior.
-- Guard/captcha detection still pauses timers, attempts the solve flow, and resumes timers afterward; the first alert still switches back to the bot tab before showing the notification if the player tab was selected.
+- Guard/puzzle detection still pauses timers, attempts the solve flow, and resumes timers afterward; the first alert still switches back to the bot tab before showing the notification if the player tab was selected.

@@ -89,21 +89,21 @@
   <ItemGroup>
     <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaAnswerResult.cs" Link="Captcha/CaptchaAnswerResult.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/ICaptchaAnswerProvider.cs" Link="Captcha/ICaptchaAnswerProvider.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaItemCatalog.cs" Link="Captcha/CaptchaItemCatalog.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaCatalogItem.cs" Link="Captcha/CaptchaCatalogItem.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaSettings.cs" Link="Captcha/CaptchaSettings.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaProviderFactory.cs" Link="Captcha/CaptchaProviderFactory.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/CaptchaImageMediaTypeDetector.cs" Link="Captcha/CaptchaImageMediaTypeDetector.cs" />
-    <Compile Include="../EpicRPGBot.UI/Captcha/Local/*.cs" Link="Captcha/Local/*.cs" />
-    <Compile Include="../tools/CaptchaReplay/ReplayDataset.cs" Link="Captcha/ReplayDataset.cs" />
-    <Compile Include="../tools/CaptchaReplay/ReplayRecord.cs" Link="Captcha/ReplayRecord.cs" />
-    <Compile Include="../tools/CaptchaReplay/ReplayOptions.cs" Link="Captcha/ReplayOptions.cs" />
-    <Compile Include="../tools/CaptchaReplay/ReplayPolicyValidation.cs" Link="Captcha/ReplayPolicyValidation.cs" />
-    <Compile Include="../EpicRPGBot.UI/Services/CaptchaSolverService.cs" Link="Services/CaptchaSolverService.cs" />
-    <Compile Include="../EpicRPGBot.UI/Services/CaptchaImageSource.cs" Link="Services/CaptchaImageSource.cs" />
-    <Compile Include="../EpicRPGBot.UI/Services/CaptchaDebugArtifactWriter.cs" Link="Services/CaptchaDebugArtifactWriter.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleAnswerResult.cs" Link="Puzzle/PuzzleAnswerResult.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/IPuzzleAnswerProvider.cs" Link="Puzzle/IPuzzleAnswerProvider.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleItemCatalog.cs" Link="Puzzle/PuzzleItemCatalog.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleCatalogItem.cs" Link="Puzzle/PuzzleCatalogItem.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleSettings.cs" Link="Puzzle/PuzzleSettings.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleProviderFactory.cs" Link="Puzzle/PuzzleProviderFactory.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/PuzzleImageMediaTypeDetector.cs" Link="Puzzle/PuzzleImageMediaTypeDetector.cs" />
+    <Compile Include="../EpicRPGBot.UI/Puzzle/Local/*.cs" Link="Puzzle/Local/*.cs" />
+    <Compile Include="../tools/PuzzleReplay/ReplayDataset.cs" Link="Puzzle/ReplayDataset.cs" />
+    <Compile Include="../tools/PuzzleReplay/ReplayRecord.cs" Link="Puzzle/ReplayRecord.cs" />
+    <Compile Include="../tools/PuzzleReplay/ReplayOptions.cs" Link="Puzzle/ReplayOptions.cs" />
+    <Compile Include="../tools/PuzzleReplay/ReplayPolicyValidation.cs" Link="Puzzle/ReplayPolicyValidation.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/PuzzleSolverService.cs" Link="Services/PuzzleSolverService.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/PuzzleImageSource.cs" Link="Services/PuzzleImageSource.cs" />
+    <Compile Include="../EpicRPGBot.UI/Services/PuzzleDebugArtifactWriter.cs" Link="Services/PuzzleDebugArtifactWriter.cs" />
     <Compile Include="../EpicRPGBot.UI/Env.cs" Link="Env.cs" />
   </ItemGroup>
 </Project>

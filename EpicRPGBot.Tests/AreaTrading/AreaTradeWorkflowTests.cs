@@ -178,7 +178,7 @@ namespace EpicRPGBot.Tests.AreaTrading
 
             public Task<bool> SendMessageAsync(string message, CancellationToken cancellationToken = default) => Task.FromResult(true);
             public Task<bool> ClickMessageButtonAsync(string messageId, int rowIndex, int columnIndex, CancellationToken cancellationToken = default) => Task.FromResult(true);
-            public Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId) => Task.FromResult(string.Empty);
+            public Task<string> GetPuzzleImageUrlForMessageIdAsync(string messageId) => Task.FromResult(string.Empty);
             public Task<byte[]> CaptureMessageImagePngAsync(string messageId) => Task.FromResult(Array.Empty<byte>());
 
             private DiscordMessageSnapshot CreateSnapshot(string author, string text)

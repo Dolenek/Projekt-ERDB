@@ -7,5 +7,5 @@ Start with:
 - [docs/ui-shell.md](../docs/ui-shell.md)
 - [docs/automation-engine.md](../docs/automation-engine.md)
 - [docs/cooldown-management.md](../docs/cooldown-management.md)
-- [docs/captcha-solver.md](../docs/captcha-solver.md)
+- [docs/puzzle-solver.md](../docs/puzzle-solver.md)
 - [docs/testing-automation.md](../docs/testing-automation.md)

@@ -30,7 +30,7 @@ namespace EpicRPGBot.UI
                     }
 
                     var key = line.Substring(0, index).Trim();
-                    if (!key.StartsWith("CAPTCHA_", StringComparison.OrdinalIgnoreCase))
+                    if (!key.StartsWith("PUZZLE_", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

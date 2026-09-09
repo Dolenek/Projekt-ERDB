@@ -28,7 +28,7 @@ namespace EpicRPGBot.UI
         private readonly AppSettingsService _settingsService;
         private readonly CooldownTracker _cooldownTracker;
         private readonly CooldownInitializationWorkflow _cooldownWorkflow;
-        private readonly CaptchaSelfTestRunner _captchaSelfTestRunner;
+        private readonly PuzzleSelfTestRunner _puzzleSelfTestRunner;
         private readonly DesktopAlertService _alertService;
         private readonly ChatMessagePoller _messagePoller;
         private readonly GuildRaidCoordinator _guildRaidCoordinator;
@@ -74,7 +74,7 @@ namespace EpicRPGBot.UI
             _completeDungeonRunCoordinator = new CompleteDungeonRunCoordinator();
             _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
-            _captchaSelfTestRunner = new CaptchaSelfTestRunner();
+            _puzzleSelfTestRunner = new PuzzleSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);
             _guildRaidCoordinator = new GuildRaidCoordinator(_guildChatClient, GetCurrentSettings);
@@ -91,7 +91,7 @@ namespace EpicRPGBot.UI
             _cooldownTracker.Start();
 
             _log.Engine("UI loaded");
-            await RunCaptchaSelfTestIfRequestedAsync();
+            await RunPuzzleSelfTestIfRequestedAsync();
             await InitializeBrowsersAsync();
             await NavigateStartupTabsAsync();
             HookGuildRaidSettings();
@@ -109,13 +109,13 @@ namespace EpicRPGBot.UI
             RefreshBotControlButtonColors();
         }
 
-        private async Task RunCaptchaSelfTestIfRequestedAsync()
+        private async Task RunPuzzleSelfTestIfRequestedAsync()
         {
             try
             {
-                if (string.Equals(Env.Get("CAPTCHA_SELFTEST", null), "1", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(Env.Get("PUZZLE_SELFTEST", null), "1", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _captchaSelfTestRunner.RunAsync(_log.Info);
+                    await _puzzleSelfTestRunner.RunAsync(_log.Info);
                 }
             }
             catch

@@ -8,7 +8,7 @@ Layout:
 - Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` / `Complete Dungeon` controls at the top, a `Time cookie` section under them, and the visual cooldown labels anchored to the bottom.
 
 Startup flow:
-1. Load captcha-only `.env` values into process environment for solver configuration.
+1. Load puzzle-only `.env` values into process environment for solver configuration.
 2. Load saved local settings from `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini` into an in-memory settings snapshot.
 3. Bind the last-message list and in-memory console log.
 4. Use the saved channel URL, fallback flag, area, and hunt/adventure/work/farm/lootbox baselines as the runtime defaults for navigation and automation.
@@ -52,7 +52,7 @@ User-visible behaviors:
 - After a guild-raid send, the watcher keeps the guild tab under a temporary EPIC GUARD/result watch and blocks further watched sends until one of those replies arrives.
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - `Inicialize` also refreshes the cached profile player name from `rpg p`.
-- If the bot detects the EPIC GUARD captcha while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.
+- If the bot detects the EPIC GUARD puzzle while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.
 - The last-message/cooldown pipeline deduplicates Discord messages by message id so snapshots and time-cookie reductions are not applied twice.
 
 Sidebar data:
@@ -63,7 +63,7 @@ Sidebar data:
 Browser behavior:
 - The app enables WebView2 devtools, zoom controls, and default context menus.
 - On navigation completion it auto-clicks common Discord interstitials such as `Continue in browser`.
-- Message sending, polling, and captcha solving are targeted at the bot tab composer, not the player tab.
+- Message sending, polling, and puzzle solving are targeted at the bot tab composer, not the player tab.
 - The player tab is manual-only and is not used by automation.
 - The guild tab is used only by the guild-raid watcher and its `rpg guild raid` sends.
 - The dungeon tab is used only by the `Complete Dungeon` workflow.

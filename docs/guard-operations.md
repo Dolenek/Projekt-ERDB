@@ -30,7 +30,7 @@ Chat send behavior:
 - After the clear message is seen, the engine also queues one fresh `rpg cd` snapshot so tracked timers are resynced from current EPIC RPG state.
 
 Classification behavior:
-- See [local recognition and the automatic-answer gate](captcha-solver.md).
+- See [local recognition and the automatic-answer gate](puzzle-solver.md).
 - Catalog descriptions and disambiguation prose do not affect template scores.
 
 Console copy:

@@ -56,7 +56,7 @@ namespace EpicRPGBot.UI
                 return false;
             }
 
-            if (_captchaSolver.IsBusy)
+            if (_puzzleSolver.IsBusy)
             {
                 ReportSolverInfo($"Guard solver is already busy; skipped new solve for message {targetMessageId}.");
                 return false;
