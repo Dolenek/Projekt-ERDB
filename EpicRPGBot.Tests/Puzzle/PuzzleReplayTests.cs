@@ -71,7 +71,7 @@ public sealed class PuzzleReplayTests : IDisposable
         Assert.Equal(partition, options.TemplateDirectory);
         Assert.False(options.Validate);
         var defaults = ReplayOptions.Parse(new[] { _directory, "test.json", "results.json" });
-        Assert.Equal(Path.Combine(_directory, "Items"), defaults.TemplateDirectory);
+        Assert.Equal(Path.Combine(_directory, EpicRPGBot.UI.Puzzle.PuzzleSettings.DefaultTemplateDirectory), defaults.TemplateDirectory);
         Assert.Throws<ArgumentException>(() => ReplayOptions.Parse(new[] { _directory, "test.json", "results.json", "--templates" }));
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using EpicRPGBot.UI.Puzzle;
 
 namespace PuzzleReplay
 {
@@ -19,8 +20,8 @@ namespace PuzzleReplay
             var options = new ReplayOptions
             {
                 Root = Path.GetFullPath(args[0]), Manifest = Path.GetFullPath(args[1]),
-                Output = Path.GetFullPath(args[2]), PolicyPath = Path.Combine(Path.GetFullPath(args[0]), "puzzle-local.json"),
-                TemplateDirectory = Path.Combine(Path.GetFullPath(args[0]), "Items")
+                Output = Path.GetFullPath(args[2]), PolicyPath = Path.Combine(Path.GetFullPath(args[0]), PuzzleSettings.DefaultPolicyFile),
+                TemplateDirectory = Path.Combine(Path.GetFullPath(args[0]), PuzzleSettings.DefaultTemplateDirectory)
             };
             for (var index = 3; index < args.Length; index++)
             {

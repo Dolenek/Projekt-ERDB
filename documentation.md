@@ -1,6 +1,6 @@
 # Documentation
 
-This repository is documented from the `.UI` application outward. The legacy Selenium project is no longer part of the active codebase.
+Canonical documentation describes the current `EpicRPGBot.UI` application and its supporting tools.
 
 Canonical pages:
 - [UI shell](docs/ui-shell.md)
@@ -19,22 +19,11 @@ Canonical pages:
 - [Wishing token](docs/wishing-token.md)
 - [Time cookie](docs/time-cookie.md)
 - [Sleepy potion](docs/sleepy-potion.md)
- - [Puzzle terminology](docs/puzzle-terminology.md)
- - [Puzzle solver](docs/puzzle-solver.md)
-- [Puzzle validation](docs/puzzle-validation.md)
-- [Puzzle dataset campaign and statistics](docs/puzzle-campaign.md)
-- [Puzzle campaign measurements](docs/puzzle-campaign-results.md)
-- [Frozen puzzle campaign evaluation](docs/puzzle-campaign-validation.md)
-- [Glyph-aware puzzle recognition](docs/puzzle-glyph-recognition.md)
-- [Multiple-reference puzzle recognition](docs/puzzle-multisource-recognition.md)
-- [Puzzle recognition evaluation](docs/puzzle-recognition.md)
-- [Trained puzzle recognition](docs/puzzle-trained-recognition.md)
-- [Additional puzzle development examples](docs/puzzle-additions.md)
-- [Trained puzzle evaluation](docs/puzzle-trained-evaluation.md)
-- [Adaptive puzzle recognition](docs/puzzle-adaptive.md)
-- [Sixteen-class puzzle dataset](docs/puzzle-training-dataset.md)
-- [Additional puzzle dataset](docs/puzzle-dataset-expansion.md)
-- [Additional dataset evaluation](docs/puzzle-expansion-results.md)
+- [Puzzle solver](docs/puzzle-solver.md)
+- [Puzzle recognition](docs/puzzle-multisource-recognition.md)
+- [Puzzle validation evidence](docs/puzzle-campaign-results.md)
+- [Puzzle replay and validation](docs/puzzle-validation.md)
+- [Puzzle terminology](docs/puzzle-terminology.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)
 

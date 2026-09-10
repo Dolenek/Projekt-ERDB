@@ -1,33 +1,10 @@
-# Puzzle dataset and validation
+# Puzzle replay and validation
 
-The shipped v9 policy and its frozen 100/100 independent result are documented
-in [trained evaluation](puzzle-trained-evaluation.md). Its reproduction directory
-is `artifacts/puzzle-validation-20260909`.
+The current model's measured evidence is documented in
+[puzzle validation evidence](puzzle-campaign-results.md). Runtime configuration
+and the automatic-answer gate live in [the solver contract](puzzle-solver.md).
 
-## Dataset
-
-The [additional attachment batch](puzzle-dataset-expansion.md) provides 500
-visually labeled images, including a separate 100-example holdout with
-[fixed-pipeline evaluation results](puzzle-expansion-results.md).
-The [16-class batch](puzzle-training-dataset.md) adds 744 unique labeled images
-and reserves a new 100-image holdout, including key targets.
-
-`artifacts/puzzle-dataset` contains original historical attachments obtained
-through EpicRPGBot.Mcp and manually verified labels. Only attachment images and
-message identifiers are retained, not account credentials or full chat histories.
-
-- `calibration.json`: 257 examples used to develop and calibrate the matcher.
-- `holdout.json`: 100 independent examples, at least five for each of 15 targets.
-- `excluded.json`: duplicate images, matching icon crops and standalone icons.
-- Each record contains the image path, SHA-256, message ID, expected answer, index,
-  and line/grayscale annotations.
-- Labels are based on visual comparison to the original item templates.
-  Text answers followed by a guard-clear message are not authoritative labels:
-  a user may also have clicked a button.
-- Exact attachment duplicates and cross-split identical icon crops are excluded.
-  The held-out set is not used for changing recognition rules or thresholds.
-
-## Windows replay tool
+## Replay
 
 Build from the repository root:
 
@@ -35,67 +12,57 @@ Build from the repository root:
 dotnet build tools/PuzzleReplay/PuzzleReplay.csproj -c Release
 ```
 
-Run the generated `tools/PuzzleReplay/bin/Release/net48/PuzzleReplay.exe` with:
-
 ```text
-PuzzleReplay.exe <repository-root> <manifest-json> <output-json> [--validate] [--policy <path>] [--templates <directory>]
+PuzzleReplay.exe <repository-root> <manifest-json> <output-json> [--policy <path>] [--templates <directory>] [--validate] [--allow-unsupported]
 ```
 
-All paths may be absolute. Calibration uses `calibration.json`; final validation
-uses `holdout.json`. The executable invokes the production provider in the UI
-assembly without starting the UI or sending Discord messages.
+Default policy and templates select the same model bundle as the UI. The CLI
+resolves them relative to its repository-root argument; explicit CLI overrides
+select another bundle. It does not use the UI's environment overrides.
+Replay invokes the production provider without starting the UI or sending chat.
 
-The output is a JSON array; large reports pack multiple predictions per line to
-respect the repository file-length limit. The companion
-`.summary.json` reports correct, wrong and rejected counts, top-candidate accuracy
-before rejection, item/condition breakdowns, mean time and p95. Correct accepted
-answers out of all cases include 95% Wilson intervals, with rejections in the denominator. Image checksums,
-labels and duplicate hashes are checked. Validation additionally rejects hash
-overlap with the calibration manifest. Visual/crop deduplication remains a dataset
-curation responsibility; different bytes do not prove independence.
+The manifest is a JSON array with `index`, `image`, `sha256`, `expected`,
+`lines` and `grayscale`; records can also retain message IDs and provenance.
+Image paths are relative to the manifest directory or absolute. Labels use
+canonical item names. Checks reject invalid records, duplicate hashes, checksum
+mismatches and unsupported labels. `--allow-unsupported` permits rejection
+diagnostics for out-of-catalog inputs and cannot be combined with validation.
 
-`--policy` selects an alternate policy without changing the repository default.
-`--templates` selects isolated learned assets for a training partition. See
-[the campaign contract](puzzle-campaign.md) for grouped CV and its statistical limits.
-`--allow-unsupported` evaluates out-of-catalog targets as rejection diagnostics;
-an accepted answer counts as wrong. It cannot be combined with `--validate`.
-For v2 evaluation, pass `--policy tools/puzzle/refined-policy.json` and omit
-`--validate`; the existing holdout is regression evidence, not a fresh validation set.
+Output is a JSON array of predictions with a companion `.summary.json` containing
+accepted-correct, accepted-wrong, rejected and top-candidate counts, class/condition
+breakdowns, timing and 95% Wilson intervals. Rejections remain in the accuracy
+denominator. These reports are evidence artifacts, not canonical documentation.
 
-`--validate` writes measured evidence to the selected policy (default `puzzle-local.json`).
-It enables eligibility only with at least 100 examples, every pipeline class represented
-at least five times, zero wrong accepted answers and at least 90% correct answers.
-It clears the old seal before reading the dataset, so a hash error or interrupted
-run cannot leave stale eligibility. An insufficient measured result returns exit
-code 3; input/runtime errors return 1. Run validation with the bot stopped: an
-already-created provider holds a snapshot and does not reload the policy.
-Rebuild the UI afterward to copy that policy into the distribution.
+For a regression check of the active bundle, run from the repository root:
 
-Policy fingerprinting binds the pipeline version, thresholds and template bytes.
-When modifying the matcher, increment its pipeline version and obtain an
-independent holdout before enabling the new version. Do not tune against a failed
-holdout and call the same set independent again.
+```powershell
+tools/PuzzleReplay/bin/Release/net48/PuzzleReplay.exe . artifacts/puzzle-validation-20260910/holdout.json artifacts/puzzle-replay-check.json
+```
 
-For dataset expansion, collect original attachments with verified labels and
-condition annotations. Keep development examples separate from a fresh validation
-set satisfying the gate above. Targeted development samples should include
-low-contrast `wolf skin`, grayscale icons crossed by colored lines, small compact
-icons and visually similar coins. The fresh set's neighboring `calibration.json`
-must include all previously inspected development/regression examples so the hash
-overlap check covers them; exclude duplicate icon crops during manual curation.
+## Validation integrity
+
+`--validate` requires `holdout.json` and checks separation from its neighboring
+`calibration.json`. It clears the selected policy's old seal before evaluating
+and writes measured evidence to that policy. Passing the runtime gate enables
+eligibility; an insufficient result returns 3, input/runtime errors return 1.
+Run validation with the bot stopped, then rebuild and restart to load the policy.
+Do not use this option for ordinary regression checks of the sealed model.
+
+Independent evaluation requires frozen implementation, thresholds and templates;
+training and model selection exclude the reserved set. Exact-file, decoded-pixel
+and icon-crop duplicates must be excluded across development and reserved groups.
+Checksum comparison alone does not prove independence. The campaign tooling
+records provenance, partitions, frozen hashes and holdout exposure in `artifacts/`.
+An inspected holdout cannot be reused as fresh evidence after model tuning.
 
 ## Integration checks
 
-Run `dotnet test EpicRPGBot.Tests/EpicRPGBot.Tests.csproj --filter FullyQualifiedName~Puzzle`.
-The test project covers unavailable images, corrupt and icon-only inputs,
-unvalidated results, observation mode, recognition failures, duplicate concurrent
-attempts and cancellation after guard clear, policy mutation and pipeline identity,
-dataset corruption/overlap, synthetic translation and display scaling, and
-color/grayscale handling. Synthetic cases do not count toward holdout validation.
-Windows-only image tests report a
-skip when run without the Windows native runtime.
+```powershell
+dotnet test EpicRPGBot.Tests/EpicRPGBot.Tests.csproj --filter FullyQualifiedName~Puzzle
+```
 
-Read [the runtime contract](puzzle-solver.md) and
-[MCP setup](testing-automation.md) before live inspection. Regular and MCP app
-instances share their WebView2 profile; close the regular instance before launching
-the MCP-managed instance. The bot need not be started to inspect Discord history.
+Tests cover production model selection and fingerprint eligibility, canonical
+answers including key, environment overrides, preprocessing and pose refinement,
+invalid images, observation mode, missing images, duplicate attempts and
+cancellation. Windows image tests require the native OpenCV runtime.
+See [MCP operation](testing-automation.md) for inspecting the application.
