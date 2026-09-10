@@ -85,8 +85,8 @@ namespace EpicRPGBot.UI.Services
                 ? "EPIC GUARD still active"
                 : "EPIC GUARD detected";
             var message = notification.Kind == GuardAlertKind.Reminder
-                ? "Captcha check is still active. Review the bot window when available."
-                : "Captcha check detected. Review the bot window now.";
+                ? "Puzzle check is still active. Review the bot window when available."
+                : "Puzzle check detected. Review the bot window now.";
 
             try
             {

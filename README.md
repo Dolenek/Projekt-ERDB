@@ -7,7 +7,7 @@ What the app provides:
 - Start/stop automation for hunt, adventure, work, and farm
 - Last-message feed, hunt counter, and structured console log
 - Cooldown discovery and visual cooldown tracking
-- Integrated captcha solver and optional offline self-test
+- Integrated puzzle solver and optional offline self-test
 - A Windows MCP sidecar for launching the app, driving the WPF shell, and inspecting the Discord WebView
 
 Docs:
@@ -15,7 +15,7 @@ Docs:
 - [UI shell](docs/ui-shell.md)
 - [Automation engine](docs/automation-engine.md)
 - [Cooldown management](docs/cooldown-management.md)
-- [Captcha solver](docs/captcha-solver.md)
+- [Puzzle solver](docs/puzzle-solver.md)
 - [Testing automation](docs/testing-automation.md)
 
 Requirements:
@@ -39,16 +39,10 @@ Local settings:
 - User-editable settings are stored in `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`.
 - The right-side settings fields auto-save when changed and are restored on the next launch.
 
-Captcha `.env`:
-- Only captcha-related configuration stays in `.env` at the repository root.
-- Supported keys:
-  - `CAPTCHA_OPENAI_API_KEY`
-  - `CAPTCHA_OPENAI_MODEL`
-  - `CAPTCHA_OPENAI_RETRY_MODEL`
-  - `CAPTCHA_ITEM_NAMES_FILE`
-  - `CAPTCHA_API_TIMEOUT_SECONDS`
-  - `CAPTCHA_SELFTEST`
-  - `CAPTCHA_SELFTEST_REPLAY_DIR`
+Puzzle `.env`:
+- Only puzzle-related configuration stays in `.env` at the repository root.
+- Recognition uses local templates and needs no API key.
+- See [puzzle configuration and runtime contract](docs/puzzle-solver.md) for supported keys.
 
 Notes:
 - `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.

@@ -1,6 +1,6 @@
 # Documentation
 
-This repository is documented from the `.UI` application outward. The legacy Selenium project is no longer part of the active codebase.
+Canonical documentation describes the current `EpicRPGBot.UI` application and its supporting tools.
 
 Canonical pages:
 - [UI shell](docs/ui-shell.md)
@@ -19,8 +19,11 @@ Canonical pages:
 - [Wishing token](docs/wishing-token.md)
 - [Time cookie](docs/time-cookie.md)
 - [Sleepy potion](docs/sleepy-potion.md)
-- [Captcha solver](docs/captcha-solver.md)
-- [Guard operations](docs/guard-operations.md)
+- [Puzzle solver](docs/puzzle-solver.md)
+- [Puzzle recognition](docs/puzzle-multisource-recognition.md)
+- [Puzzle validation evidence](docs/puzzle-campaign-results.md)
+- [Puzzle replay and validation](docs/puzzle-validation.md)
+- [Puzzle terminology](docs/puzzle-terminology.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)
 

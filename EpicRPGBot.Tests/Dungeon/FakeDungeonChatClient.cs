@@ -301,7 +301,7 @@ Area: 7 (Max: 7)";
             return Task.FromResult(false);
         }
 
-        public Task<string> GetCaptchaImageUrlForMessageIdAsync(string messageId)
+        public Task<string> GetPuzzleImageUrlForMessageIdAsync(string messageId)
         {
             return Task.FromResult(string.Empty);
         }

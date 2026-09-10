@@ -15,7 +15,7 @@ namespace EpicRPGBot.UI
         private const int GlobalCommandGapMs = 1000;
 
         private readonly IDiscordChatClient _chatClient;
-        private readonly CaptchaSolverService _captchaSolver;
+        private readonly PuzzleSolverService _puzzleSolver;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly DispatcherTimer _checkMessageTimer;
         private readonly GuardIncidentTracker _guardIncidentTracker;
@@ -64,7 +64,7 @@ namespace EpicRPGBot.UI
         public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
-            _captchaSolver = new CaptchaSolverService(_chatClient);
+            _puzzleSolver = new PuzzleSolverService(_chatClient);
             _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
             _guardIncidentTracker = new GuardIncidentTracker();
             _work = NormalizeWorkCommand(workCommand);
@@ -127,6 +127,7 @@ namespace EpicRPGBot.UI
             _startupCutoffMessageId = string.Empty;
             _guardIncidentTracker.Reset();
             ResetGuardMessageTracking();
+            _puzzleSolver.Dispose();
             _stopCancellation.Cancel();
             _scheduler.StopAll();
             _scheduler.ClearPending();

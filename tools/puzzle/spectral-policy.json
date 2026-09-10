@@ -1,0 +1,6 @@
+{
+  "Pipeline": "template-spectral-v5",
+  "MinimumScore": 0.65,
+  "MinimumMargin": 0.025,
+  "ValidatedFingerprint": ""
+}

@@ -11,7 +11,7 @@ namespace EpicRPGBot.Tests.Services
         {
             var tracker = new GuardIncidentTracker();
 
-            var notification = tracker.RegisterDetection("Captcha detected in latest message.");
+            var notification = tracker.RegisterDetection("Puzzle detected in latest message.");
 
             Assert.NotNull(notification);
             Assert.Equal(GuardAlertKind.FirstDetected, notification.Kind);

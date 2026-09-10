@@ -1,0 +1,27 @@
+{
+  "Pipeline": "template-fine-v9",
+  "MinimumScore": 0.65000000000000002,
+  "MinimumMargin": 0.025000000000000001,
+  "ValidatedFingerprint": "df1ae03c97f77c2aaceaff327a3ed955bcd657cd1f53a9516f9cd3d133e8b12f",
+  "TestTotal": 100,
+  "TestCorrect": 100,
+  "TestWrong": 0,
+  "TestClassCounts": {
+    "apple": 7,
+    "banana": 7,
+    "chip": 7,
+    "coin": 7,
+    "dragon scale": 6,
+    "epic coin": 6,
+    "epic fish": 6,
+    "golden fish": 6,
+    "key": 6,
+    "life potion": 6,
+    "mermaid hair": 6,
+    "normie fish": 6,
+    "ruby": 6,
+    "unicorn horn": 6,
+    "wolf skin": 6,
+    "zombie eye": 6
+  }
+}

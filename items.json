@@ -84,6 +84,12 @@
     "disambiguation": "Unlike dragon scale it is a ragged skin, not one smooth shard. Unlike chip it is organic and uneven rather than angular and mechanical."
   },
   {
+    "name": "key",
+    "outline": "Small key with a red-orange head and a narrow yellow toothed shaft.",
+    "grayscale_cues": "Compact rectangular head connected to a thin diagonal shaft with teeth at its end.",
+    "disambiguation": "A narrow key shaft with teeth, rather than a broad ragged wolf hide or round coin."
+  },
+  {
     "name": "zombie eye",
     "outline": "Eye-like icon with a dark central pupil or iris area inside a bright green outer shape; it can read as a tilted eye, diamond, or square frame around the pupil.",
     "grayscale_cues": "High-contrast center-with-ring structure: one dark square or round pupil inside a lighter inner block and a brighter outer green frame, even when the overall silhouette is slightly tilted.",

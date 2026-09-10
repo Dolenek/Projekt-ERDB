@@ -143,7 +143,7 @@ namespace EpicRPGBot.UI
                 var cleared = _guardIncidentTracker.ClearIfActive();
                 if (cleared != null)
                 {
-                    _captchaSolver.CancelCurrentSolve();
+                    _puzzleSolver.CancelCurrentSolve();
                     CompleteGuardSolve(_activeGuardMessageId);
                     ResetGuardMessageTracking();
                     _scheduler.ResumeAll(_running);
@@ -167,8 +167,8 @@ namespace EpicRPGBot.UI
 
             var targetMessageId = ResolveGuardTargetMessageId(latestHasGuard, previousHasGuard);
             var detectionInfo = latestHasGuard
-                ? "Captcha detected in latest message."
-                : "Captcha detected in previous message.";
+                ? "Puzzle detected in latest message."
+                : "Puzzle detected in previous message.";
             var notification = _guardIncidentTracker.RegisterDetection(detectionInfo);
             if (notification != null)
             {
@@ -182,7 +182,7 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            _ = SolveCaptchaAsync(targetMessageId);
+            _ = SolvePuzzleAsync(targetMessageId);
         }
 
         private void HandleChangeWork(string message)
@@ -252,17 +252,17 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task SolveCaptchaAsync(string targetMessageId)
+        private async Task SolvePuzzleAsync(string targetMessageId)
         {
             try
             {
-                await _captchaSolver.TrySolveAsync(
+                await _puzzleSolver.TrySolveAsync(
                     targetMessageId,
                     _lastMessageId,
                     _previousMessageId,
-                    text => SendAndEmitAsync(text, null, true),
+                    (text, token) => SendPuzzleAnswerAsync(targetMessageId, text, token),
                     _scheduler.PauseAll,
-                    () => _scheduler.ResumeAll(_running),
+                    () => IsCurrentPuzzle(targetMessageId),
                     ReportSolverInfo);
             }
             finally

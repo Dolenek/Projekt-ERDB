@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Reference Include="System.Net.Http" />
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260627" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -60,18 +61,18 @@
     <Compile Include="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="Bunny\BunnyPromptParser.cs" />
-    <Compile Include="Captcha\CaptchaAnswerResult.cs" />
-    <Compile Include="Captcha\CaptchaCatalogItem.cs" />
-    <Compile Include="Captcha\CaptchaImageMediaTypeDetector.cs" />
-    <Compile Include="Captcha\CaptchaImagePreprocessor.cs" />
-    <Compile Include="Captcha\CaptchaItemCatalog.cs" />
-    <Compile Include="Captcha\CaptchaProviderFactory.cs" />
-    <Compile Include="Captcha\CaptchaSettings.cs" />
-    <Compile Include="Captcha\CaptchaVisionPromptBuilder.cs" />
-    <Compile Include="Captcha\ICaptchaAnswerProvider.cs" />
-    <Compile Include="Captcha\OpenAiCaptchaAnswerProvider.cs" />
-    <Compile Include="Captcha\OpenAiChatCompletionApiClient.cs" />
-    <Compile Include="Captcha\OpenAiChatCompletionDtos.cs" />
+    <Compile Include="Puzzle\Local\*.cs" />
+    <Compile Include="Services\PuzzleImageSource.cs" />
+    <Compile Include="Services\IPuzzleAnswerChatClient.cs" />
+    <Compile Include="Services\DiscordChatClient.PuzzleAnswer.cs" />
+    <Compile Include="BotEngine.Puzzle.cs" />
+    <Compile Include="Puzzle\PuzzleAnswerResult.cs" />
+    <Compile Include="Puzzle\PuzzleCatalogItem.cs" />
+    <Compile Include="Puzzle\PuzzleImageMediaTypeDetector.cs" />
+    <Compile Include="Puzzle\PuzzleItemCatalog.cs" />
+    <Compile Include="Puzzle\PuzzleProviderFactory.cs" />
+    <Compile Include="Puzzle\PuzzleSettings.cs" />
+    <Compile Include="Puzzle\IPuzzleAnswerProvider.cs" />
     <Compile Include="Controls\CooldownPanelControl.xaml.cs" />
     <Compile Include="Crafting\CraftItemCatalog.cs" />
     <Compile Include="Crafting\CraftItemDefinition.cs" />
@@ -136,9 +137,9 @@
     <Compile Include="Models\TrackedCooldownSnapshot.cs" />
     <Compile Include="Services\AppSettingsService.cs" />
     <Compile Include="Services\AreaWorkCommandSettings.cs" />
-    <Compile Include="Services\CaptchaSelfTestRunner.cs" />
-    <Compile Include="Services\CaptchaSolverService.cs" />
-    <Compile Include="Services\CaptchaDebugArtifactWriter.cs" />
+    <Compile Include="Services\PuzzleSelfTestRunner.cs" />
+    <Compile Include="Services\PuzzleSolverService.cs" />
+    <Compile Include="Services\PuzzleDebugArtifactWriter.cs" />
     <Compile Include="Services\ChatMessagePoller.cs" />
     <Compile Include="Services\ConfirmedCommandSender.cs" />
     <Compile Include="Services\ConfiguredWorkCommandCatalog.cs" />
@@ -149,7 +150,7 @@
     <Compile Include="Services\DesktopAlertService.cs" />
     <Compile Include="Services\DiscordChatClient.Components.cs" />
     <Compile Include="Services\DiscordChatClient.Composer.cs" />
-    <Compile Include="Services\DiscordChatClient.CaptchaImages.cs" />
+    <Compile Include="Services\DiscordChatClient.PuzzleImages.cs" />
     <Compile Include="Services\DiscordChatClient.Messages.cs" />
     <Compile Include="Services\DiscordChatClient.Sidebar.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
@@ -190,5 +191,10 @@
     <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
     <Compile Include="WishingToken\WishingTokenReplyParser.cs" />
     <Compile Include="WishingToken\WishingTokenWorkflow.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\items.json" Link="items.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\models\puzzle\production\Items\**\*.webp" Link="models\puzzle\production\Items\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\models\puzzle\production\policy.json" Link="models\puzzle\production\policy.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
