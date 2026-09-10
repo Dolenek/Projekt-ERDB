@@ -5,7 +5,7 @@ namespace EpicRPGBot.UI.Puzzle
 {
     public sealed class PuzzleSettings
     {
-        public const string DefaultModelDirectory = "artifacts/puzzle-validation-20260910";
+        public const string DefaultModelDirectory = "models/puzzle/production";
         public const string DefaultTemplateDirectory = DefaultModelDirectory + "/Items";
         public const string DefaultPolicyFile = DefaultModelDirectory + "/policy.json";
         private PuzzleSettings() { }

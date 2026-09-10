@@ -21,11 +21,20 @@ public sealed class ProductionPuzzleTests
         Assert.Equal(16, provider.Labels.Count);
         Assert.True(provider.AutomaticAnswersValidated);
         Assert.Equal(policy.ValidatedFingerprint, provider.Fingerprint);
-        var bytes = File.ReadAllBytes(Path.Combine(root,
-            "artifacts/puzzle-dataset-expansion-20260908/images/1485124172236456016.png"));
-        var result = await provider.SolveAsync(bytes, default);
+        var result = await provider.SolveAsync(CreateKeyCard(settings.TemplateDirectory), default);
         Assert.Equal("key", result.Label);
         Assert.True(result.AutomaticSubmissionAllowed);
+    }
+
+    private static byte[] CreateKeyCard(string templateDirectory)
+    {
+        using var original = PuzzleTemplateTransforms.ReadTemplate(Path.Combine(templateDirectory, "key.webp"));
+        using var icon = PuzzleTemplateTransforms.Transform(original, 0, 48, 1);
+        using var card = new OpenCvSharp.Mat(200, 160, OpenCvSharp.MatType.CV_8UC3, OpenCvSharp.Scalar.All(34));
+        using (var region = new OpenCvSharp.Mat(card, new OpenCvSharp.Rect(35, 75, icon.Width, icon.Height)))
+            icon.CopyTo(region);
+        OpenCvSharp.Cv2.ImEncode(".png", card, out var bytes);
+        return bytes;
     }
 
     [Fact]

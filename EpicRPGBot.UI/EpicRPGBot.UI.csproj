@@ -194,7 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\items.json" Link="items.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\artifacts\puzzle-validation-20260910\Items\**\*.webp" Link="artifacts\puzzle-validation-20260910\Items\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\artifacts\puzzle-validation-20260910\policy.json" Link="artifacts\puzzle-validation-20260910\policy.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\models\puzzle\production\Items\**\*.webp" Link="models\puzzle\production\Items\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\models\puzzle\production\policy.json" Link="models\puzzle\production\policy.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

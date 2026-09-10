@@ -1,6 +1,6 @@
 # Puzzle validation evidence
 
-The active model bundle is `artifacts/puzzle-validation-20260910/` with pipeline
+The active model bundle is `models/puzzle/production/` with pipeline
 `template-multisource-v11`. Runtime selection is defined in
 [the solver contract](puzzle-solver.md).
 
@@ -17,7 +17,8 @@ The two-sided 95% Wilson interval is **98.1155%-100%**.
 | Grayscale with lines | 8 / 8 |
 | Grayscale without lines | 28 / 28 |
 
-The bundle contains `policy.json`, `Items/`, `holdout.json`, the replay reports
+The local evaluation snapshot in ignored `artifacts/puzzle-validation-20260910/`
+contains the model, `holdout.json`, the replay reports
 and `completion.json`. Templates were fitted on development examples only.
 The recorded freeze audit covers implementation, policy, templates, source images
 and manifests. The holdout is already exposed; rerunning it is a regression

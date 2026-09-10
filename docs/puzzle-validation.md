@@ -35,6 +35,9 @@ denominator. These reports are evidence artifacts, not canonical documentation.
 
 For a regression check of the active bundle, run from the repository root:
 
+This example needs the local evaluation dataset in ignored `artifacts/`.
+The dataset is not required to build or run the production application.
+
 ```powershell
 tools/PuzzleReplay/bin/Release/net48/PuzzleReplay.exe . artifacts/puzzle-validation-20260910/holdout.json artifacts/puzzle-replay-check.json
 ```
@@ -66,3 +69,7 @@ answers including key, environment overrides, preprocessing and pose refinement,
 invalid images, observation mode, missing images, duplicate attempts and
 cancellation. Windows image tests require the native OpenCV runtime.
 See [MCP operation](testing-automation.md) for inspecting the application.
+
+The focused `--filter FullyQualifiedName~ProductionPuzzleTests` suite uses only
+the versioned production bundle and a synthetic key card. It runs without local
+datasets; the broader puzzle suite includes dataset-dependent regression tests.

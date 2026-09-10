@@ -7,14 +7,17 @@ Downloading the original Discord attachment still requires a connection.
 
 ## Model and deployment
 
-The model bundle is `artifacts/puzzle-validation-20260910/`:
+The Git-versioned model bundle is `models/puzzle/production/`:
 
 - `policy.json` supplies thresholds and the validation fingerprint.
 - `Items/` contains 16 original templates and 17 grayscale references under `Trained/`.
 
+Only this small runtime bundle is shared through Git. Training attachments,
+validation datasets and debug captures remain in ignored `artifacts/`.
+
 The UI build copies the policy and all 33 WebP assets into the same relative
 location beside the executable, together with `items.json` and native dependencies.
-A copied build directory is self-contained for recognition. Defaults are shared
+A copied build directory is self-contained for recognition; ignored datasets are not required. Defaults are shared
 by `PuzzleSettings` and the replay CLI. Relative settings resolve from the app
 folder, then its parent directories; absolute paths are used directly.
 
@@ -57,8 +60,8 @@ or model changes. Do not replace model files while a provider is using them.
 | Variable | Default |
 | --- | --- |
 | `PUZZLE_ITEM_NAMES_FILE` | `items.json` |
-| `PUZZLE_TEMPLATES_DIR` | `artifacts/puzzle-validation-20260910/Items` |
-| `PUZZLE_LOCAL_POLICY_FILE` | `artifacts/puzzle-validation-20260910/policy.json` |
+| `PUZZLE_TEMPLATES_DIR` | `models/puzzle/production/Items` |
+| `PUZZLE_LOCAL_POLICY_FILE` | `models/puzzle/production/policy.json` |
 | `PUZZLE_AUTO_SEND` | `1` |
 | `PUZZLE_DEBUG_CAPTURE` | `0` |
 | `PUZZLE_DEBUG_DIR` | `artifacts/puzzle-debug` |
