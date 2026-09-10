@@ -101,6 +101,9 @@
     <Compile Include="../tools/PuzzleReplay/ReplayRecord.cs" Link="Puzzle/ReplayRecord.cs" />
     <Compile Include="../tools/PuzzleReplay/ReplayOptions.cs" Link="Puzzle/ReplayOptions.cs" />
     <Compile Include="../tools/PuzzleReplay/ReplayPolicyValidation.cs" Link="Puzzle/ReplayPolicyValidation.cs" />
+    <Compile Include="../tools/PuzzleReplay/IBinomialIntervalEstimator.cs" Link="Puzzle/IBinomialIntervalEstimator.cs" />
+    <Compile Include="../tools/PuzzleReplay/BinomialInterval.cs" Link="Puzzle/BinomialInterval.cs" />
+    <Compile Include="../tools/PuzzleReplay/WilsonIntervalEstimator.cs" Link="Puzzle/WilsonIntervalEstimator.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/PuzzleSolverService.cs" Link="Services/PuzzleSolverService.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/PuzzleImageSource.cs" Link="Services/PuzzleImageSource.cs" />
     <Compile Include="../EpicRPGBot.UI/Services/PuzzleDebugArtifactWriter.cs" Link="Services/PuzzleDebugArtifactWriter.cs" />

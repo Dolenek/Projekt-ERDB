@@ -75,7 +75,7 @@ def review_sheets(records, directory):
         for position, record in enumerate(records[start:start + 25]):
             left, top = (position % 5) * 210, (position // 5) * 255
             with Image.open(directory / record['image']) as original:
-                width = 140 if original.height >= 150 else 70
+                width = 220 if original.height >= 150 else 110
                 icon = original.convert('RGB').crop((0, 0, min(original.width, width), original.height))
                 icon.thumbnail((200, 200), Image.Resampling.NEAREST)
                 if original.height < 150:

@@ -10,6 +10,7 @@ namespace PuzzleReplay
 {
     internal static class ReplayEvaluation
     {
+        private static readonly IBinomialIntervalEstimator Intervals = new WilsonIntervalEstimator();
         public static async Task<List<ReplayPrediction>> RunAsync(string manifest,
             IEnumerable<ReplayRecord> records, LocalPuzzleAnswerProvider provider)
         {
@@ -38,6 +39,7 @@ namespace PuzzleReplay
         {
             Fingerprint = fingerprint, Total = predictions.Count,
             Correct = predictions.Count(prediction => prediction.Correct),
+            Accuracy95 = Intervals.Estimate(predictions.Count(prediction => prediction.Correct), predictions.Count),
             TopCandidateCorrect = predictions.Count(prediction =>
                 prediction.Candidates.Count > 0 && prediction.Candidates[0].Label == prediction.Expected),
             Wrong = predictions.Count(prediction => prediction.Accepted && !prediction.Correct),
@@ -55,6 +57,7 @@ namespace PuzzleReplay
         private static object SummarizeGroup(IGrouping<string, ReplayPrediction> group) => new
         {
             Group = group.Key, Total = group.Count(), Correct = group.Count(prediction => prediction.Correct),
+            Accuracy95 = Intervals.Estimate(group.Count(prediction => prediction.Correct), group.Count()),
             Wrong = group.Count(prediction => prediction.Accepted && !prediction.Correct),
             Rejected = group.Count(prediction => !prediction.Accepted)
         };

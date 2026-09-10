@@ -14,7 +14,7 @@ namespace PuzzleReplay
         {
             if (args.Length < 3)
             {
-                Console.Error.WriteLine("Usage: PuzzleReplay.exe <repository> <manifest> <output-json> [--validate] [--policy <path>] [--allow-unsupported]");
+                Console.Error.WriteLine("Usage: PuzzleReplay.exe <repository> <manifest> <output-json> [--validate] [--policy <path>] [--templates <directory>] [--allow-unsupported]");
                 return 2;
             }
             try { return await RunAsync(args); }
@@ -32,7 +32,7 @@ namespace PuzzleReplay
             if (validate) ReplayPolicyValidation.Revoke(policyPath, policy);
             var records = ReplayDataset.Read(manifest);
             if (validate) ReplayDataset.EnsureHoldoutSeparation(manifest, records);
-            using (var provider = new LocalPuzzleAnswerProvider(Path.Combine(root, "Items"),
+            using (var provider = new LocalPuzzleAnswerProvider(options.TemplateDirectory,
                 PuzzleItemCatalog.Load(Path.Combine(root, "items.json")), policy))
             {
                 if (!options.AllowUnsupported && records.Any(record => !provider.Labels.Contains(record.Expected)))

@@ -16,4 +16,7 @@
 
 **/artifacts
 
+# Python tool caches
+__pycache__/
+
 

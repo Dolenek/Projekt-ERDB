@@ -9,6 +9,7 @@ namespace PuzzleReplay
         public string Manifest { get; private set; }
         public string Output { get; private set; }
         public string PolicyPath { get; private set; }
+        public string TemplateDirectory { get; private set; }
         public bool Validate { get; private set; }
         public bool AllowUnsupported { get; private set; }
 
@@ -18,7 +19,8 @@ namespace PuzzleReplay
             var options = new ReplayOptions
             {
                 Root = Path.GetFullPath(args[0]), Manifest = Path.GetFullPath(args[1]),
-                Output = Path.GetFullPath(args[2]), PolicyPath = Path.Combine(Path.GetFullPath(args[0]), "puzzle-local.json")
+                Output = Path.GetFullPath(args[2]), PolicyPath = Path.Combine(Path.GetFullPath(args[0]), "puzzle-local.json"),
+                TemplateDirectory = Path.Combine(Path.GetFullPath(args[0]), "Items")
             };
             for (var index = 3; index < args.Length; index++)
             {
@@ -26,6 +28,8 @@ namespace PuzzleReplay
                 else if (args[index] == "--allow-unsupported") options.AllowUnsupported = true;
                 else if (args[index] == "--policy" && index + 1 < args.Length)
                     options.PolicyPath = Path.GetFullPath(args[++index]);
+                else if (args[index] == "--templates" && index + 1 < args.Length)
+                    options.TemplateDirectory = Path.GetFullPath(args[++index]);
                 else throw new ArgumentException("Unknown or incomplete argument: " + args[index]);
             }
             if (options.Validate && options.AllowUnsupported)

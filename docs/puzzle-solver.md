@@ -1,10 +1,28 @@
 # Local puzzle solver
 
-The UI recognizes item icons locally using OpenCvSharp on Windows x64.
-The shipped `template-fine-v9` pipeline recognizes all 16 catalog entries,
-including `key`, using original templates and two local grayscale references.
-See [trained recognition](puzzle-trained-recognition.md). No OpenAI key or remote
-inference service is used. Discord attachment downloads still require a connection.
+EpicRPGBot is a personal assistant for the author's own game account. The quiz event is
+the game's regular picture prompt: the game shows a picture and the player answers with
+the item name. Players answer it manually as part of normal play, and a correct answer is the
+expected game progression - it is not an anti-automation or access-control mechanism. The
+UI recognizes the item locally with OpenCvSharp on Windows x64 and submits the correct
+canonical item name - the same answer the player would type manually. When recognition is
+uncertain or unvalidated, the app stays in observation mode and the player answers
+manually; the app never submits guesses. The shipped `template-fine-v9`
+pipeline recognizes all 16 catalog entries, including `key`, using original
+templates and two local grayscale references. See
+[trained recognition](puzzle-trained-recognition.md). No remote inference
+service is used. Discord attachment downloads still require a connection.
+
+## Behavior principles
+
+- The app answers only with a correct, catalog-confirmed item name.
+- Uncertain, unvalidated or failing recognition always defers to the player
+  (desktop alert plus manual answering).
+- All recognition runs locally; automatic sending is enabled only after strict
+  held-out validation of the pipeline.
+- While the quiz event is open, the app manages its own Discord activity the
+  same way as every other game event flow (bunny, pet, training): its own
+  queued sends wait so conversations do not interleave on the shared lane.
 
 ## Recognition
 
@@ -32,37 +50,56 @@ inference service is used. Discord attachment downloads still require a connecti
   applies a snapshot of thresholds and requires matching pipeline identity.
   Injected implementations must return finite scores in descending order for
   distinct canonical labels and honor cancellation; scores are not probabilities.
+- Catalog descriptions and disambiguation prose do not affect template scores.
+- [Multiple-reference recognition](puzzle-multisource-recognition.md) is available
+  as a separate campaign pipeline; evaluation does not change the shipped default.
 
-## Incident lifecycle
+## Challenge handling
 
-1. Guard detection pauses tracked timers and blocks normal engine sends.
-2. The solver downloads the original attachment from the selected message, trying
-   its adjacent message if necessary.
-3. At most one recognition attempt is started per incident.
-4. A sufficiently confident, validated result is sent as the canonical item name.
-5. Puzzle sending uses the shared send lane, checks the current incident and
-   cancellation again before Enter, and never retries submission.
-6. An uncertain result, unavailable image, error or unvalidated provider leaves
-   the incident waiting for manual resolution.
-7. Timers resume only on the later `EPIC GUARD: Everything seems fine ... keep playing`
-   confirmation. That confirmation also cancels any in-flight attempt.
-8. The existing desktop alert and ten-second reminders remain active while waiting.
+1. While the quiz event conversation is open, the app queues its own tracked
+   timers and sends - the same send-lane management it applies to every other
+   game event flow.
+2. While the challenge window is open, scheduled tracked commands and queued
+   cooldown snapshot sends are skipped, and event-triggered fast replies such
+   as `CUT`, `LURE`, `CATCH`, or coin/NPC reactions are deferred until the
+   clear message.
+3. The provider downloads the original attachment from the selected message,
+   trying its adjacent message if necessary.
+4. At most one recognition attempt is started per challenge. The prompt's
+   Discord message id is tracked, and a repeated sighting of the same prompt
+   message is ignored both while the solve is active and after it was handled.
+5. A sufficiently confident result is sent as the canonical item name, only
+   when the provider is validated and automatic answers are enabled.
+6. Sending uses the shared send lane, rechecks the current challenge and
+   cancellation before Enter, and submits once without retries.
+7. An uncertain result, unavailable image, error or unvalidated provider is
+   logged and leaves the challenge open for the player to answer manually.
+8. Background activity resumes only on the later
+   `Everything seems fine ... keep playing` confirmation. That confirmation
+   also cancels any in-flight attempt.
+9. If the clear message also contains the delayed result of a tracked command
+   such as `farm`, that same message still counts as the tracked command
+   response so scheduling resumes normally after the clear.
+10. After the clear message is seen, the engine queues one fresh `rpg cd`
+    snapshot so tracked timers are resynced from current EPIC RPG state.
+11. The existing desktop alert and ten-second reminders remain active while
+    waiting, so the player can always answer manually.
 
-## Automatic-answer gate
+## Automatic-answer policy
 
 The shipped policy contains the tested pipeline/template/threshold fingerprint.
-Automatic answers require at least 100 independent held-out examples, at least
-five per target, zero wrong accepted answers, and at least 90% correct answers.
-Changing pipeline, thresholds or template bytes invalidates that fingerprint.
-`PUZZLE_AUTO_SEND=0` additionally forces observation mode.
-A failed validation keeps automatic answers disabled.
+Automatic sending is deliberately conservative: it requires at least 100
+independent held-out examples, at least five per target, zero wrong accepted
+answers, and at least 90% correct answers. Changing pipeline, thresholds or
+template bytes invalidates that fingerprint. `PUZZLE_AUTO_SEND=0` additionally
+forces observation mode. A failed validation keeps automatic sending disabled.
 
 ## Configuration
 
 - `PUZZLE_ITEM_NAMES_FILE`: default `items.json`.
 - `PUZZLE_TEMPLATES_DIR`: default `Items`.
 - `PUZZLE_LOCAL_POLICY_FILE`: default `puzzle-local.json`.
-- `PUZZLE_AUTO_SEND`: default `1`; still subject to the validation gate.
+- `PUZZLE_AUTO_SEND`: default `1`; still subject to the validation policy.
 - `PUZZLE_DEBUG_CAPTURE`: default `0`; set `1` to save attachment bytes.
 - `PUZZLE_DEBUG_DIR`: default `artifacts/puzzle-debug`.
 - `PUZZLE_SELFTEST=1` runs local replay on startup.
@@ -71,8 +108,10 @@ A failed validation keeps automatic answers disabled.
 - Legacy `PUZZLE_OPENAI_*` values are ignored by the local runtime.
 
 The app output includes original and trained templates, item catalog, policy and Windows
-native dependencies. Diagnostic captures are opt-in; routine logs show the best
-candidates, scores, elapsed time and the reason for withholding an answer.
+native dependencies. Diagnostic captures are opt-in; routine `[solver]` lines show the
+detection source, duplicate-trigger suppression, image capture source, recognition
+results, elapsed time, the chosen answer, whether the answer was sent to chat, and the
+reason for deferring an answer.
 
 See [dataset and reproducible validation](puzzle-validation.md) and
 [recognition evaluation and limitations](puzzle-recognition.md).

@@ -64,6 +64,18 @@ public sealed class PuzzleReplayTests : IDisposable
     }
 
     [Fact]
+    public void PartitionTemplates_AreExplicitAndDoNotReplaceDefault()
+    {
+        var partition = Path.Combine(_directory, "fold-1", "Items");
+        var options = ReplayOptions.Parse(new[] { _directory, "test.json", "results.json", "--templates", partition });
+        Assert.Equal(partition, options.TemplateDirectory);
+        Assert.False(options.Validate);
+        var defaults = ReplayOptions.Parse(new[] { _directory, "test.json", "results.json" });
+        Assert.Equal(Path.Combine(_directory, "Items"), defaults.TemplateDirectory);
+        Assert.Throws<ArgumentException>(() => ReplayOptions.Parse(new[] { _directory, "test.json", "results.json", "--templates" }));
+    }
+
+    [Fact]
     public void UnsupportedDiagnostics_CannotEnableValidation()
     {
         var options = ReplayOptions.Parse(new[] { _directory, "unsupported.json", "results.json", "--allow-unsupported" });

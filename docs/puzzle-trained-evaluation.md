@@ -67,6 +67,6 @@ checks the frozen inputs, complete 100% predictions and unchanged thresholds
 before copying the sealed policy to the repository default.
 
 The test suite checks shipped eligibility, canonical key recognition, interference,
-grayscale, translations/scales, corrupt/blank inputs and incident cancellation.
-Actual sending still obeys observation mode and incident lifecycle checks in
+grayscale, translations/scales, corrupt/blank inputs and challenge cancellation.
+Actual sending still obeys observation mode and challenge handling checks in
 [the runtime contract](puzzle-solver.md). Further tuning needs a fresh holdout.

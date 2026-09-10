@@ -3,8 +3,11 @@ using OpenCvSharp;
 
 namespace EpicRPGBot.UI.Puzzle.Local
 {
-    internal sealed class PuzzleQuestionRegionLocator
+    internal sealed class PuzzleQuestionRegionLocator : IPuzzleQuestionRegionLocator
     {
+        private readonly IPuzzleLetterMaskFilter _letterFilter;
+        public PuzzleQuestionRegionLocator(IPuzzleLetterMaskFilter letterFilter = null) { _letterFilter = letterFilter; }
+
         public Rect Locate(Mat colors, bool allowNarrowCard = false)
         {
             using (var letters = CreateLetterMask(colors))
@@ -13,6 +16,7 @@ namespace EpicRPGBot.UI.Puzzle.Local
             using (var statistics = new Mat())
             using (var centers = new Mat())
             {
+                _letterFilter?.Apply(letters);
                 Cv2.MorphologyEx(letters, letters, MorphTypes.Close, kernel);
                 var count = Cv2.ConnectedComponentsWithStats(letters, components, statistics, centers);
                 var textStart = colors.Width;

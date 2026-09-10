@@ -10,13 +10,18 @@ from clean_probe import remove_lines
 from finalize_dataset import write_manifest
 
 
-def locate(source):
+def locate(source, glyph_aware=False):
     height = 200 if source.shape[0] >= 150 else 85
     source = cv2.resize(source, (round(source.shape[1] * height / source.shape[0]), height))
     minimum, maximum = source.min(2), source.max(2)
     letters = ((minimum > 180) & (maximum - minimum < 30)).astype(np.uint8)
     letters[:5] = 0
     letters[-5:] = 0
+    if glyph_aware:
+        count, components, stats, _ = cv2.connectedComponentsWithStats(letters)
+        retained = (stats[:, 2] <= 32) & (stats[:, 3] <= 42)
+        retained[0] = False
+        letters[~retained[components]] = 0
     letters = cv2.morphologyEx(letters, cv2.MORPH_CLOSE, np.ones((3, 21), np.uint8))
     _, _, stats, _ = cv2.connectedComponentsWithStats(letters)
     starts = [x for x, y, width, height, area in stats[1:] if x >= 50 and width >= 120 and 12 <= height <= 55]

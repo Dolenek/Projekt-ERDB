@@ -32,14 +32,15 @@ public sealed class TrainedPuzzleTests
     }
 
     [WindowsFact]
-    public async Task RootExamples_AreRecognizedWithoutAutomaticSubmission()
+    public async Task FixedExamples_AreRecognizedWithoutAutomaticSubmission()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();
         using var provider = Create(root);
-        foreach (var example in new[] { ("epic_guard_dragon_scale.webp", "dragon scale"),
-                                        ("epic_guard_mermaid.webp", "mermaid hair") })
+        foreach (var example in new[] { ("dragon-scale.webp", "dragon scale"),
+                                        ("mermaid-hair.webp", "mermaid hair") })
         {
-            var result = await provider.SolveAsync(File.ReadAllBytes(Path.Combine(root, example.Item1)), default);
+            var path = Path.Combine(root, "EpicRPGBot.Tests/Puzzle/Fixtures", example.Item1);
+            var result = await provider.SolveAsync(File.ReadAllBytes(path), default);
             Assert.Equal(example.Item2, result.Label);
             Assert.False(result.AutomaticSubmissionAllowed);
         }

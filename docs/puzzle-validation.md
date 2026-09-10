@@ -38,7 +38,7 @@ dotnet build tools/PuzzleReplay/PuzzleReplay.csproj -c Release
 Run the generated `tools/PuzzleReplay/bin/Release/net48/PuzzleReplay.exe` with:
 
 ```text
-PuzzleReplay.exe <repository-root> <manifest-json> <output-json> [--validate] [--policy <path>]
+PuzzleReplay.exe <repository-root> <manifest-json> <output-json> [--validate] [--policy <path>] [--templates <directory>]
 ```
 
 All paths may be absolute. Calibration uses `calibration.json`; final validation
@@ -48,12 +48,15 @@ assembly without starting the UI or sending Discord messages.
 The output is a JSON array; large reports pack multiple predictions per line to
 respect the repository file-length limit. The companion
 `.summary.json` reports correct, wrong and rejected counts, top-candidate accuracy
-before rejection, item/condition breakdowns, mean time and p95. Image checksums,
+before rejection, item/condition breakdowns, mean time and p95. Correct accepted
+answers out of all cases include 95% Wilson intervals, with rejections in the denominator. Image checksums,
 labels and duplicate hashes are checked. Validation additionally rejects hash
 overlap with the calibration manifest. Visual/crop deduplication remains a dataset
 curation responsibility; different bytes do not prove independence.
 
 `--policy` selects an alternate policy without changing the repository default.
+`--templates` selects isolated learned assets for a training partition. See
+[the campaign contract](puzzle-campaign.md) for grouped CV and its statistical limits.
 `--allow-unsupported` evaluates out-of-catalog targets as rejection diagnostics;
 an accepted answer counts as wrong. It cannot be combined with `--validate`.
 For v2 evaluation, pass `--policy tools/puzzle/refined-policy.json` and omit

@@ -21,7 +21,7 @@ namespace EpicRPGBot.UI.Puzzle.Local
         public double ForegroundArea { get; }
 
         public static PuzzleScene Decode(byte[] bytes, bool clean = false, bool adaptive = false, bool crossingLines = false,
-            bool fine = false)
+            bool fine = false, bool glyphAware = false)
         {
             if (bytes == null || bytes.Length == 0 || bytes.Length > 8 * 1024 * 1024)
                 throw new ArgumentException("Empty or oversized puzzle attachment.");
@@ -36,7 +36,7 @@ namespace EpicRPGBot.UI.Puzzle.Local
                 {
                     var height = tall ? 200 : 85;
                     Cv2.Resize(source, normalized, new Size((int)Math.Round(source.Width * (double)height / source.Height), height));
-                    if (clean) return CreateCleanScene(normalized, tall, adaptive, crossingLines, fine);
+                    if (clean) return CreateCleanScene(normalized, tall, adaptive, crossingLines, fine, glyphAware);
                     var bounds = tall ? new Rect(0, 12, Math.Min(normalized.Width, 145), 176)
                         : new Rect(0, 0, Math.Min(normalized.Width, 100), 85);
                     using (var region = new Mat(normalized, bounds))
@@ -51,11 +51,12 @@ namespace EpicRPGBot.UI.Puzzle.Local
 
         public void Dispose() { Gray.Dispose(); Colors.Dispose(); Binary.Dispose(); }
 
-        private static PuzzleScene CreateCleanScene(Mat normalized, bool tall, bool adaptive, bool crossingLines, bool fine)
+        private static PuzzleScene CreateCleanScene(Mat normalized, bool tall, bool adaptive, bool crossingLines, bool fine, bool glyphAware)
         {
             IPuzzleInterferenceFilter filter = crossingLines ? (IPuzzleInterferenceFilter)new PuzzleCrossingLineFilter(fine ? 1.5 : 3)
                 : new PuzzleColoredLineFilter();
-            return new PuzzleScene(new PuzzleCardPreprocessor(filter).Prepare(normalized, tall, adaptive, fine));
+            var locator = new PuzzleQuestionRegionLocator(glyphAware ? new PuzzleGlyphMaskFilter() : null);
+            return new PuzzleScene(new PuzzleCardPreprocessor(filter, locator).Prepare(normalized, tall, adaptive, fine));
         }
     }
 }

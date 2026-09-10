@@ -26,16 +26,19 @@ namespace EpicRPGBot.UI.Puzzle.Local
         private bool UsesSpectralScoring => Pipeline == LocalPuzzlePolicy.SpectralPipeline || UsesCrossingFilter;
         private bool UsesCrossingFilter => Pipeline == LocalPuzzlePolicy.CrossingPipeline || UsesLearnedTemplates;
         private bool UsesLearnedTemplates => Pipeline == LocalPuzzlePolicy.TrainedPipeline ||
-            Pipeline == LocalPuzzlePolicy.CroppedTrainingPipeline || Pipeline == LocalPuzzlePolicy.FinePipeline;
+            Pipeline == LocalPuzzlePolicy.CroppedTrainingPipeline || UsesFineSearch;
+        private bool UsesFineSearch => Pipeline == LocalPuzzlePolicy.FinePipeline || UsesGlyphScene;
+        private bool UsesGlyphScene => Pipeline == LocalPuzzlePolicy.GlyphPipeline ||
+            Pipeline == LocalPuzzlePolicy.MultiSourcePipeline;
 
         public IReadOnlyList<PuzzleCandidate> Rank(byte[] imageBytes, CancellationToken cancellationToken)
         {
             using (var scene = PuzzleScene.Decode(imageBytes,
                 UsesCleanScene, UsesCleanScene && Pipeline != LocalPuzzlePolicy.CleanPipeline,
-                UsesCrossingFilter, Pipeline == LocalPuzzlePolicy.FinePipeline))
+                UsesCrossingFilter, UsesFineSearch, UsesGlyphScene))
                 return _matcher.Rank(scene, _library, cancellationToken,
                     Pipeline == LocalPuzzlePolicy.RefinedPipeline || UsesSpectralScoring, UsesSpectralScoring,
-                    Pipeline == LocalPuzzlePolicy.FinePipeline);
+                    UsesFineSearch, Pipeline == LocalPuzzlePolicy.MultiSourcePipeline);
         }
 
         public void Dispose() => _library.Dispose();

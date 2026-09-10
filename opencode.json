@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "epic_rpg_bot": {
+      "type": "local",
+      "command": [
+        "cmd.exe",
+        "/c",
+        "dotnet",
+        "C:\\ERPGBOT\\EpicRPGBotCSHARP\\EpicRPGBot.Mcp\\bin\\Debug\\net8.0-windows\\EpicRPGBot.Mcp.dll"
+      ],
+      "enabled": true
+    }
+  }
+}

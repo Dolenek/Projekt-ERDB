@@ -1,5 +1,6 @@
 """Build traceable grayscale epic-coin templates from visually confirmed development cards."""
 import hashlib
+import argparse
 import json
 import pathlib
 import cv2
@@ -8,7 +9,7 @@ from learned_probe import locate
 from finalize_dataset import write_manifest
 
 
-def main():
+def reproduce_original_templates():
     root = pathlib.Path(__file__).resolve().parents[2]
     directory = root / 'artifacts/puzzle-training-20260908'
     records = json.loads((directory / 'development.json').read_text())
@@ -36,6 +37,24 @@ def main():
                                templateSha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
                                method='adaptive-question-crop-then-largest-foreground-component', split='development'))
     write_manifest(output.parent / 'provenance.json', provenance)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--manifest', type=pathlib.Path)
+    parser.add_argument('--output', type=pathlib.Path)
+    parser.add_argument('--forbidden', type=pathlib.Path)
+    arguments = parser.parse_args()
+    if arguments.manifest is None:
+        reproduce_original_templates()
+        return
+    if arguments.output is None or arguments.forbidden is None:
+        parser.error('Partition training requires --output and --forbidden hash registry')
+    from gray_template_training import fit_templates
+    forbidden = set(json.loads(arguments.forbidden.read_text()))
+    provenance = fit_templates(arguments.manifest, arguments.output,
+                               pathlib.Path(__file__).resolve().parents[2] / 'Items', forbidden)
+    print(json.dumps(provenance))
 
 
 if __name__ == '__main__':

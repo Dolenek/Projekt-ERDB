@@ -6,6 +6,7 @@ import os
 import pathlib
 import subprocess
 from finalize_dataset import write_manifest
+from evaluation_statistics import summary as statistical_summary
 
 
 def evaluate_partition(executable, root, policy, partition, output):
@@ -20,9 +21,7 @@ def evaluate_partition(executable, root, policy, partition, output):
 
 
 def summarize(predictions):
-    return dict(Total=len(predictions), Correct=sum(p['Correct'] for p in predictions),
-                Wrong=sum(p['Accepted'] and not p['Correct'] for p in predictions),
-                Rejected=sum(not p['Accepted'] for p in predictions),
+    return dict(statistical_summary(predictions),
                 TopCandidateCorrect=sum(bool(p['Candidates']) and p['Candidates'][0]['Label'] == p['Expected'] for p in predictions),
                 Evaluation='development; concurrent replay processes; no policy seal')
 
@@ -67,7 +66,7 @@ def main():
         raise ValueError('Replay label mismatch')
     write_manifest(arguments.output, ordered)
     summary = summarize(ordered)
-    arguments.output.with_suffix('.summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+    arguments.output.with_suffix('.summary.json').write_text(json.dumps(summary) + '\n')
     print(json.dumps(summary), flush=True)
 
 

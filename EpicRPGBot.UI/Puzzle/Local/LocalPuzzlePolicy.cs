@@ -19,6 +19,8 @@ namespace EpicRPGBot.UI.Puzzle.Local
         public const string TrainedPipeline = "template-trained-v7";
         public const string CroppedTrainingPipeline = "template-trained-v8";
         public const string FinePipeline = "template-fine-v9";
+        public const string GlyphPipeline = "template-glyph-v10";
+        public const string MultiSourcePipeline = "template-multisource-v11";
         public string Pipeline { get; set; } = CurrentPipeline;
         public double MinimumScore { get; set; } = 0.8;
         public double MinimumMargin { get; set; } = 0.08;
@@ -67,6 +69,7 @@ namespace EpicRPGBot.UI.Puzzle.Local
         public static bool IsSupportedPipeline(string pipeline) =>
             pipeline == CurrentPipeline || pipeline == RefinedPipeline || pipeline == CleanPipeline ||
             pipeline == AdaptivePipeline || pipeline == SpectralPipeline || pipeline == CrossingPipeline ||
-            pipeline == TrainedPipeline || pipeline == CroppedTrainingPipeline || pipeline == FinePipeline;
+            pipeline == TrainedPipeline || pipeline == CroppedTrainingPipeline || pipeline == FinePipeline ||
+            pipeline == GlyphPipeline || pipeline == MultiSourcePipeline;
     }
 }

@@ -1,5 +1,8 @@
 # Additional development examples
 
+The [dataset campaign](puzzle-campaign.md) adds multi-channel acquisition,
+partition-specific training and Wilson intervals. See [campaign measurements](puzzle-campaign-results.md).
+
 `artifacts/puzzle-additions-20260909/` contains 100 original attachments collected
 through the EpicRPG MCP-managed Discord WebView from channel `557606805425881088`.
 Search: `in: bot-commands-1 has:image stop there, before:2023-12-26`.
@@ -13,10 +16,9 @@ Review sheets and `review-labels.json` preserve the visual review; canonical
 labels and descriptions are in `development.json` and `visual-labels.json`.
 Descriptions follow [the established annotation vocabulary](puzzle-dataset-expansion.md).
 
-The two user-supplied root WebP files are also development examples:
-
-- `epic_guard_dragon_scale.webp`: red segmented pointed scale, with interference.
-- `epic_guard_mermaid.webp`: cyan flowing strand, with interference.
+The two user-supplied root WebP files are also development examples: one shows a
+red segmented pointed scale and the other a cyan flowing strand, both with
+interference.
 
 `root-examples.json` stores their hashes, labels, condition flags and descriptions.
 `development-combined.json` contains all 1,601 development examples: 1,505 earlier
