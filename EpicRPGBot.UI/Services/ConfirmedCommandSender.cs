@@ -29,14 +29,17 @@ namespace EpicRPGBot.UI.Services
         {
             DiscordMessageSnapshot lastOutgoing = null;
             var anchorMessageId = string.Empty;
-            for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+            var allowedAttempts = DiscordCommandSendPolicy.AllowsBlindResend(command)
+                ? MaxAttempts
+                : 1;
+            for (var attempt = 1; attempt <= allowedAttempts; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 anchorMessageId = (await _chatClient.GetLatestMessageAsync())?.Id ?? string.Empty;
                 lastOutgoing = await _chatClient.SendMessageAndWaitForOutgoingAsync(command, cancellationToken);
                 if (lastOutgoing == null)
                 {
-                    if (attempt < MaxAttempts)
+                    if (attempt < allowedAttempts)
                     {
                         await Task.Delay(RetryDelayMs, cancellationToken);
                     }
@@ -53,13 +56,13 @@ namespace EpicRPGBot.UI.Services
                     return new ConfirmedCommandSendResult(lastOutgoing, reply, attempt);
                 }
 
-                if (attempt < MaxAttempts)
+                if (attempt < allowedAttempts)
                 {
                     await Task.Delay(RetryDelayMs, cancellationToken);
                 }
             }
 
-            return new ConfirmedCommandSendResult(lastOutgoing, null, MaxAttempts);
+            return new ConfirmedCommandSendResult(lastOutgoing, null, allowedAttempts);
         }
 
         public static bool RequiresReplyConfirmation(string message)

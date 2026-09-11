@@ -146,6 +146,7 @@
     <Compile Include="Services\PuzzleDebugArtifactWriter.cs" />
     <Compile Include="Services\ChatMessagePoller.cs" />
     <Compile Include="Services\ConfirmedCommandSender.cs" />
+    <Compile Include="Services\DiscordCommandSendPolicy.cs" />
     <Compile Include="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="Services\CooldownReductionCalculator.cs" />
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />

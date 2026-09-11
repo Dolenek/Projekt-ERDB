@@ -37,6 +37,11 @@ namespace EpicRPGBot.UI.Services
                 {
                     return registered;
                 }
+
+                if (!DiscordCommandSendPolicy.AllowsBlindResend(message))
+                {
+                    return null;
+                }
             }
 
             await ClearComposerAsync();
@@ -229,6 +234,10 @@ namespace EpicRPGBot.UI.Services
             var escapedMessage = originalMessage
                 .Replace("\\", "\\\\")
                 .Replace("'", "\\'");
+            var escapedDetectionToken = DiscordCommandSendPolicy
+                .GetOutgoingDetectionToken(originalMessage)
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'");
             var script = $@"
 (() => {{
   const getAuthor = (item) => {{
@@ -247,6 +256,7 @@ namespace EpicRPGBot.UI.Services
   }};
   const previousId = '{escapedPreviousId}';
   const target = '{escapedMessage}'.toLowerCase();
+  const detectionToken = '{escapedDetectionToken}'.toLowerCase();
   const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]')).slice(-{OutgoingMessageScanCount});
   let startIndex = 0;
   if (previousId) {{
@@ -260,7 +270,8 @@ namespace EpicRPGBot.UI.Services
     const author = getAuthor(item);
     const text = item.innerText || '';
     if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) continue;
-    if (text.toLowerCase().includes(target)) {{
+    const normalizedText = text.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (normalizedText.includes(target) || normalizedText.includes(detectionToken)) {{
       return JSON.stringify({{ id, text, author }});
     }}
   }}
