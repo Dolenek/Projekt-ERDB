@@ -17,6 +17,7 @@ namespace EpicRPGBot.UI
             StartBtn.Background = isEngineRunning ? StartActiveBrush : InactiveBotControlBrush;
             StopBtn.Background = isEngineRunning ? InactiveBotControlBrush : StopActiveBrush;
             RefreshDungeonButton();
+            RefreshDuelButton();
             WishingTokenBtn.IsEnabled = (!_isTimeCookieRunning && !_isSleepyPotionRunning) || _isWishingTokenRunning;
             WishingTokenBtn.Background = _isWishingTokenRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
             RefreshSleepyPotionButton();
@@ -37,6 +38,19 @@ namespace EpicRPGBot.UI
             CompleteDungeonBtn.Content = isActive ? "Stop Dungeon" : "Complete Dungeon";
             CompleteDungeonBtn.IsEnabled = canStart;
             CompleteDungeonBtn.Background = isActive ? ExclusiveActiveBrush : InactiveBotControlBrush;
+        }
+
+        private void RefreshDuelButton()
+        {
+            if (DuelBtn == null)
+            {
+                return;
+            }
+
+            var canStart = string.IsNullOrWhiteSpace(_activeExclusiveBotOperation) || _isDuelRunning;
+            DuelBtn.Content = _isDuelRunning ? "Stop Duel" : "Duel start";
+            DuelBtn.IsEnabled = canStart;
+            DuelBtn.Background = _isDuelRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
         }
 
         private void RefreshTimeCookieButton(Button button, TimeCookieTarget target)

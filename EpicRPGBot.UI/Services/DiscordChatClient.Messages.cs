@@ -162,9 +162,12 @@ namespace EpicRPGBot.UI.Services
     id: '',
     text: '',
     author: '',
+    authorId: '',
+    createdAtUtc: '',
     renderedText: '',
     buttons: [],
-    mentions: []
+    mentions: [],
+    reactions: []
   }});
   const getAuthor = (item) => {{
     const selectors = [
@@ -184,6 +187,19 @@ namespace EpicRPGBot.UI.Services
     if (!img) return '';
     const raw = (img.getAttribute('alt') || img.getAttribute('aria-label') || img.getAttribute('title') || '').trim();
     return raw.startsWith(':') && raw.endsWith(':') ? raw : '';
+  }};
+  const getAuthorId = (item) => {{
+    const direct = item.querySelector('[data-author-id]')?.getAttribute('data-author-id');
+    if (direct) return direct.trim();
+    const userNode = item.querySelector('h3 [data-user-id]');
+    const userId = userNode?.getAttribute('data-user-id');
+    if (userId) return userId.trim();
+    const avatar = item.querySelector('img[src*=""/avatars/""]');
+    const match = (avatar?.getAttribute('src') || '').match(/\/avatars\/(\d+)\//i);
+    return match ? match[1] : '';
+  }};
+  const getCreatedAtUtc = (item) => {{
+    return (item.querySelector('time[datetime]')?.getAttribute('datetime') || '').trim();
   }};
   const replaceImagesWithAlt = (root) => {{
     Array.from(root.querySelectorAll('img')).forEach(img => {{
@@ -228,9 +244,12 @@ namespace EpicRPGBot.UI.Services
       .sort((a, b) => a.left - b.left)
       .map((entry, columnIndex) => {{
         const clone = entry.button.cloneNode(true);
+        const imageLabels = Array.from(clone.querySelectorAll('img'))
+          .map(img => (img.getAttribute('alt') || '').trim())
+          .filter(Boolean);
         replaceImagesWithAlt(clone);
         return {{
-          label: (clone.innerText || '').trim(),
+          label: (clone.innerText || '').trim() || imageLabels.join(' '),
           rowIndex,
           columnIndex
         }};
@@ -264,13 +283,39 @@ namespace EpicRPGBot.UI.Services
     }}
     return mentions;
   }};
+  const getReactions = (item) => {{
+    const seen = new Set();
+    const selectors = [
+      'button[class*=""reaction""]',
+      '[class*=""reaction""] button',
+      'button[aria-label*=""reaction"" i]'
+    ].join(', ');
+    return Array.from(item.querySelectorAll(selectors)).flatMap(button => {{
+      const imageName = (button.querySelector('img')?.getAttribute('alt') || '').trim();
+      const label = (button.getAttribute('aria-label') || button.innerText || '').trim();
+      const rawName = imageName || label.split(',')[0] || '';
+      const name = rawName.replace(/^:|:$/g, '').trim();
+      if (!name || seen.has(name.toLowerCase())) return [];
+      seen.add(name.toLowerCase());
+      const countText = button.querySelector('[class*=""reactionCount""]')?.textContent || label;
+      const countMatch = countText.match(/\d+/);
+      return [{{
+        name,
+        isMine: button.getAttribute('aria-pressed') === 'true' || button.dataset?.userReacted === 'true',
+        count: countMatch ? Number(countMatch[0]) : 1
+      }}];
+    }});
+  }};
   const mapSnapshot = (item) => ({{
     id: item.id || '',
     text: item.innerText || '',
     author: getAuthor(item),
+    authorId: getAuthorId(item),
+    createdAtUtc: getCreatedAtUtc(item),
     renderedText: renderTextWithoutButtons(item),
     buttons: getVisibleButtons(item),
-    mentions: getMentions(item)
+    mentions: getMentions(item),
+    reactions: getReactions(item)
   }});
 {body}
 }})();

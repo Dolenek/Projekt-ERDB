@@ -10,6 +10,9 @@ namespace EpicRPGBot.UI.Services
         private static readonly Regex MaxAreaPattern = new Regex(
             @"Area:\s*\d+\s*\(Max:\s*(?<value>\d+)\)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex LevelPattern = new Regex(
+            @"\bLevel:\s*(?<value>[\d,]+)\b",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         public static bool TryParsePlayerName(string message, out string playerName)
         {
@@ -44,6 +47,21 @@ namespace EpicRPGBot.UI.Services
             }
 
             return int.TryParse(match.Groups["value"].Value, out maxArea) && maxArea > 0;
+        }
+
+        public static bool TryParseLevel(string message, out int level)
+        {
+            level = 0;
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return false;
+            }
+
+            var match = LevelPattern.Match(message);
+            var normalized = match.Success
+                ? match.Groups["value"].Value.Replace(",", string.Empty)
+                : string.Empty;
+            return int.TryParse(normalized, out level) && level > 0;
         }
     }
 }

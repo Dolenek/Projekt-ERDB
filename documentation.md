@@ -8,6 +8,7 @@ Canonical pages:
 - [Dismantling](docs/dismantling.md)
 - [Area trading](docs/area-trading.md)
 - [Dungeon automation](docs/dungeon-automation.md)
+- [Duel automation](docs/duel-automation.md)
 - [Card hand automation](docs/card-hand-automation.md)
 - [Settings window](docs/settings-window.md)
 - [Work command settings](docs/work-command-settings.md)

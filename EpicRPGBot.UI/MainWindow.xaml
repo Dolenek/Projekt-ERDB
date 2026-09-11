@@ -153,6 +153,11 @@
                             <wv2:WebView2 Name="DungeonWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </Grid>
                     </TabItem>
+                    <TabItem Name="DuelBrowserTab" Header="Duel tab" Style="{StaticResource BrowserTabItemStyle}">
+                        <Grid Background="#1e1f22">
+                            <wv2:WebView2 Name="DuelWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
                 <TextBlock Name="InitHint" Text="Loading WebView2..." Foreground="#bbb" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
             </Grid>
@@ -172,6 +177,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -185,6 +191,7 @@
                         <Button Name="TradeAreaBtn" Grid.Row="1" Grid.Column="1" Content="Trade area" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TradeAreaBtn_Click"/>
                         <Button Name="WishingTokenBtn" Grid.Row="1" Grid.Column="2" Content="Wishing token" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="WishingTokenBtn_Click"/>
                         <Button Name="CompleteDungeonBtn" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Complete Dungeon" Margin="0,8,0,0" MinHeight="30" Padding="12,4" Click="CompleteDungeonBtn_Click"/>
+                        <Button Name="DuelBtn" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Content="Duel start" Margin="0,8,0,0" MinHeight="30" Padding="12,4" Click="DuelBtn_Click"/>
                     </Grid>
 
                     <TextBlock Text="Time cookie" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,6"/>

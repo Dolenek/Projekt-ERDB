@@ -9,6 +9,7 @@ using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
 using EpicRPGBot.UI.Dungeon;
+using EpicRPGBot.UI.Duel;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.TimeCookie;
@@ -24,6 +25,7 @@ namespace EpicRPGBot.UI
         private readonly IDiscordChatClient _playerChatClient;
         private readonly IDiscordChatClient _guildChatClient;
         private readonly IDiscordChatClient _dungeonChatClient;
+        private readonly IDuelDiscordClient _duelChatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly ConfirmedCommandSender _dungeonConfirmedCommandSender;
         private readonly AppSettingsService _settingsService;
@@ -38,6 +40,7 @@ namespace EpicRPGBot.UI
         private readonly AreaTradeWorkflow _areaTradeWorkflow;
         private readonly CompleteDungeonRunCoordinator _completeDungeonRunCoordinator;
         private readonly DungeonWorkflow _dungeonWorkflow;
+        private readonly DuelWorkflow _duelWorkflow;
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
         private readonly CardDeckImportWorkflow _cardDeckImportWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
@@ -46,11 +49,13 @@ namespace EpicRPGBot.UI
         private BotEngine _engine;
         private bool _isAreaTradeRunning;
         private bool _isDungeonRunning;
+        private bool _isDuelRunning;
         private bool _isSleepyPotionRunning;
         private bool _isTimeCookieRunning;
         private bool _isWishingTokenRunning;
         private TimeCookieTarget? _activeTimeCookieTarget;
         private CancellationTokenSource _dungeonCancellation;
+        private CancellationTokenSource _duelCancellation;
         private CancellationTokenSource _sleepyPotionCancellation;
         private CancellationTokenSource _timeCookieCancellation;
         private CancellationTokenSource _wishingTokenCancellation;
@@ -65,6 +70,10 @@ namespace EpicRPGBot.UI
             _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
             _guildChatClient = new DiscordChatClient(GuildWeb, "guild");
             _dungeonChatClient = new DiscordChatClient(DungeonWeb, "dungeon");
+            _duelChatClient = new DiscordChatClient(
+                DuelWeb,
+                "duel",
+                message => _log.Info("[duel] " + message));
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
             _settingsService = new AppSettingsService(new LocalSettingsStore());
@@ -75,6 +84,11 @@ namespace EpicRPGBot.UI
             _areaTradeWorkflow = new AreaTradeWorkflow(_confirmedCommandSender, _dismantlingWorkflow, _settingsService, GetCurrentSettings);
             _completeDungeonRunCoordinator = new CompleteDungeonRunCoordinator();
             _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
+            _duelWorkflow = new DuelWorkflow(
+                _duelChatClient,
+                _botChatClient,
+                _confirmedCommandSender,
+                _settingsService);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
             _cardDeckImportWorkflow = new CardDeckImportWorkflow(_botChatClient);
             _puzzleSelfTestRunner = new PuzzleSelfTestRunner();
@@ -129,6 +143,7 @@ namespace EpicRPGBot.UI
         private void MainWindow_Closed(object sender, EventArgs e)
         {
             _dungeonCancellation?.Cancel();
+            _duelCancellation?.Cancel();
             _sleepyPotionCancellation?.Cancel();
             _timeCookieCancellation?.Cancel();
             _wishingTokenCancellation?.Cancel();

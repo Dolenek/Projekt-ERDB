@@ -23,6 +23,7 @@ namespace EpicRPGBot.UI.Services
                 return null;
             }
 
+            ReportTelemetry($"Sending message: '{message}'.");
             var latestBeforeSend = await GetLatestMessageAsync();
             if (!await FocusComposerAsync(cancellationToken))
             {

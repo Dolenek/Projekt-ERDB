@@ -179,7 +179,10 @@ namespace EpicRPGBot.UI.Services
                 GetString(item, "author"),
                 GetString(item, "renderedText"),
                 ParseButtons(item),
-                ParseMentions(item));
+                ParseMentions(item),
+                GetString(item, "authorId"),
+                ParseTimestamp(item),
+                ParseReactions(item));
         }
 
         private static IReadOnlyList<DiscordMessageButton> ParseButtons(JsonElement item)
@@ -231,6 +234,42 @@ namespace EpicRPGBot.UI.Services
             return mentions;
         }
 
+        private static IReadOnlyList<DiscordMessageReaction> ParseReactions(JsonElement item)
+        {
+            if (!item.TryGetProperty("reactions", out var element) || element.ValueKind != JsonValueKind.Array)
+            {
+                return Array.Empty<DiscordMessageReaction>();
+            }
+
+            var reactions = new List<DiscordMessageReaction>();
+            foreach (var reaction in element.EnumerateArray())
+            {
+                if (reaction.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                reactions.Add(new DiscordMessageReaction(
+                    GetString(reaction, "name"),
+                    GetBoolean(reaction, "isMine"),
+                    GetInt32(reaction, "count")));
+            }
+
+            return reactions;
+        }
+
+        private static DateTimeOffset? ParseTimestamp(JsonElement item)
+        {
+            var value = GetString(item, "createdAtUtc");
+            return DateTimeOffset.TryParse(
+                value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var timestamp)
+                ? timestamp
+                : (DateTimeOffset?)null;
+        }
+
         private static string GetString(JsonElement element, string propertyName)
         {
             if (!element.TryGetProperty(propertyName, out var property) ||
@@ -258,6 +297,17 @@ namespace EpicRPGBot.UI.Services
             }
 
             return int.TryParse(property.ToString(), out value) ? value : 0;
+        }
+
+        private static bool GetBoolean(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var property))
+            {
+                return false;
+            }
+
+            return property.ValueKind == JsonValueKind.True ||
+                   (property.ValueKind == JsonValueKind.String && bool.TryParse(property.GetString(), out var value) && value);
         }
     }
 }

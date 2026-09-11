@@ -4,7 +4,7 @@ The active application is `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` desktop ap
 
 Layout:
 - Left sidebar: tabs for `Last messages`, `Stats`, and `Console`.
-- Center pane: a `TabControl` with `Player tab`, `Bot tab`, `Guild tab`, and `Dungeon tab`, each hosting its own Discord WebView2 surface, plus a header button row with `Settings`, `Reload`, and `Go To Channel`.
+- Center pane: a `TabControl` with `Player tab`, `Bot tab`, `Guild tab`, `Dungeon tab`, and `Duel tab`, each hosting its own Discord WebView2 surface, plus a header button row with `Settings`, `Reload`, and `Go To Channel`.
 - Right pane: the `Start Bot` / `Stop Bot` / `Inicialize` / `rpg cd` / `Trade area` / `Wishing token` / `Complete Dungeon` controls at the top, a `Time cookie` section under them, and the visual cooldown labels anchored to the bottom.
 
 Startup flow:
@@ -12,9 +12,9 @@ Startup flow:
 2. Load saved local settings from `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini` into an in-memory settings snapshot.
 3. Bind the last-message list and in-memory console log.
 4. Use the saved channel URL, fallback flag, area, and hunt/adventure/work/farm/lootbox baselines as the runtime defaults for navigation and automation.
-5. Warm all four Discord tabs once during startup so each WebView2 surface is realized before the user switches tabs.
-6. Initialize all four WebView2 tabs with a shared persistent profile under `%LocalAppData%/EpicRPGBot.UI/WebView2`.
-7. Navigate the bot, player, and dungeon tabs to the saved bot channel URL, or `https://discord.com/channels/@me` if the URL is empty and fallback is enabled.
+5. Warm all five Discord tabs once during startup so each WebView2 surface is realized before the user switches tabs.
+6. Initialize all five WebView2 tabs with a shared persistent profile under `%LocalAppData%/EpicRPGBot.UI/WebView2`.
+7. Navigate the bot, player, and dungeon tabs to the saved bot channel URL, navigate the duel tab to its fixed `dueling-2` channel, and use `https://discord.com/channels/@me` as the configured-channel fallback.
 8. If guild-raid settings are complete, navigate the guild tab to the saved guild-raid channel URL.
 9. Start polling the bot tab for the last visible message every 2 seconds.
 10. Start the guild watcher so it can monitor the guild tab even while the main bot engine is stopped.
@@ -28,6 +28,7 @@ User-visible behaviors:
 - `Go To Channel` navigates only the bot tab to the currently saved channel URL.
 - The browser tabs open with `Player tab` selected by default, and the currently selected tab is highlighted light blue.
 - `Complete Dungeon` starts an exclusive run that first performs `Trade area` on the bot tab in its currently open channel, then switches to the dedicated `Dungeon tab` for the listing-channel signup; while active, the button changes to `Stop Dungeon`.
+- `Duel start` loads the profile through the channel currently held by the Bot tab and runs matchmaking in the dedicated Duel tab without forcing it into the foreground; while active, the button changes to `Stop Duel`.
 - `Start Bot` starts the automation engine, then sends `rpg cd` through the bot tab and waits for the cooldown snapshot before scheduling commands.
 - `Stop Bot` stops engine timers but keeps all four tabs open.
 - While the engine is running, `Start Bot` is tinted light green and `Stop Bot` stays white; while the engine is stopped, `Stop Bot` is tinted light red and `Start Bot` stays white.
@@ -36,7 +37,7 @@ User-visible behaviors:
 - `Trade area` starts a one-click live-area dismantle/trade sweep and logs progress to the Console.
 - `Wishing token` starts an exclusive `rpg use wishing token` loop that keeps selecting `time cookie` until the user clicks the same button again or the workflow stops on an unrecognized state.
 - `Sleepy potion` starts a one-shot exclusive workflow that sends `rpg cd`, lets ready automated tracked commands finish, uses `rpg egg use sleepy potion`, refreshes with `rpg cd`, and lets newly-ready tracked commands finish.
-- The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd`, `Trade area`, and `Wishing token` on the second row, and `Complete Dungeon` spanning the full third row.
+- The button grid keeps `Start Bot`, `Stop Bot`, and `Inicialize` on the first row, with `rpg cd`, `Trade area`, and `Wishing token` on the second row, followed by full-width `Complete Dungeon` and `Duel start` rows.
 - The `Time cookie` section sits under that grid and exposes `Dungeon`, `Duel`, and `Card hand` target buttons, plus `Sleepy potion` directly under `Dungeon`.
 - `Time cookie` starts an exclusive loop that refreshes `rpg cd`, lets normal tracked automation finish, uses `rpg use time cookie`, then waits for newly-ready tracked commands to finish until the selected target cooldown reaches `Ready`.
 - If the engine is stopped when `Sleepy potion` starts, the UI starts it for the workflow and stops it again when the workflow ends; if it was already running, it keeps running throughout the workflow.
@@ -67,3 +68,4 @@ Browser behavior:
 - The player tab is manual-only and is not used by automation.
 - The guild tab is used only by the guild-raid watcher and its `rpg guild raid` sends.
 - The dungeon tab is used only by the `Complete Dungeon` workflow.
+- The duel tab is used only by the duel workflow.

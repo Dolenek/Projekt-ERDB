@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +12,10 @@ namespace EpicRPGBot.UI.Models
             string author = null,
             string renderedText = null,
             IReadOnlyList<DiscordMessageButton> buttons = null,
-            IReadOnlyList<DiscordMessageMention> mentions = null)
+            IReadOnlyList<DiscordMessageMention> mentions = null,
+            string authorId = null,
+            DateTimeOffset? createdAtUtc = null,
+            IReadOnlyList<DiscordMessageReaction> reactions = null)
         {
             Id = id ?? string.Empty;
             Text = text ?? string.Empty;
@@ -19,6 +23,9 @@ namespace EpicRPGBot.UI.Models
             RenderedText = string.IsNullOrWhiteSpace(renderedText) ? Text : renderedText;
             Buttons = buttons?.Where(button => button != null).ToArray() ?? new DiscordMessageButton[0];
             Mentions = mentions?.Where(mention => mention != null).ToArray() ?? new DiscordMessageMention[0];
+            AuthorId = authorId ?? string.Empty;
+            CreatedAtUtc = createdAtUtc;
+            Reactions = reactions?.Where(reaction => reaction != null).ToArray() ?? new DiscordMessageReaction[0];
         }
 
         public string Id { get; }
@@ -27,5 +34,8 @@ namespace EpicRPGBot.UI.Models
         public string RenderedText { get; }
         public IReadOnlyList<DiscordMessageButton> Buttons { get; }
         public IReadOnlyList<DiscordMessageMention> Mentions { get; }
+        public string AuthorId { get; }
+        public DateTimeOffset? CreatedAtUtc { get; }
+        public IReadOnlyList<DiscordMessageReaction> Reactions { get; }
     }
 }

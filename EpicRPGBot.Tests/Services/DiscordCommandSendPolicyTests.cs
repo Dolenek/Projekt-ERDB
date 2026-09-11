@@ -20,6 +20,15 @@ namespace EpicRPGBot.Tests.Services
             Assert.False(DiscordCommandSendPolicy.AllowsBlindResend("rpg dung <@123456>"));
         }
 
+        [Theory]
+        [InlineData("rpg duel 123456")]
+        [InlineData("  RPG   DUEL   <@123456>  ")]
+        public void DuelEntry_UsesStableTokenAndDisablesBlindResend(string command)
+        {
+            Assert.Equal("rpg duel", DiscordCommandSendPolicy.GetOutgoingDetectionToken(command));
+            Assert.False(DiscordCommandSendPolicy.AllowsBlindResend(command));
+        }
+
         [Fact]
         public void OrdinaryCommand_PreservesNormalizedTextAndRetry()
         {

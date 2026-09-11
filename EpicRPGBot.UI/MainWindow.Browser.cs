@@ -18,6 +18,7 @@ namespace EpicRPGBot.UI
                 await _playerChatClient.EnsureInitializedAsync();
                 await _guildChatClient.EnsureInitializedAsync();
                 await _dungeonChatClient.EnsureInitializedAsync();
+                await _duelChatClient.EnsureInitializedAsync();
                 InitHint.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
@@ -28,7 +29,7 @@ namespace EpicRPGBot.UI
 
         private async Task WarmUpBrowserTabsAsync()
         {
-            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null || DungeonBrowserTab == null)
+            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null || DungeonBrowserTab == null || DuelBrowserTab == null)
             {
                 return;
             }
@@ -38,6 +39,7 @@ namespace EpicRPGBot.UI
             await ShowTabAsync(PlayerBrowserTab);
             await ShowTabAsync(GuildBrowserTab);
             await ShowTabAsync(DungeonBrowserTab);
+            await ShowTabAsync(DuelBrowserTab);
             BrowserTabs.SelectedItem = originalSelection ?? BotBrowserTab;
             BrowserTabs.UpdateLayout();
         }
@@ -57,6 +59,7 @@ namespace EpicRPGBot.UI
                 await _botChatClient.NavigateToChannelAsync(channelUrl);
                 await _playerChatClient.NavigateToChannelAsync(channelUrl);
                 await _dungeonChatClient.NavigateToChannelAsync(channelUrl);
+                await _duelChatClient.NavigateToChannelAsync(Duel.DuelChannelCatalog.OutgoingDuelChannelUrl);
             }
             catch (Exception ex)
             {

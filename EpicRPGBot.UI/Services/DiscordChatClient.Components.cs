@@ -87,5 +87,64 @@ namespace EpicRPGBot.UI.Services
             cancellationToken.ThrowIfCancellationRequested();
             return string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
         }
+
+        public async Task<bool> ClickMessageButtonByLabelAsync(
+            string messageId,
+            string label,
+            CancellationToken cancellationToken = default)
+        {
+            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(messageId) ||
+                string.IsNullOrWhiteSpace(label))
+            {
+                return false;
+            }
+
+            ReportTelemetry($"Clicking button '{label}' in message {messageId}.");
+            var script = BuildLabeledButtonClickScript(messageId, label);
+            for (var attempt = 0; attempt < 10; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = await _web.CoreWebView2.ExecuteScriptAsync(script);
+                if (string.Equals(result?.Trim(), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                await Task.Delay(150, cancellationToken);
+            }
+
+            return false;
+        }
+
+        private static string BuildLabeledButtonClickScript(string messageId, string label)
+        {
+            var escapedMessageId = EscapeJavaScriptString(messageId);
+            var escapedLabel = EscapeJavaScriptString(label);
+            return $@"
+(() => {{
+  const messageId = '{escapedMessageId}';
+  const numericId = messageId.match(/\d{{15,22}}$/)?.[0] || '';
+  const root = document.getElementById(messageId) ||
+    (numericId ? document.getElementById(`chat-messages-${{numericId}}`) : null) ||
+    (numericId ? document.querySelector(`[data-message-id=""${{numericId}}""]`) : null);
+  if (!root) return false;
+  const normalize = value => (value || '').trim().toLowerCase().replace(/\s+/g, '');
+  const expected = normalize('{escapedLabel}');
+  const buttons = Array.from(root.querySelectorAll('button')).filter(button => {{
+    const rect = button.getBoundingClientRect();
+    const style = window.getComputedStyle(button);
+    return rect.width > 0 && rect.height > 0 && !button.disabled &&
+      style.visibility !== 'hidden' && style.display !== 'none';
+  }});
+  const target = buttons.find(button => {{
+    const labels = [button.innerText, button.getAttribute('aria-label'), button.getAttribute('title'),
+      button.querySelector('img')?.getAttribute('alt')];
+    return labels.some(value => normalize(value) === expected);
+  }});
+  if (!target) return false;
+  try {{ target.scrollIntoView({{ block: 'center', inline: 'nearest' }}); }} catch (e) {{}}
+  try {{ target.click(); return true; }} catch (e) {{ return false; }}
+}})();";
+        }
     }
 }

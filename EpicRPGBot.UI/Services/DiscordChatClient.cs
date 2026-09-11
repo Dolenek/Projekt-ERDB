@@ -6,22 +6,24 @@ using Microsoft.Web.WebView2.Wpf;
 
 namespace EpicRPGBot.UI.Services
 {
-    public sealed partial class DiscordChatClient : IDiscordChatClient, IDiscordAttachmentImageClient
+    public sealed partial class DiscordChatClient : IDiscordChatClient, IDuelDiscordClient, IDiscordAttachmentImageClient
     {
         private readonly WebView2 _web;
         private readonly string _tabRole;
+        private readonly Action<string> _telemetry;
         private bool _navigationHandlerAttached;
         private bool _roleMarkerRegistered;
 
         public DiscordChatClient(WebView2 web)
-            : this(web, "bot")
+            : this(web, "bot", null)
         {
         }
 
-        public DiscordChatClient(WebView2 web, string tabRole)
+        public DiscordChatClient(WebView2 web, string tabRole, Action<string> telemetry = null)
         {
             _web = web ?? throw new ArgumentNullException(nameof(web));
             _tabRole = string.IsNullOrWhiteSpace(tabRole) ? "bot" : tabRole.Trim().ToLowerInvariant();
+            _telemetry = telemetry;
         }
 
         public bool IsReady => _web.CoreWebView2 != null;
@@ -133,6 +135,11 @@ namespace EpicRPGBot.UI.Services
             return (value ?? string.Empty)
                 .Replace("\\", "\\\\")
                 .Replace("'", "\\'");
+        }
+
+        private void ReportTelemetry(string message)
+        {
+            _telemetry?.Invoke(message);
         }
 
         private async Task ClickInterstitialsAsync()
