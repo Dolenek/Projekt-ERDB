@@ -1,4 +1,8 @@
 using System.Windows;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Settings;
 
@@ -42,6 +46,7 @@ namespace EpicRPGBot.UI
         private void OnAppSettingsChanged(AppSettingsSnapshot settings)
         {
             _cooldownTracker.RefreshWorkAliases(settings?.WorkCommands);
+            _engine?.UpdateCardHandSettings(settings?.CardHand);
         }
 
         private int GetConfiguredHuntMs()
@@ -76,12 +81,37 @@ namespace EpicRPGBot.UI
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
         {
-            var settingsWindow = new SettingsWindow(_settingsService)
+            var settingsWindow = new SettingsWindow(_settingsService, LoadCardDeckFromSettingsAsync)
             {
                 Owner = this
             };
 
             settingsWindow.ShowDialog();
+        }
+
+        private async Task<CardDeckImportResult> LoadCardDeckFromSettingsAsync()
+        {
+            if (!_botChatClient.IsReady)
+                return new CardDeckImportResult(false, null, "Discord is not ready.");
+
+            var result = _engine != null && _engine.IsRunning
+                ? await _engine.ImportCardDeckAsync(_cardDeckImportWorkflow)
+                : await _cardDeckImportWorkflow.RunAsync(
+                    () => _log.Command("Message (rpg card deck) sent"),
+                    CancellationToken.None);
+            if (result.Success)
+            {
+                var cardHand = _settingsService.Current.CardHand.WithDeck(result.OwnedCards, DateTime.UtcNow);
+                _settingsService.Save(_settingsService.Current.WithCardHand(cardHand));
+                _log.Info("[card hand] " + result.Message);
+            }
+            else
+            {
+                _log.Warning("[card hand] " + result.Message);
+                _alertService.ShowCardHandAlert(this, result.Message);
+            }
+
+            return result;
         }
     }
 }

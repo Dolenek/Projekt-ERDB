@@ -70,6 +70,14 @@ namespace EpicRPGBot.UI.Services
         {
             var msg = (message ?? string.Empty).ToLowerInvariant();
 
+            if (msg.Contains("card hand") ||
+                (msg.Contains("reward") && msg.Contains("owned") && msg.Contains("goldened")) ||
+                msg.Contains("ace extravaganza") || msg.Contains("royal hearted flush"))
+            {
+                kind = TrackedCommandKind.CardHand;
+                return true;
+            }
+
             if (msg.Contains("daily") &&
                 (msg.Contains("ready") ||
                  msg.Contains("claimed") ||

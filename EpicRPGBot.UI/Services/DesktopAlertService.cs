@@ -67,6 +67,13 @@ namespace EpicRPGBot.UI.Services
             ShowWarningBalloon("Pet prompt issue", message);
         }
 
+        public void ShowCardHandAlert(Window window, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            ShowWarningBalloon("Card hand stopped", message);
+            BringToFront(window);
+        }
+
         private static void PlayAlertSound()
         {
             try

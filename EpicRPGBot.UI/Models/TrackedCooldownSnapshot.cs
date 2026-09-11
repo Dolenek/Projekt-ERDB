@@ -12,7 +12,8 @@ namespace EpicRPGBot.UI.Models
             TimeSpan? training,
             TimeSpan? work,
             TimeSpan? farm,
-            TimeSpan? lootbox)
+            TimeSpan? lootbox,
+            TimeSpan? cardHand = null)
         {
             Daily = daily;
             Weekly = weekly;
@@ -22,6 +23,7 @@ namespace EpicRPGBot.UI.Models
             Work = work;
             Farm = farm;
             Lootbox = lootbox;
+            CardHand = cardHand;
         }
 
         public TimeSpan? Daily { get; }
@@ -32,5 +34,6 @@ namespace EpicRPGBot.UI.Models
         public TimeSpan? Work { get; }
         public TimeSpan? Farm { get; }
         public TimeSpan? Lootbox { get; }
+        public TimeSpan? CardHand { get; }
     }
 }

@@ -15,7 +15,7 @@ Tracked cooldown state:
 - A 1-second UI timer decrements active labels until they reach `Ready`.
 - The Stats sidebar also shows live counts for currently running cooldowns across all tracked rows and per section (`Rewards`, `Experience`, `Progress`).
 - Rows that are `Ready` get a stable green/light-green background based on fixed row order; active cooldown rows keep the default dark background.
-- For daily, weekly, hunt, adventure, training, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
+- For daily, weekly, card hand, hunt, adventure, training, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
 
 Time-cookie handling:
 - EPIC RPG replies containing `time cookie` plus `X minute(s) ahead` reduce the tracked cooldown state immediately.
@@ -32,7 +32,8 @@ Sleepy-potion handling:
 Runtime scheduling:
 - The bot still arms daily/weekly labels with fixed EPIC RPG cooldowns and hunt/adventure/training/work/farm/lootbox labels with the configured settings baseline when it sends those commands.
 - If EPIC RPG replies with `wait at least ...`, the engine retries after that reported remaining time plus a small safety buffer.
-- After a parsed `rpg cd` snapshot or time-cookie reduction, daily/weekly/hunt/adventure/training/work/farm/lootbox scheduling is resynced from the tracked cooldown state.
+- After a parsed `rpg cd` snapshot or time-cookie reduction, all automated tracked scheduling, including card hand, is resynced from the tracked cooldown state.
+- Card hand arms a 24-hour fallback after an accepted game. A server `wait at least` reply and later cooldown snapshots override it.
 - The `Time cookie` workflow reuses that same tracked scheduling so normal automated commands can finish before and after each `rpg use time cookie`.
 - Incoming Discord messages are deduplicated by message id so cooldown snapshots and time-cookie reductions are only applied once.
 

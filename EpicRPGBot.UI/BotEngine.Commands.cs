@@ -26,11 +26,6 @@ namespace EpicRPGBot.UI
                 onOutgoingSnapshotRegistered);
         }
 
-        private async Task OnTrackedTimerElapsedAsync(TrackedCommandKind kind)
-        {
-            await SendTrackedCommandAsync(kind, GetCommandText(kind));
-        }
-
         private async Task SendTrackedCommandAsync(TrackedCommandKind kind, string command)
         {
             if (!_running)
@@ -107,21 +102,6 @@ namespace EpicRPGBot.UI
                 await SafeDelay(
                     (int)Math.Ceiling((TimeSpan.FromMilliseconds(GlobalCommandGapMs) - elapsed).TotalMilliseconds),
                     _stopCancellation.Token);
-            }
-        }
-
-        private string GetCommandText(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: return "rpg daily";
-                case TrackedCommandKind.Weekly: return "rpg weekly";
-                case TrackedCommandKind.Hunt: return _hunt;
-                case TrackedCommandKind.Adventure: return _adventure;
-                case TrackedCommandKind.Training: return _training;
-                case TrackedCommandKind.Work: return _work;
-                case TrackedCommandKind.Farm: return _farm;
-                default: return _lootbox;
             }
         }
 

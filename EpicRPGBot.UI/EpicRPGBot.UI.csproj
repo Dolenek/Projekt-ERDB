@@ -35,6 +35,7 @@
     <Page Include="Crafting\CraftingWindow.xaml" />
     <Page Include="Dismantling\DismantleWindow.xaml" />
     <Page Include="Settings\GuildRaidSettingsWindow.xaml" />
+    <Page Include="Settings\CardHandSettingsWindow.xaml" />
     <Page Include="Settings\SettingsWindow.xaml" />
     <Page Include="Settings\WorkCommandsWindow.xaml" />
   </ItemGroup>
@@ -51,6 +52,8 @@
     <Compile Include="Automation\AutomationOptions.cs" />
     <Compile Include="Automation\AutomationRuntime.cs" />
     <Compile Include="BotEngine.Commands.cs" />
+    <Compile Include="BotEngine.CardHand.cs" />
+    <Compile Include="BotEngine.TrackedCommands.cs" />
     <Compile Include="BotEngine.Bunny.cs" />
     <Compile Include="BotEngine.Events.cs" />
     <Compile Include="BotEngine.Guard.cs" />
@@ -61,6 +64,7 @@
     <Compile Include="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="Bunny\BunnyPromptParser.cs" />
+    <Compile Include="CardHand\*.cs" />
     <Compile Include="Puzzle\Local\*.cs" />
     <Compile Include="Services\PuzzleImageSource.cs" />
     <Compile Include="Services\IPuzzleAnswerChatClient.cs" />
@@ -147,7 +151,9 @@
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />
     <Compile Include="Services\CooldownStatsCalculator.cs" />
     <Compile Include="Services\CooldownTracker.cs" />
+    <Compile Include="Services\CooldownTracker.Snapshots.cs" />
     <Compile Include="Services\DesktopAlertService.cs" />
+    <Compile Include="Services\DiscordAttachmentImageSource.cs" />
     <Compile Include="Services\DiscordChatClient.Components.cs" />
     <Compile Include="Services\DiscordChatClient.Composer.cs" />
     <Compile Include="Services\DiscordChatClient.PuzzleImages.cs" />
@@ -163,6 +169,7 @@
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
     <Compile Include="Services\IDiscordChatClient.cs" />
+    <Compile Include="Services\IDiscordAttachmentImageClient.cs" />
     <Compile Include="Services\InMemoryLog.cs" />
     <Compile Include="Services\InteractivePromptGate.cs" />
     <Compile Include="Services\LastMessagesBuffer.cs" />
@@ -173,11 +180,13 @@
     <Compile Include="Services\TrackedCommandKind.cs" />
     <Compile Include="Services\TrackedCommandResponseClassifier.cs" />
     <Compile Include="Services\TrackedCommandScheduler.Parsing.cs" />
+    <Compile Include="Services\TrackedCommandScheduler.State.cs" />
     <Compile Include="Services\TrackedCommandScheduler.cs" />
     <Compile Include="Services\UiDispatcher.cs" />
     <Compile Include="Services\WebViewEnvironmentFactory.cs" />
     <Compile Include="Settings\AreaWorkCommandRow.cs" />
     <Compile Include="Settings\GuildRaidSettingsWindow.xaml.cs" />
+    <Compile Include="Settings\CardHandSettingsWindow.xaml.cs" />
     <Compile Include="Settings\SettingsWindow.xaml.cs" />
     <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
     <Compile Include="TimeCookie\TimeCookieLoopEvaluator.cs" />

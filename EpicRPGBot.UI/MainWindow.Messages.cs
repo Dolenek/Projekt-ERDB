@@ -87,13 +87,13 @@ namespace EpicRPGBot.UI
             }
 
             var snapshot = _cooldownTracker.GetTrackedSnapshot();
-            if (_engine.TryInitializeFromCooldownSnapshot(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox))
+            if (_engine.TryInitializeFromCooldownSnapshot(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox, snapshot.CardHand))
             {
                 _log.Engine(source + "; command scheduling initialized");
                 return;
             }
 
-            _engine.SyncTrackedCooldowns(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox);
+            _engine.SyncTrackedCooldowns(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox, snapshot.CardHand);
             _log.Engine(source + "; scheduling resynced from tracked cooldowns");
         }
 

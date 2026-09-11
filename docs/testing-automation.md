@@ -62,12 +62,14 @@ Stable control IDs exposed by the UI:
 - `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`, `GuildBrowserTab`
 - `DiscordWebView`, `PlayerDiscordWebView`, `GuildDiscordWebView`
 - `ConsoleList`, `LastMessagesList`, `CooldownsPanel`
-- `SettingsWindow`, `SettingsCloseButton`
+- `SettingsWindow`, `SettingsCloseButton`, `SettingsCardHandButton`
 - `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
 - `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
 - `SettingsTrainingCooldownInput`
 - `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - `SettingsGuildRaidButton`
+- `CardHandSettingsWindow`, `CardHandAutoPlayInput`, `CardHandLoadDeckButton`, `CardHandDeckStatus`, `CardHandSettingsCloseButton`
+- `CardHandWeight{Reward}` for each of the nine reward types
 - `GuildRaidSettingsWindow`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
 - `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`

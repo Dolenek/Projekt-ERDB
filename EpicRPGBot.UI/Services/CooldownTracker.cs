@@ -10,7 +10,7 @@ using EpicRPGBot.UI.Models;
 
 namespace EpicRPGBot.UI.Services
 {
-    public sealed class CooldownTracker
+    public sealed partial class CooldownTracker
     {
         private static readonly Brush ReadyBrush = CreateBrush(0x24, 0x63, 0x3C);
         private static readonly Brush AlternateReadyBrush = CreateBrush(0x2F, 0x7A, 0x4A);
@@ -117,64 +117,6 @@ namespace EpicRPGBot.UI.Services
             }
 
             return changed;
-        }
-
-        public TimeSpan? GetRemaining(string canonical)
-        {
-            return _entries.TryGetValue(canonical, out var entry) ? entry.Remaining : null;
-        }
-
-        public TrackedCooldownSnapshot GetTrackedSnapshot()
-        {
-            return new TrackedCooldownSnapshot(
-                GetRemaining("daily"),
-                GetRemaining("weekly"),
-                GetRemaining("hunt"),
-                GetRemaining("adventure"),
-                GetRemaining("training"),
-                GetRemaining("work"),
-                GetRemaining("farm"),
-                GetRemaining("lootbox"));
-        }
-
-        public CooldownStatsSnapshot GetStatsSnapshot()
-        {
-            return BuildStatsSnapshot();
-        }
-
-        public void SetCooldown(string canonical, int milliseconds)
-        {
-            if (!_entries.TryGetValue(canonical, out var entry))
-            {
-                return;
-            }
-
-            entry.Remaining = milliseconds > 0
-                ? TimeSpan.FromMilliseconds(milliseconds)
-                : (TimeSpan?)null;
-            UpdateEntryVisual(entry);
-            PublishStatsIfChanged();
-        }
-
-        public void RefreshWorkAliases(string serializedSelections)
-        {
-            foreach (var alias in _workAliases)
-            {
-                _aliasMap.Remove(alias);
-            }
-
-            _workAliases.Clear();
-            foreach (var alias in ConfiguredWorkCommandCatalog.BuildCooldownAliases(serializedSelections))
-            {
-                var normalized = NormalizeAlias(alias);
-                if (string.IsNullOrWhiteSpace(normalized))
-                {
-                    continue;
-                }
-
-                _aliasMap[normalized] = "work";
-                _workAliases.Add(normalized);
-            }
         }
 
         public bool ApplyTimeCookieReduction(TimeSpan reduction)

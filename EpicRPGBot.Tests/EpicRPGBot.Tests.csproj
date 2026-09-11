@@ -31,6 +31,7 @@
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyCatchPlanBuilder.cs" Link="Bunny\BunnyCatchPlanBuilder.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParseResult.cs" Link="Bunny\BunnyPromptParseResult.cs" />
     <Compile Include="..\EpicRPGBot.UI\Bunny\BunnyPromptParser.cs" Link="Bunny\BunnyPromptParser.cs" />
+    <Compile Include="..\EpicRPGBot.UI\CardHand\*.cs" Link="CardHand\%(Filename)%(Extension)" />
     <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemCatalog.cs" Link="Crafting\CraftItemCatalog.cs" />
     <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemDefinition.cs" Link="Crafting\CraftItemDefinition.cs" />
     <Compile Include="..\EpicRPGBot.UI\Crafting\CraftItemKey.cs" Link="Crafting\CraftItemKey.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="..\EpicRPGBot.UI\Services\AppSettingsService.cs" Link="Services\AppSettingsService.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfiguredWorkCommandCatalog.cs" Link="Services\ConfiguredWorkCommandCatalog.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordAttachmentImageSource.cs" Link="Services\DiscordAttachmentImageSource.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\CooldownReductionCalculator.cs" Link="Services\CooldownReductionCalculator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuardIncidentTracker.cs" Link="Services\GuardIncidentTracker.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidOutcomeWatch.cs" Link="Services\GuildRaidOutcomeWatch.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordChatClient.cs" Link="Services\IDiscordChatClient.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\IDiscordAttachmentImageClient.cs" Link="Services\IDiscordAttachmentImageClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\InteractivePromptGate.cs" Link="Services\InteractivePromptGate.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\LocalSettingsStore.cs" Link="Services\LocalSettingsStore.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\MessageReactionGate.cs" Link="Services\MessageReactionGate.cs" />

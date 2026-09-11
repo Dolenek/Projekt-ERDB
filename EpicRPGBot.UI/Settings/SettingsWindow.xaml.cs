@@ -1,8 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using EpicRPGBot.UI.Models;
+using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI.Settings
@@ -10,11 +12,20 @@ namespace EpicRPGBot.UI.Settings
     public partial class SettingsWindow : Window
     {
         private readonly AppSettingsService _settingsService;
+        private readonly Func<Task<CardDeckImportResult>> _loadCardDeck;
         private bool _loadingSettings;
 
         public SettingsWindow(AppSettingsService settingsService)
+            : this(settingsService, null)
+        {
+        }
+
+        public SettingsWindow(
+            AppSettingsService settingsService,
+            Func<Task<CardDeckImportResult>> loadCardDeck)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+            _loadCardDeck = loadCardDeck;
             InitializeComponent();
             ApplyAutomationSurface();
             RegisterSettingsPersistence();
@@ -105,7 +116,8 @@ namespace EpicRPGBot.UI.Settings
                 _settingsService.Current.GuildRaidChannelUrl,
                 _settingsService.Current.GuildRaidTriggerText,
                 _settingsService.Current.GuildRaidMatchMode,
-                _settingsService.Current.GuildRaidAuthorFilter));
+                _settingsService.Current.GuildRaidAuthorFilter,
+                _settingsService.Current.CardHand));
         }
 
         private void CloseBtn_Click(object sender, RoutedEventArgs e)
@@ -133,6 +145,16 @@ namespace EpicRPGBot.UI.Settings
             guildRaidWindow.ShowDialog();
         }
 
+        private void CardHandBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var cardHandWindow = new CardHandSettingsWindow(_settingsService, _loadCardDeck)
+            {
+                Owner = this
+            };
+
+            cardHandWindow.ShowDialog();
+        }
+
         private void ApplyAutomationSurface()
         {
             SetAutomationIdentity(this, "SettingsWindow");
@@ -150,6 +172,7 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(LootboxCdBox, "SettingsLootboxCooldownInput");
             SetAutomationIdentity(WorkCommandsBtn, "SettingsWorkCommandsButton");
             SetAutomationIdentity(GuildRaidBtn, "SettingsGuildRaidButton");
+            SetAutomationIdentity(CardHandBtn, "SettingsCardHandButton");
             SetAutomationIdentity(CloseBtn, "SettingsCloseButton");
         }
 

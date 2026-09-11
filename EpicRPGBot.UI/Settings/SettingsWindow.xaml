@@ -128,6 +128,13 @@
                                     Margin="0,10,0,0"
                                     HorizontalAlignment="Left"
                                     Click="GuildRaidBtn_Click"/>
+                            <Button Name="CardHandBtn"
+                                    Content="Card hand"
+                                    Width="132"
+                                    Height="30"
+                                    Margin="0,10,0,0"
+                                    HorizontalAlignment="Left"
+                                    Click="CardHandBtn_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using EpicRPGBot.UI.Bunny;
+using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.Training;
@@ -29,6 +30,10 @@ namespace EpicRPGBot.UI
         private readonly int _farmCooldown;
         private readonly bool _farmEnabled;
         private readonly TrainingPromptParser _trainingPromptParser = new TrainingPromptParser();
+        private readonly Func<CardHandSettingsSnapshot> _cardHandSettingsProvider;
+        private readonly ICardHandDecisionEngine _cardHandDecisionEngine;
+        private readonly CardHandPromptParser _cardHandPromptParser = new CardHandPromptParser();
+        private readonly CardHandMessageSelector _cardHandMessageSelector = new CardHandMessageSelector();
 
         private string _hunt = "rpg hunt h";
         private string _adventure = "rpg adv h";
@@ -61,16 +66,30 @@ namespace EpicRPGBot.UI
         {
         }
 
-        public BotEngine(IDiscordChatClient chatClient, string workCommand, bool farmEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown)
+        public BotEngine(
+            IDiscordChatClient chatClient,
+            string workCommand,
+            bool farmEnabled,
+            int huntCooldown,
+            int adventureCooldown,
+            int trainingCooldown,
+            int workCooldown,
+            int farmCooldown,
+            int lootboxCooldown,
+            Func<CardHandSettingsSnapshot> cardHandSettingsProvider = null,
+            ICardHandDecisionEngine cardHandDecisionEngine = null)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _puzzleSolver = new PuzzleSolverService(_chatClient);
             _confirmedCommandSender = new ConfirmedCommandSender(_chatClient);
             _guardIncidentTracker = new GuardIncidentTracker();
+            _cardHandSettingsProvider = cardHandSettingsProvider ?? (() => CardHandSettingsSnapshot.Default);
+            _cardHandDecisionEngine = cardHandDecisionEngine ?? new SampledExpectimaxDecisionEngine();
+            _cardHandAutomationEnabled = _cardHandSettingsProvider().AutoPlayEnabled;
             _work = NormalizeWorkCommand(workCommand);
             _farmCooldown = farmCooldown;
             _farmEnabled = farmEnabled;
-            _scheduler = new TrackedCommandScheduler(farmEnabled, huntCooldown, adventureCooldown, trainingCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
+            _scheduler = new TrackedCommandScheduler(farmEnabled, _cardHandSettingsProvider().AutoPlayEnabled, huntCooldown, adventureCooldown, trainingCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);
             _checkMessageTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(2)
@@ -89,6 +108,8 @@ namespace EpicRPGBot.UI
         public event Action<string> OnBunnyInfo;
         public event Action<string> OnBunnyAlert;
         public event Action<string> OnTrainingAlert;
+        public event Action<string> OnCardHandAlert;
+        public event Action<string> OnCardHandInfo;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
         public event Action<string> OnSolverInfo;
 
@@ -160,7 +181,8 @@ namespace EpicRPGBot.UI
             TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
-            TimeSpan? lootboxRemaining)
+            TimeSpan? lootboxRemaining,
+            TimeSpan? cardHandRemaining = null)
         {
             if (!_running || !_awaitingStartupCooldownSnapshot)
             {
@@ -168,7 +190,7 @@ namespace EpicRPGBot.UI
             }
 
             _awaitingStartupCooldownSnapshot = false;
-            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining, cardHandRemaining);
             return true;
         }
 
@@ -180,14 +202,15 @@ namespace EpicRPGBot.UI
             TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
-            TimeSpan? lootboxRemaining)
+            TimeSpan? lootboxRemaining,
+            TimeSpan? cardHandRemaining = null)
         {
             if (!_running)
             {
                 return;
             }
 
-            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining);
+            ApplyTrackedCooldownSnapshot(dailyRemaining, weeklyRemaining, huntRemaining, adventureRemaining, trainingRemaining, workRemaining, farmRemaining, lootboxRemaining, cardHandRemaining);
         }
 
         private void ApplyTrackedCooldownSnapshot(
@@ -198,11 +221,13 @@ namespace EpicRPGBot.UI
             TimeSpan? trainingRemaining,
             TimeSpan? workRemaining,
             TimeSpan? farmRemaining,
-            TimeSpan? lootboxRemaining)
+            TimeSpan? lootboxRemaining,
+            TimeSpan? cardHandRemaining)
         {
             _scheduler.ClearPending();
             ScheduleFromRemaining(TrackedCommandKind.Daily, dailyRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Weekly, weeklyRemaining);
+            ScheduleFromRemaining(TrackedCommandKind.CardHand, cardHandRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Hunt, huntRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Adventure, adventureRemaining);
             ScheduleFromRemaining(TrackedCommandKind.Training, trainingRemaining);

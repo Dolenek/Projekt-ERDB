@@ -25,6 +25,7 @@ namespace EpicRPGBot.UI.Services
         }
 
         private readonly bool _farmEnabled;
+        private bool _cardHandEnabled;
         private readonly int _huntCooldown;
         private readonly int _adventureCooldown;
         private readonly int _trainingCooldown;
@@ -33,6 +34,7 @@ namespace EpicRPGBot.UI.Services
         private readonly int _lootboxCooldown;
         private readonly DispatcherTimer _dailyTimer;
         private readonly DispatcherTimer _weeklyTimer;
+        private readonly DispatcherTimer _cardHandTimer;
         private readonly DispatcherTimer _huntTimer;
         private readonly DispatcherTimer _adventureTimer;
         private readonly DispatcherTimer _trainingTimer;
@@ -43,6 +45,7 @@ namespace EpicRPGBot.UI.Services
 
         private DateTime? _dailyDueUtc;
         private DateTime? _weeklyDueUtc;
+        private DateTime? _cardHandDueUtc;
         private DateTime? _huntDueUtc;
         private DateTime? _adventureDueUtc;
         private DateTime? _trainingDueUtc;
@@ -51,6 +54,7 @@ namespace EpicRPGBot.UI.Services
         private DateTime? _lootboxDueUtc;
         private TimeSpan? _pausedDailyDelay;
         private TimeSpan? _pausedWeeklyDelay;
+        private TimeSpan? _pausedCardHandDelay;
         private TimeSpan? _pausedHuntDelay;
         private TimeSpan? _pausedAdventureDelay;
         private TimeSpan? _pausedTrainingDelay;
@@ -59,10 +63,16 @@ namespace EpicRPGBot.UI.Services
         private TimeSpan? _pausedLootboxDelay;
 
         public TrackedCommandScheduler(bool farmEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
+            : this(farmEnabled, true, huntCooldown, adventureCooldown, trainingCooldown, workCooldown, farmCooldown, lootboxCooldown, onTimerElapsed)
+        {
+        }
+
+        public TrackedCommandScheduler(bool farmEnabled, bool cardHandEnabled, int huntCooldown, int adventureCooldown, int trainingCooldown, int workCooldown, int farmCooldown, int lootboxCooldown, Func<TrackedCommandKind, Task> onTimerElapsed)
         {
             if (onTimerElapsed == null) throw new ArgumentNullException(nameof(onTimerElapsed));
 
             _farmEnabled = farmEnabled;
+            _cardHandEnabled = cardHandEnabled;
             _huntCooldown = huntCooldown;
             _adventureCooldown = adventureCooldown;
             _trainingCooldown = trainingCooldown;
@@ -71,6 +81,7 @@ namespace EpicRPGBot.UI.Services
             _lootboxCooldown = lootboxCooldown;
             _dailyTimer = CreateCommandTimer(DailyCooldownMs, () => onTimerElapsed(TrackedCommandKind.Daily));
             _weeklyTimer = CreateCommandTimer(WeeklyCooldownMs, () => onTimerElapsed(TrackedCommandKind.Weekly));
+            _cardHandTimer = CreateCommandTimer(DailyCooldownMs, () => onTimerElapsed(TrackedCommandKind.CardHand));
             _huntTimer = CreateCommandTimer(huntCooldown, () => onTimerElapsed(TrackedCommandKind.Hunt));
             _adventureTimer = CreateCommandTimer(adventureCooldown, () => onTimerElapsed(TrackedCommandKind.Adventure));
             _trainingTimer = CreateCommandTimer(trainingCooldown, () => onTimerElapsed(TrackedCommandKind.Training));
@@ -93,7 +104,8 @@ namespace EpicRPGBot.UI.Services
 
         public void Schedule(TrackedCommandKind kind, TimeSpan delay, bool isRunning)
         {
-            if (!isRunning || (kind == TrackedCommandKind.Farm && !_farmEnabled))
+            if (!isRunning || (kind == TrackedCommandKind.Farm && !_farmEnabled) ||
+                (kind == TrackedCommandKind.CardHand && !_cardHandEnabled))
             {
                 return;
             }
@@ -113,6 +125,7 @@ namespace EpicRPGBot.UI.Services
         {
             Stop(TrackedCommandKind.Daily);
             Stop(TrackedCommandKind.Weekly);
+            Stop(TrackedCommandKind.CardHand);
             Stop(TrackedCommandKind.Hunt);
             Stop(TrackedCommandKind.Adventure);
             Stop(TrackedCommandKind.Training);
@@ -130,6 +143,7 @@ namespace EpicRPGBot.UI.Services
         {
             Pause(TrackedCommandKind.Daily);
             Pause(TrackedCommandKind.Weekly);
+            Pause(TrackedCommandKind.CardHand);
             Pause(TrackedCommandKind.Hunt);
             Pause(TrackedCommandKind.Adventure);
             Pause(TrackedCommandKind.Training);
@@ -142,6 +156,7 @@ namespace EpicRPGBot.UI.Services
         {
             Resume(TrackedCommandKind.Daily, isRunning);
             Resume(TrackedCommandKind.Weekly, isRunning);
+            Resume(TrackedCommandKind.CardHand, isRunning);
             Resume(TrackedCommandKind.Hunt, isRunning);
             Resume(TrackedCommandKind.Adventure, isRunning);
             Resume(TrackedCommandKind.Training, isRunning);
@@ -172,6 +187,12 @@ namespace EpicRPGBot.UI.Services
             }
 
             Schedule(pending.Kind, TimeSpan.FromMilliseconds(GetBaseCooldownMs(pending.Kind)), isRunning);
+        }
+
+        public void SetCardHandEnabled(bool enabled, bool isRunning)
+        {
+            _cardHandEnabled = enabled;
+            if (!enabled) Stop(TrackedCommandKind.CardHand);
         }
 
         private static DispatcherTimer CreateCommandTimer(int intervalMs, Func<Task> action)
@@ -255,96 +276,6 @@ namespace EpicRPGBot.UI.Services
             }
 
             Schedule(kind, paused.Value, isRunning);
-        }
-
-        private DispatcherTimer GetTimer(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: return _dailyTimer;
-                case TrackedCommandKind.Weekly: return _weeklyTimer;
-                case TrackedCommandKind.Hunt: return _huntTimer;
-                case TrackedCommandKind.Adventure: return _adventureTimer;
-                case TrackedCommandKind.Training: return _trainingTimer;
-                case TrackedCommandKind.Work: return _workTimer;
-                case TrackedCommandKind.Farm: return _farmTimer;
-                default: return _lootboxTimer;
-            }
-        }
-
-        private int GetBaseCooldownMs(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: return DailyCooldownMs;
-                case TrackedCommandKind.Weekly: return WeeklyCooldownMs;
-                case TrackedCommandKind.Hunt: return _huntCooldown;
-                case TrackedCommandKind.Adventure: return _adventureCooldown;
-                case TrackedCommandKind.Training: return _trainingCooldown;
-                case TrackedCommandKind.Work: return _workCooldown;
-                case TrackedCommandKind.Farm: return _farmCooldown;
-                default: return _lootboxCooldown;
-            }
-        }
-
-        private DateTime? GetDueUtc(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: return _dailyDueUtc;
-                case TrackedCommandKind.Weekly: return _weeklyDueUtc;
-                case TrackedCommandKind.Hunt: return _huntDueUtc;
-                case TrackedCommandKind.Adventure: return _adventureDueUtc;
-                case TrackedCommandKind.Training: return _trainingDueUtc;
-                case TrackedCommandKind.Work: return _workDueUtc;
-                case TrackedCommandKind.Farm: return _farmDueUtc;
-                default: return _lootboxDueUtc;
-            }
-        }
-
-        private void SetDueUtc(TrackedCommandKind kind, DateTime? value)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: _dailyDueUtc = value; break;
-                case TrackedCommandKind.Weekly: _weeklyDueUtc = value; break;
-                case TrackedCommandKind.Hunt: _huntDueUtc = value; break;
-                case TrackedCommandKind.Adventure: _adventureDueUtc = value; break;
-                case TrackedCommandKind.Training: _trainingDueUtc = value; break;
-                case TrackedCommandKind.Work: _workDueUtc = value; break;
-                case TrackedCommandKind.Farm: _farmDueUtc = value; break;
-                default: _lootboxDueUtc = value; break;
-            }
-        }
-
-        private TimeSpan? GetPausedDelay(TrackedCommandKind kind)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: return _pausedDailyDelay;
-                case TrackedCommandKind.Weekly: return _pausedWeeklyDelay;
-                case TrackedCommandKind.Hunt: return _pausedHuntDelay;
-                case TrackedCommandKind.Adventure: return _pausedAdventureDelay;
-                case TrackedCommandKind.Training: return _pausedTrainingDelay;
-                case TrackedCommandKind.Work: return _pausedWorkDelay;
-                case TrackedCommandKind.Farm: return _pausedFarmDelay;
-                default: return _pausedLootboxDelay;
-            }
-        }
-
-        private void SetPausedDelay(TrackedCommandKind kind, TimeSpan? value)
-        {
-            switch (kind)
-            {
-                case TrackedCommandKind.Daily: _pausedDailyDelay = value; break;
-                case TrackedCommandKind.Weekly: _pausedWeeklyDelay = value; break;
-                case TrackedCommandKind.Hunt: _pausedHuntDelay = value; break;
-                case TrackedCommandKind.Adventure: _pausedAdventureDelay = value; break;
-                case TrackedCommandKind.Training: _pausedTrainingDelay = value; break;
-                case TrackedCommandKind.Work: _pausedWorkDelay = value; break;
-                case TrackedCommandKind.Farm: _pausedFarmDelay = value; break;
-                default: _pausedLootboxDelay = value; break;
-            }
         }
 
     }

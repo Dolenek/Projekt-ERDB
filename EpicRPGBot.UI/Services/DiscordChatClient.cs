@@ -6,7 +6,7 @@ using Microsoft.Web.WebView2.Wpf;
 
 namespace EpicRPGBot.UI.Services
 {
-    public sealed partial class DiscordChatClient : IDiscordChatClient
+    public sealed partial class DiscordChatClient : IDiscordChatClient, IDiscordAttachmentImageClient
     {
         private readonly WebView2 _web;
         private readonly string _tabRole;

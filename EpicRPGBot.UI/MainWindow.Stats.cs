@@ -126,6 +126,11 @@ namespace EpicRPGBot.UI
                 return "weekly";
             }
 
+            if (normalized.StartsWith("rpg card hand", System.StringComparison.Ordinal))
+            {
+                return "card_hand";
+            }
+
             if (normalized.StartsWith("rpg adv", System.StringComparison.Ordinal))
             {
                 return "adventure";

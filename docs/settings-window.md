@@ -4,16 +4,17 @@
 
 Layout:
 - `Discord` section: channel URL and the `Fallback to @me if empty` toggle
-- `Bot Parameters` section: area, `Ascended`, `Auto delete dungeon channel after a win`, a `Work commands` button, a `Guild raid` button, and hunt/adventure/training/work/farm/lootbox cooldown baselines
+- `Bot Parameters` section: area, `Ascended`, `Auto delete dungeon channel after a win`, `Work commands`, `Guild raid`, and `Card Hand` buttons, plus hunt/adventure/training/work/farm/lootbox cooldown baselines
 - `Close` button only; there is no separate save/apply action
 - `Work commands` opens a second modal with editable work-command text rows for areas `1..15`
 - `Guild raid` opens a second modal with guild-raid channel, trigger text, match mode, and optional author filter
+- `Card Hand` opens a second modal for auto-play, nine reward weights, and the persisted deck-ownership import; see [Card hand automation](card-hand-automation.md)
 
 Persistence model:
 - File: `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`
 - The settings window loads from the shared in-memory settings snapshot when it opens.
 - Every edit saves immediately back to the shared snapshot and the backing `.ini` file.
-- Existing keys are preserved and extended with `ascended`, `training_ms`, `work_commands`, `profile_player_name`, `auto_delete_dungeon_channel`, `guild_raid_channel_url`, `guild_raid_trigger_text`, `guild_raid_match_mode`, and `guild_raid_author_filter`.
+- Existing keys are preserved. Card-hand keys store the enabled flag, nine weights, deck-loaded flag, sorted owned-card codes, and successful-load UTC timestamp.
 
 Runtime behavior:
 - `Go To Channel` reads the current saved settings snapshot, not a textbox on the main window.
@@ -30,5 +31,6 @@ Automation IDs:
 - Dialog fields: `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`, `SettingsAscendedInput`, `SettingsAutoDeleteDungeonChannelInput`
 - Cooldown fields: `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsTrainingCooldownInput`, `SettingsWorkCooldownInput`, `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - Dialog actions: `SettingsWorkCommandsButton`, `SettingsGuildRaidButton`, `SettingsCloseButton`
+- Card-hand dialog: `CardHandSettingsWindow`, `CardHandAutoPlayInput`, `CardHandLoadDeckButton`, `CardHandDeckStatus`, `CardHandWeight{Reward}`, `CardHandSettingsCloseButton`
 - Guild-raid dialog: `GuildRaidSettingsWindow`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
 - Work-commands dialog: `WorkCommandsWindow`, `WorkCommandsCloseButton`, and `WorkCommandArea{N}Input` for areas `1..15`

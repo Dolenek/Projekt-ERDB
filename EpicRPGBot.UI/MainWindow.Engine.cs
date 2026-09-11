@@ -97,6 +97,20 @@ namespace EpicRPGBot.UI
                 });
             };
 
+            engine.OnCardHandInfo += message =>
+            {
+                UiDispatcher.OnUI(() => _log.Info("[card hand] " + message));
+            };
+
+            engine.OnCardHandAlert += message =>
+            {
+                UiDispatcher.OnUI(() =>
+                {
+                    _log.Warning("[card hand] " + message);
+                    _alertService.ShowCardHandAlert(this, message);
+                });
+            };
+
             engine.OnMessageSeen += snapshot =>
             {
                 UiDispatcher.OnUI(() => HandleObservedMessage(snapshot));
@@ -150,6 +164,9 @@ namespace EpicRPGBot.UI
                     break;
                 case "weekly":
                     _cooldownTracker.SetCooldown("weekly", 604800000);
+                    break;
+                case "card_hand":
+                    _cooldownTracker.SetCooldown("card_hand", 86400000);
                     break;
                 case "hunt":
                     _cooldownTracker.SetCooldown("hunt", GetConfiguredHuntMs());
@@ -233,7 +250,8 @@ namespace EpicRPGBot.UI
                 GetConfiguredTrainingMs(),
                 GetConfiguredWorkMs(),
                 GetConfiguredFarmMs(),
-                GetConfiguredLootboxMs());
+                GetConfiguredLootboxMs(),
+                () => GetCurrentSettings().CardHand);
         }
 
     }

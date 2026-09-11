@@ -4,6 +4,7 @@ namespace EpicRPGBot.UI.Services
     {
         Daily,
         Weekly,
+        CardHand,
         Hunt,
         Adventure,
         Training,

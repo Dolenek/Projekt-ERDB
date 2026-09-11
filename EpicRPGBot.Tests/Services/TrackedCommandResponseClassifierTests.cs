@@ -77,5 +77,18 @@ namespace EpicRPGBot.Tests.Services
 
             Assert.False(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));
         }
+
+        [Fact]
+        public void CardHandPrompt_IsTrackedAsCardHand()
+        {
+            var snapshot = new DiscordMessageSnapshot(
+                "m7",
+                "EPIC RPG\nCard hand — choose a card to redraw or pass.",
+                "EPIC RPG");
+
+            Assert.True(TrackedCommandResponseClassifier.LooksLikeTrackedCommandResponse(snapshot));
+            Assert.True(TrackedCommandResponseClassifier.TryInferKind(snapshot.Text, out var kind));
+            Assert.Equal(TrackedCommandKind.CardHand, kind);
+        }
     }
 }

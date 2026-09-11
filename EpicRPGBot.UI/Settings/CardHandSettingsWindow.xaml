@@ -1,0 +1,103 @@
+<Window x:Class="EpicRPGBot.UI.Settings.CardHandSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Card Hand Settings"
+        Width="470"
+        Height="650"
+        MinWidth="470"
+        MinHeight="600"
+        Background="#1e1f22"
+        Foreground="#ddd"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#1e1f22"/>
+            <Setter Property="Foreground" Value="#ddd"/>
+            <Setter Property="BorderBrush" Value="#4a4d52"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Card Hand" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock Text="Maximize the weighted expected reward from each hand."
+                       Foreground="#aaa" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Background="#242529" BorderBrush="#2f3136" BorderThickness="1"
+                        CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <CheckBox Name="AutoPlayCheckBox"
+                                  Content="Auto Card Hand"
+                                  Foreground="#ddd"/>
+                        <TextBlock Name="DeckStatusText" Foreground="#aaa" Margin="0,12,0,0"
+                                   TextWrapping="Wrap"/>
+                        <Button Name="LoadDeckButton" Content="Load card deck"
+                                Width="132" Height="30" Margin="0,10,0,0"
+                                HorizontalAlignment="Left" Click="LoadDeckButton_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#242529" BorderBrush="#2f3136" BorderThickness="1"
+                        CornerRadius="6" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="Reward weights" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Set a reward to 0 to ignore it. Changes save automatically."
+                                   Foreground="#aaa" Margin="0,4,0,12" TextWrapping="Wrap"/>
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Time capsule" Foreground="#aaa"/>
+                                <TextBox Name="TimeCapsuleWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Round card" Foreground="#aaa"/>
+                                <TextBox Name="RoundCardWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="ETERNAL lootbox" Foreground="#aaa"/>
+                                <TextBox Name="EternalLootboxWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="GODLY lootbox" Foreground="#aaa"/>
+                                <TextBox Name="GodlyLootboxWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="OMEGA lootbox" Foreground="#aaa"/>
+                                <TextBox Name="OmegaLootboxWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Flask" Foreground="#aaa"/>
+                                <TextBox Name="FlaskWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Time cookie" Foreground="#aaa"/>
+                                <TextBox Name="TimeCookieWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Guild ring" Foreground="#aaa"/>
+                                <TextBox Name="GuildRingWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="Arena cookie" Foreground="#aaa"/>
+                                <TextBox Name="ArenaCookieWeightBox" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </UniformGrid>
+                        <TextBlock Name="ValidationText" Foreground="#f0b35a" Margin="0,6,0,0"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Grid.Row="2" Name="CloseButton" Content="Close" Width="88" Height="30"
+                Margin="0,12,0,0" HorizontalAlignment="Right" Click="CloseButton_Click"/>
+    </Grid>
+</Window>

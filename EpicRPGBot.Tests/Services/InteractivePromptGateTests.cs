@@ -34,5 +34,21 @@ namespace EpicRPGBot.Tests.Services
             gate.EndTraining();
             Assert.False(gate.IsAnyPending);
         }
+
+        [Fact]
+        public void CardHandPending_ParticipatesInGlobalInteractiveLock()
+        {
+            var gate = new InteractivePromptGate();
+
+            Assert.True(gate.TryBeginCardHand());
+            Assert.False(gate.TryBeginCardHand());
+            Assert.True(gate.IsCardHandPending);
+            Assert.True(gate.IsAnyPending);
+
+            gate.Reset();
+
+            Assert.False(gate.IsCardHandPending);
+            Assert.False(gate.IsAnyPending);
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,10 +12,12 @@ namespace EpicRPGBot.UI.Services
 
     public sealed class PuzzleImageSource : IPuzzleImageSource
     {
-        private static readonly HttpClient Client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-        private readonly IDiscordChatClient _chat;
+        private readonly DiscordAttachmentImageSource _attachmentSource;
         private readonly PuzzleDebugArtifactWriter _debug = new PuzzleDebugArtifactWriter();
-        public PuzzleImageSource(IDiscordChatClient chat) { _chat = chat; }
+        public PuzzleImageSource(IDiscordChatClient chat)
+        {
+            _attachmentSource = new DiscordAttachmentImageSource(chat);
+        }
 
         public async Task<byte[]> LoadAsync(string targetId, string adjacentId,
             Action<string> report, CancellationToken cancellationToken)
@@ -29,13 +30,11 @@ namespace EpicRPGBot.UI.Services
         private async Task<byte[]> TryLoadAsync(string messageId, Action<string> report, CancellationToken token)
         {
             if (string.IsNullOrWhiteSpace(messageId)) return null;
-            var url = await _chat.GetPuzzleImageUrlForMessageIdAsync(messageId);
-            token.ThrowIfCancellationRequested();
-            if (string.IsNullOrWhiteSpace(url)) return null;
             try
             {
-                var bytes = await DownloadAsync(url, token);
-                var debugPath = _debug.TryWriteCapture(messageId, "message-url", url, bytes);
+                var bytes = await _attachmentSource.LoadAsync(messageId, token);
+                if (bytes == null) return null;
+                var debugPath = _debug.TryWriteCapture(messageId, "message-url", string.Empty, bytes);
                 if (!string.IsNullOrEmpty(debugPath)) report?.Invoke("Puzzle debug artifact: " + debugPath);
                 return bytes;
             }
@@ -51,35 +50,5 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private static async Task<byte[]> DownloadAsync(string url, CancellationToken token)
-        {
-            using (var deadline = CancellationTokenSource.CreateLinkedTokenSource(token))
-            {
-                deadline.CancelAfter(TimeSpan.FromSeconds(10));
-                using (var response = await Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, deadline.Token))
-                {
-                    response.EnsureSuccessStatusCode();
-                    return await ReadBoundedAsync(response, deadline.Token);
-                }
-            }
-        }
-
-        private static async Task<byte[]> ReadBoundedAsync(HttpResponseMessage response, CancellationToken token)
-        {
-            const int limit = 8 * 1024 * 1024;
-            if (response.Content.Headers.ContentLength > limit) throw new InvalidOperationException("Puzzle attachment is too large.");
-            using (var stream = await response.Content.ReadAsStreamAsync())
-            using (var output = new System.IO.MemoryStream())
-            {
-                var buffer = new byte[8192];
-                int count;
-                while ((count = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
-                {
-                    if (output.Length + count > limit) throw new InvalidOperationException("Puzzle attachment is too large.");
-                    output.Write(buffer, 0, count);
-                }
-                return output.ToArray();
-            }
-        }
     }
 }

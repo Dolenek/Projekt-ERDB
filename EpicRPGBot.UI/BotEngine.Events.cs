@@ -40,6 +40,12 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            if (_interactivePromptGate.IsCardHandPending)
+            {
+                _previousMessageText = msg;
+                return;
+            }
+
             if (!TryBeginReactiveHandling(snapshot))
             {
                 _previousMessageText = msg;

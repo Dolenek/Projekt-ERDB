@@ -7,7 +7,12 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed partial class DiscordChatClient
     {
-        public async Task<string> GetPuzzleImageUrlForMessageIdAsync(string messageId)
+        public Task<string> GetPuzzleImageUrlForMessageIdAsync(string messageId)
+        {
+            return GetMessageImageUrlForMessageIdAsync(messageId);
+        }
+
+        public async Task<string> GetMessageImageUrlForMessageIdAsync(string messageId)
         {
             if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(messageId))
             {

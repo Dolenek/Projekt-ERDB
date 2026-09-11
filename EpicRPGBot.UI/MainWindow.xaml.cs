@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using EpicRPGBot.UI.AreaTrading;
+using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
 using EpicRPGBot.UI.Dungeon;
@@ -38,6 +39,7 @@ namespace EpicRPGBot.UI
         private readonly CompleteDungeonRunCoordinator _completeDungeonRunCoordinator;
         private readonly DungeonWorkflow _dungeonWorkflow;
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
+        private readonly CardDeckImportWorkflow _cardDeckImportWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedMessageOrder = new Queue<string>();
 
@@ -74,6 +76,7 @@ namespace EpicRPGBot.UI
             _completeDungeonRunCoordinator = new CompleteDungeonRunCoordinator();
             _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
+            _cardDeckImportWorkflow = new CardDeckImportWorkflow(_botChatClient);
             _puzzleSelfTestRunner = new PuzzleSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);
