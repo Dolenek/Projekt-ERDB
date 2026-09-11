@@ -9,18 +9,37 @@
     <UserControl.Resources>
         <Style x:Key="CooldownRowBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Padding" Value="6,2"/>
-            <Setter Property="Margin" Value="0,1,0,1"/>
+            <Setter Property="BorderBrush" Value="#22313D"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="3,1"/>
+        </Style>
+        <Style x:Key="CooldownValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#96A5B3"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="Text" Value="READY">
+                    <Setter Property="Background" Value="#38E879"/>
+                    <Setter Property="Foreground" Value="#07120C"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Padding" Value="6,0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="CooldownGroupStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#96A5B3"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,2,0,1"/>
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalAlignment="Bottom" VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-            <Separator Background="#2f3136" Margin="0,0,0,8"/>
-            <TextBlock Text="Cooldowns (visual)" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <StackPanel x:Name="CooldownsPanel" Margin="0,0,0,8">
-                <TextBlock Text="Rewards" Foreground="#ccc" Margin="0,6,0,2"/>
+    <StackPanel>
+            <Separator Background="#2f3136" Margin="0,0,0,3"/>
+            <TextBlock Text="Cooldowns" Foreground="#F4F7FA" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,2"/>
+            <StackPanel x:Name="CooldownsPanel" TextElement.FontSize="12">
+                <TextBlock Text="Rewards" Style="{StaticResource CooldownGroupStyle}"/>
 
                 <Border x:Name="DailyCdRow" Style="{StaticResource CooldownRowBorderStyle}">
                     <Grid>
@@ -29,7 +48,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="daily" Foreground="#ddd"/>
-                        <TextBlock x:Name="DailyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="DailyCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -40,7 +59,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="weekly" Foreground="#ddd"/>
-                        <TextBlock x:Name="WeeklyCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="WeeklyCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -51,7 +70,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="lootbox" Foreground="#ddd"/>
-                        <TextBlock x:Name="LootboxCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="LootboxCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -62,22 +81,22 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="card hand" Foreground="#ddd"/>
-                        <TextBlock x:Name="CardHandCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="CardHandCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
-                <Border x:Name="VoteCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
+                <Border x:Name="VoteCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,0,0,2">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="vote" Foreground="#ddd"/>
-                        <TextBlock x:Name="VoteCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="VoteCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
-                <TextBlock Text="Experience" Foreground="#ccc" Margin="0,6,0,2"/>
+                <TextBlock Text="Experience" Style="{StaticResource CooldownGroupStyle}"/>
 
                 <Border x:Name="HuntCdRow" Style="{StaticResource CooldownRowBorderStyle}">
                     <Grid>
@@ -86,7 +105,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="hunt" Foreground="#ddd"/>
-                        <TextBlock x:Name="HuntCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="HuntCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -97,7 +116,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="adventure" Foreground="#ddd"/>
-                        <TextBlock x:Name="AdventureCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="AdventureCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -108,7 +127,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="training" Foreground="#ddd"/>
-                        <TextBlock x:Name="TrainingCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="TrainingCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -119,22 +138,22 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="duel" Foreground="#ddd"/>
-                        <TextBlock x:Name="DuelCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="DuelCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
-                <Border x:Name="QuestCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,1,0,7">
+                <Border x:Name="QuestCdRow" Style="{StaticResource CooldownRowBorderStyle}" Margin="0,0,0,2">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="quest | epic quest" Foreground="#ddd"/>
-                        <TextBlock x:Name="QuestCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="QuestCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
-                <TextBlock Text="Progress" Foreground="#ccc" Margin="0,6,0,2"/>
+                <TextBlock Text="Progress" Style="{StaticResource CooldownGroupStyle}"/>
 
                 <Border x:Name="WorkCdRow" Style="{StaticResource CooldownRowBorderStyle}">
                     <Grid>
@@ -143,7 +162,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="chop | fish | pickup | mine" Foreground="#ddd"/>
-                        <TextBlock x:Name="WorkCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="WorkCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -154,7 +173,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="farm" Foreground="#ddd"/>
-                        <TextBlock x:Name="FarmCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="FarmCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -165,7 +184,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="horse breeding | horse race" Foreground="#ddd"/>
-                        <TextBlock x:Name="HorseCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="HorseCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -176,7 +195,7 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="arena" Foreground="#ddd"/>
-                        <TextBlock x:Name="ArenaCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="ArenaCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
 
@@ -187,10 +206,9 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="dungeon | miniboss" Foreground="#ddd"/>
-                        <TextBlock x:Name="DungeonCdText" Grid.Column="1" Text="00h 00m 00s" Foreground="#aaa" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="DungeonCdText" Grid.Column="1" Text="READY" Style="{StaticResource CooldownValueStyle}"/>
                     </Grid>
                 </Border>
             </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>

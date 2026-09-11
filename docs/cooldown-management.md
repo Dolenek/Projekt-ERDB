@@ -12,9 +12,10 @@ Tracked cooldown state:
 - The right panel shows parsed cooldowns for rewards, experience, and progress commands.
 - When a message contains `cooldowns`, the tracker parses entries such as `quest | epic quest (1m 2s)` and maps aliases to canonical labels.
 - The `work` row recognizes both the built-in work aliases and the per-area configured work-command texts from settings, so custom commands such as `rpg dynamite` still map to the same `work` visual row.
-- A 1-second UI timer decrements active labels until they reach `Ready`.
+- A 1-second UI timer decrements active labels until they reach `READY`.
 - The Stats sidebar also shows live counts for currently running cooldowns across all tracked rows and per section (`Rewards`, `Experience`, `Progress`).
-- Rows that are `Ready` get a stable green/light-green background based on fixed row order; active cooldown rows keep the default dark background.
+- Active rows show a right-aligned countdown on the dark panel. Ready rows keep their dark background and replace the countdown with a compact green `READY` badge.
+- The full 15-row cooldown list is compact enough to remain visible in the expanded Control Center without its own scrollbar.
 - For daily, weekly, card hand, hunt, adventure, training, work, farm, and lootbox, the tracked values are also used to resync the runtime scheduler after a fresh `rpg cd` snapshot.
 
 Time-cookie handling:
@@ -43,9 +44,9 @@ Alias mapping preserved in the current app:
 - `horse breeding` and `horse race` map to the horse label.
 - `dungeon` and `miniboss` map to the dungeon label.
 
-`Inicialize` workflow:
+`Initialize` workflow:
 1. Send one opening `rpg cd` and parse it before any command-specific initialization starts.
-2. If hunt, adventure, training, work, farm, or lootbox already has remaining time in that opening snapshot, skip that command and leave its saved setting unchanged. Daily and weekly use fixed cooldown baselines and are not part of `Inicialize`.
+2. If hunt, adventure, training, work, farm, or lootbox already has remaining time in that opening snapshot, skip that command and leave its saved setting unchanged. Daily and weekly use fixed cooldown baselines and are not part of `Initialize`.
 3. For commands that were ready in the opening snapshot, send the command, wait 2 seconds, send `rpg cd`, parse the refreshed remaining time, and persist the corresponding `*_ms` value.
 4. Add a fixed 4-second safety overhead to the parsed remaining time before saving.
 5. The next settings-window open reflects the saved milliseconds only for commands that were actually initialized.

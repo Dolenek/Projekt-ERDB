@@ -24,6 +24,7 @@ namespace EpicRPGBot.UI.Settings
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _loadDeck = loadDeck;
             InitializeComponent();
+            DialogWindowShell.Attach(this, MinimizeBtn, MaximizeRestoreBtn, CloseWindowBtn);
             BuildWeightMap();
             ApplyAutomationSurface();
             LoadSettings(_settingsService.Current.CardHand);
@@ -136,6 +137,9 @@ namespace EpicRPGBot.UI.Settings
             SetId(LoadDeckButton, "CardHandLoadDeckButton");
             SetId(DeckStatusText, "CardHandDeckStatus");
             SetId(CloseButton, "CardHandSettingsCloseButton");
+            SetId(MinimizeBtn, "CardHandSettingsMinimizeButton");
+            SetId(MaximizeRestoreBtn, "CardHandSettingsMaximizeRestoreButton");
+            SetId(CloseWindowBtn, "CardHandSettingsWindowCloseButton");
             foreach (var pair in _weightBoxes) SetId(pair.Value, "CardHandWeight" + pair.Key);
         }
 

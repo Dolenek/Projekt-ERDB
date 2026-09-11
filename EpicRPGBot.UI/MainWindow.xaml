@@ -5,215 +5,355 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:EpicRPGBot.UI.Controls"
+        xmlns:models="clr-namespace:EpicRPGBot.UI.Models"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
-        Title="EpicRPG Bot UI" Height="800" Width="1300" WindowStartupLocation="CenterScreen">
+        Title="EpicRPG Bot UI"
+        Icon="/EpicRPGBot.UI;component/Assets/icon.png"
+        Width="1600"
+        Height="900"
+        MinWidth="1200"
+        MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        SourceInitialized="MainWindow_SourceInitialized"
+        StateChanged="MainWindow_StateChanged"
+        Background="#081119">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="56"
+                            ResizeBorderThickness="6"
+                            CornerRadius="0"
+                            GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
     <Window.Resources>
-        <Style x:Key="BrowserTabItemStyle" TargetType="TabItem">
-            <Setter Property="Background" Value="#2b2d31"/>
-            <Setter Property="Foreground" Value="#ddd"/>
-            <Setter Property="BorderBrush" Value="#3a3c42"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Margin" Value="0,0,2,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border Name="TabBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="1,1,1,0"
-                                CornerRadius="4,4,0,0"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="LightBlue"/>
-                                <Setter Property="Foreground" Value="#10243a"/>
-                                <Setter Property="Panel.ZIndex" Value="1"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#7fb8e6"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/MainWindowTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
-    <Grid Background="#1e1f22">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="300"/>
-        </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#242529" BorderBrush="#2f3136" BorderThickness="0,0,1,0">
-            <DockPanel Margin="12">
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,12">
-                    <Button Name="LastMessagesTabBtn" Content="Last messages" Margin="0,0,8,0" Padding="8,4" Click="LastMessagesTabBtn_Click"/>
-                    <Button Name="StatsTabBtn" Content="Stats" Margin="0,0,8,0" Padding="8,4" Click="StatsTabBtn_Click"/>
-                    <Button Name="ConsoleTabBtn" Content="Console" Padding="8,4" Click="ConsoleTabBtn_Click"/>
-                </StackPanel>
-
-                <Grid>
-                    <Grid Name="LastMessagesPanel" Visibility="Visible">
-                        <ListBox Name="StatsList"
-                                 Background="#1e1f22"
-                                 Foreground="#ddd"
-                                 BorderBrush="#3a3c42"
-                                 HorizontalContentAlignment="Stretch">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Path=., Mode=OneWay}"
-                                               TextWrapping="Wrap" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-
-                    <Grid Name="StatsPanel" Visibility="Collapsed">
-                        <StackPanel Background="#1e1f22" Margin="4">
-                            <TextBlock Text="Stats" Foreground="#ddd" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock Name="HuntCountText" Text="Hunt sent: 0" Foreground="#ddd"/>
-                            <TextBlock Name="AdventureCountText" Text="Adventure sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="TrainingCountText" Text="Training sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="WorkCountText" Text="Work sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="FarmCountText" Text="Farm sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="LootboxCountText" Text="Lootbox sent: 0" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="RunningCooldownsText" Text="Running cooldowns: 0 / 15" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="RunningRewardsText" Text="Rewards running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="RunningExperienceText" Text="Experience running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
-                            <TextBlock Name="RunningProgressText" Text="Progress running: 0 / 5" Foreground="#ddd" Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid Name="ConsolePanel" Visibility="Collapsed">
-                        <ListBox Name="ConsoleList"
-                                 Background="#1e1f22"
-                                 Foreground="#ddd"
-                                 BorderBrush="#3a3c42"
-                                 HorizontalContentAlignment="Stretch"
-                                 SelectionMode="Extended"
-                                 PreviewKeyDown="ConsoleList_PreviewKeyDown">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Path=., Mode=OneWay}"
-                                               TextWrapping="Wrap" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Grid>
-            </DockPanel>
-        </Border>
-
-        <Grid Grid.Column="1">
+    <Border Background="{StaticResource AppBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="40"/>
+                <RowDefinition Height="56"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <DockPanel Grid.Row="0" Background="#2b2d31" LastChildFill="False">
-                <TextBlock Text="Discord" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#ddd" FontWeight="SemiBold"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
-                    <Button Name="DismantleBtn" Content="Dismantle" Margin="8,6" Padding="12,4" Click="DismantleBtn_Click"/>
-                    <Button Name="CraftingBtn" Content="Crafting" Margin="8,6" Padding="12,4" Click="CraftingBtn_Click"/>
-                    <Button Name="SettingsBtn" Content="Settings" Margin="8,6" Padding="12,4" Click="SettingsBtn_Click"/>
-                    <Button Name="ReloadBtn" Content="Reload" Margin="8,6" Padding="12,4" Click="ReloadBtn_Click"/>
-                    <Button Name="GoChannelBtn" Content="Go To Channel" Margin="8,6" Padding="12,4" Click="GoChannelBtn_Click"/>
-                </StackPanel>
-            </DockPanel>
+            <Border Grid.Row="0"
+                    Background="{StaticResource TopBarBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid Margin="18,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="1" Background="#1e1f22">
-                <TabControl Name="BrowserTabs"
-                            Background="#1e1f22"
-                            BorderBrush="#2f3136"
-                            Foreground="#ddd"
-                            SelectedIndex="0">
-                    <TabItem Name="PlayerBrowserTab" Header="Player tab" Style="{StaticResource BrowserTabItemStyle}">
-                        <Grid Background="#1e1f22">
-                            <wv2:WebView2 Name="PlayerWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="0,0,22,0">
+                        <Image Source="/EpicRPGBot.UI;component/Assets/icon.png"
+                               Width="34" Height="34" Margin="0,0,10,0"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="EPIC RPG BOT"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                        <Ellipse x:Name="ConnectionStatusDot" Style="{StaticResource StatusDotStyle}" Fill="{StaticResource WarningBrush}"/>
+                        <TextBlock x:Name="ConnectionStatusText" Text="Initializing" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse x:Name="EngineStatusDot" Style="{StaticResource StatusDotStyle}" Fill="{StaticResource MutedTextBrush}"/>
+                        <TextBlock x:Name="EngineStatusText" Text="Stopped" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="StartBtn" Content="▶  Start" Style="{StaticResource PrimaryButtonStyle}" MinWidth="100" Click="StartBtn_Click"/>
+                        <Button x:Name="StopBtn" Content="■  Stop" Style="{StaticResource DangerButtonStyle}" MinWidth="96" Margin="5,0,0,0" Click="StopBtn_Click"/>
+                        <Button x:Name="ReloadBtn" Content="↻  Reload" Style="{StaticResource TitleBarButtonStyle}" Click="ReloadBtn_Click"/>
+                        <Button x:Name="SettingsBtn" Content="⚙  Settings" Style="{StaticResource TitleBarButtonStyle}" Click="SettingsBtn_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="5"
+                                Orientation="Horizontal"
+                                Margin="12,0,0,0"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="MinimizeBtn" Content="&#xE921;" Style="{StaticResource WindowControlButtonStyle}" Click="MinimizeBtn_Click"/>
+                        <Button x:Name="MaximizeRestoreBtn" Content="&#xE922;" Style="{StaticResource WindowControlButtonStyle}" Click="MaximizeRestoreBtn_Click"/>
+                        <Button x:Name="CloseWindowBtn" Content="&#xE8BB;" Style="{StaticResource CloseWindowButtonStyle}" Click="CloseWindowBtn_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ActivityColumn" Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="ControlCenterColumn" Width="360"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Grid>
+                        <Grid x:Name="ActivityExpandedContent" Margin="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="44"/>
+                                <RowDefinition Height="44"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBlock Text="Activity" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <Button x:Name="ActivityCollapseBtn" Content="‹" HorizontalAlignment="Right" Style="{StaticResource PanelToggleButtonStyle}" Click="ActivityToggleBtn_Click"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Background="{StaticResource AppBackgroundBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="LastMessagesTabBtn" Grid.Column="0" Content="Messages" Tag="Selected" Style="{StaticResource SegmentButtonStyle}" Click="LastMessagesTabBtn_Click"/>
+                                <Button x:Name="StatsTabBtn" Grid.Column="1" Content="Stats" Style="{StaticResource SegmentButtonStyle}" Click="StatsTabBtn_Click"/>
+                                <Button x:Name="ConsoleTabBtn" Grid.Column="2" Content="Console" Style="{StaticResource SegmentButtonStyle}" Click="ConsoleTabBtn_Click"/>
+                            </Grid>
+
+                            <Grid x:Name="ActivityFilterPanel" Grid.Row="2" Margin="0,10,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBox x:Name="ActivitySearchBox" TextChanged="ActivitySearchBox_TextChanged"/>
+                                    <TextBlock x:Name="ActivitySearchPlaceholder"
+                                               Text="Filter activity..."
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="11,0,0,0"
+                                               IsHitTestVisible="False"/>
+                                </Grid>
+                                <ComboBox x:Name="ActivityKindFilter" Grid.Column="1" Width="100" SelectedIndex="0" SelectionChanged="ActivityKindFilter_SelectionChanged">
+                                    <ComboBoxItem Content="All"/>
+                                    <ComboBoxItem Content="Info" Tag="{x:Static models:LogKind.Info}"/>
+                                    <ComboBoxItem Content="Command" Tag="{x:Static models:LogKind.Command}"/>
+                                    <ComboBoxItem Content="Warning" Tag="{x:Static models:LogKind.Warning}"/>
+                                    <ComboBoxItem Content="Error" Tag="{x:Static models:LogKind.Error}"/>
+                                    <ComboBoxItem Content="Engine" Tag="{x:Static models:LogKind.Engine}"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <Grid Grid.Row="3">
+                                <Grid x:Name="LastMessagesPanel">
+                                    <ListBox x:Name="StatsList" HorizontalContentAlignment="Stretch">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="2,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="66"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding At, StringFormat={}{0:HH:mm:ss}}" Foreground="{StaticResource MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+
+                                <Grid x:Name="StatsPanel" Visibility="Collapsed">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <StackPanel>
+                                            <TextBlock Text="Commands sent" Style="{StaticResource SectionTitleStyle}"/>
+                                            <TextBlock x:Name="HuntCountText" Text="Hunt sent: 0" Margin="4"/>
+                                            <TextBlock x:Name="AdventureCountText" Text="Adventure sent: 0" Margin="4"/>
+                                            <TextBlock x:Name="TrainingCountText" Text="Training sent: 0" Margin="4"/>
+                                            <TextBlock x:Name="WorkCountText" Text="Work sent: 0" Margin="4"/>
+                                            <TextBlock x:Name="FarmCountText" Text="Farm sent: 0" Margin="4"/>
+                                            <TextBlock x:Name="LootboxCountText" Text="Lootbox sent: 0" Margin="4,4,4,16"/>
+                                            <TextBlock Text="Cooldown state" Style="{StaticResource SectionTitleStyle}"/>
+                                            <TextBlock x:Name="RunningCooldownsText" Text="Running cooldowns: 0 / 15" Margin="4"/>
+                                            <TextBlock x:Name="RunningRewardsText" Text="Rewards running: 0 / 5" Margin="4"/>
+                                            <TextBlock x:Name="RunningExperienceText" Text="Experience running: 0 / 5" Margin="4"/>
+                                            <TextBlock x:Name="RunningProgressText" Text="Progress running: 0 / 5" Margin="4"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+
+                                <Grid x:Name="ConsolePanel" Visibility="Collapsed">
+                                    <ListBox x:Name="ConsoleList" HorizontalContentAlignment="Stretch" SelectionMode="Extended" PreviewKeyDown="ConsoleList_PreviewKeyDown">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="2,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="14"/>
+                                                        <ColumnDefinition Width="66"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse x:Name="LogKindDot" Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding At, StringFormat={}{0:HH:mm:ss}}" Foreground="{StaticResource MutedTextBrush}"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Message}" TextWrapping="Wrap"/>
+                                                </Grid>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Command}">
+                                                        <Setter TargetName="LogKindDot" Property="Fill" Value="{StaticResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Warning}">
+                                                        <Setter TargetName="LogKindDot" Property="Fill" Value="{StaticResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Error}">
+                                                        <Setter TargetName="LogKindDot" Property="Fill" Value="{StaticResource DangerBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Engine}">
+                                                        <Setter TargetName="LogKindDot" Property="Fill" Value="{StaticResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Grid>
                         </Grid>
-                    </TabItem>
-                    <TabItem Name="BotBrowserTab" Header="Bot tab" Style="{StaticResource BrowserTabItemStyle}">
-                        <Grid Background="#1e1f22">
-                            <wv2:WebView2 Name="Web" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+                        <Grid x:Name="ActivityCollapsedContent" Visibility="Collapsed">
+                            <Button x:Name="ActivityExpandBtn" Content="›" VerticalAlignment="Top" Margin="3,8" Style="{StaticResource PanelToggleButtonStyle}" Click="ActivityToggleBtn_Click"/>
+                            <TextBlock Text="ACTIVITY" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.LayoutTransform>
+                                    <RotateTransform Angle="-90"/>
+                                </TextBlock.LayoutTransform>
+                            </TextBlock>
                         </Grid>
-                    </TabItem>
-                    <TabItem Name="GuildBrowserTab" Header="Guild tab" Style="{StaticResource BrowserTabItemStyle}">
-                        <Grid Background="#1e1f22">
-                            <wv2:WebView2 Name="GuildWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1" Background="{StaticResource AppBackgroundBrush}">
+                    <TabControl x:Name="BrowserTabs"
+                                Background="{StaticResource AppBackgroundBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="0"
+                                SelectedIndex="0">
+                        <TabItem x:Name="PlayerBrowserTab" Header="Player" Style="{StaticResource BrowserTabItemStyle}">
+                            <wv2:WebView2 x:Name="PlayerWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem x:Name="BotBrowserTab" Header="Bot" Style="{StaticResource BrowserTabItemStyle}">
+                            <wv2:WebView2 x:Name="Web" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem x:Name="GuildBrowserTab" Header="Guild" Style="{StaticResource BrowserTabItemStyle}">
+                            <wv2:WebView2 x:Name="GuildWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem x:Name="DungeonBrowserTab" Header="Dungeon" Style="{StaticResource BrowserTabItemStyle}">
+                            <wv2:WebView2 x:Name="DungeonWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                        <TabItem x:Name="DuelBrowserTab" Header="Duel" Style="{StaticResource BrowserTabItemStyle}">
+                            <wv2:WebView2 x:Name="DuelWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </TabItem>
+                    </TabControl>
+                    <Button x:Name="GoChannelBtn"
+                            Content="Go to channel"
+                            Style="{StaticResource TitleBarButtonStyle}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,8,12,0"
+                            Panel.ZIndex="2"
+                            Click="GoChannelBtn_Click"/>
+                    <TextBlock x:Name="InitHint" Text="Loading WebView2..." Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" Panel.ZIndex="3"/>
+                </Grid>
+
+                <Border Grid.Column="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0">
+                    <Grid>
+                        <Grid x:Name="ControlCenterExpandedContent" Margin="10,8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBlock Text="Control Center" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <Button x:Name="ControlCenterCollapseBtn" Content="›" HorizontalAlignment="Right" Style="{StaticResource PanelToggleButtonStyle}" Click="ControlCenterToggleBtn_Click"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1">
+                                <StackPanel>
+                                    <TextBlock Text="Quick actions" Style="{StaticResource ControlSectionTitleStyle}"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="InitBtn" Grid.Column="0" Content="Initialize" Style="{StaticResource ActionButtonStyle}" Margin="0,0,2,0" Click="InitBtn_Click"/>
+                                        <Button x:Name="RpgCdBtn" Grid.Column="1" Content="Cooldowns" Style="{StaticResource ActionButtonStyle}" Margin="2,0" Click="RpgCdBtn_Click"/>
+                                        <Button x:Name="TradeAreaBtn" Grid.Column="2" Content="Trade area" Style="{StaticResource ActionButtonStyle}" Margin="2,0" Click="TradeAreaBtn_Click"/>
+                                        <Button x:Name="WishingTokenBtn" Grid.Column="3" Content="Wishing token" Style="{StaticResource ActionButtonStyle}" Margin="2,0,0,0" Click="WishingTokenBtn_Click"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Inventory tools" Style="{StaticResource ControlSectionTitleStyle}"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="CraftingBtn" Grid.Column="0" Content="Crafting" Style="{StaticResource ActionButtonStyle}" Margin="0,0,2,0" Click="CraftingBtn_Click"/>
+                                        <Button x:Name="DismantleBtn" Grid.Column="1" Content="Dismantle" Style="{StaticResource ActionButtonStyle}" Margin="2,0,0,0" Click="DismantleBtn_Click"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Runs" Style="{StaticResource ControlSectionTitleStyle}"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="CompleteDungeonBtn" Grid.Column="0" Content="Complete dungeon" Style="{StaticResource ActionButtonStyle}" Margin="0,0,2,0" Click="CompleteDungeonBtn_Click"/>
+                                        <Button x:Name="DuelBtn" Grid.Column="1" Content="Start duel" Style="{StaticResource ActionButtonStyle}" Margin="2,0,0,0" Click="DuelBtn_Click"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Time cookie" Style="{StaticResource ControlSectionTitleStyle}"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="TimeCookieDungeonBtn" Grid.Column="0" Content="Dungeon" Style="{StaticResource ActionButtonStyle}" Margin="0,0,2,0" Click="TimeCookieDungeonBtn_Click"/>
+                                        <Button x:Name="TimeCookieDuelBtn" Grid.Column="1" Content="Duel" Style="{StaticResource ActionButtonStyle}" Margin="2,0" Click="TimeCookieDuelBtn_Click"/>
+                                        <Button x:Name="TimeCookieCardHandBtn" Grid.Column="2" Content="Card hand" Style="{StaticResource ActionButtonStyle}" Margin="2,0" Click="TimeCookieCardHandBtn_Click"/>
+                                        <Button x:Name="SleepyPotionBtn" Grid.Column="3" Content="Sleepy potion" Style="{StaticResource ActionButtonStyle}" Margin="2,0,0,0" Click="SleepyPotionBtn_Click"/>
+                                    </Grid>
+
+                                    <controls:CooldownPanelControl x:Name="CooldownVisual"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
-                    </TabItem>
-                    <TabItem Name="DungeonBrowserTab" Header="Dungeon tab" Style="{StaticResource BrowserTabItemStyle}">
-                        <Grid Background="#1e1f22">
-                            <wv2:WebView2 Name="DungeonWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+                        <Grid x:Name="ControlCenterCollapsedContent" Visibility="Collapsed">
+                            <Button x:Name="ControlCenterExpandBtn" Content="‹" VerticalAlignment="Top" Margin="3,8" Style="{StaticResource PanelToggleButtonStyle}" Click="ControlCenterToggleBtn_Click"/>
+                            <TextBlock Text="CONTROLS" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.LayoutTransform>
+                                    <RotateTransform Angle="90"/>
+                                </TextBlock.LayoutTransform>
+                            </TextBlock>
                         </Grid>
-                    </TabItem>
-                    <TabItem Name="DuelBrowserTab" Header="Duel tab" Style="{StaticResource BrowserTabItemStyle}">
-                        <Grid Background="#1e1f22">
-                            <wv2:WebView2 Name="DuelWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                        </Grid>
-                    </TabItem>
-                </TabControl>
-                <TextBlock Name="InitHint" Text="Loading WebView2..." Foreground="#bbb" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
-        <Border Grid.Column="2" Background="#242529" BorderBrush="#2f3136" BorderThickness="1,0,0,0">
-            <Grid Margin="12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0">
-                    <TextBlock Text="Bot Controls" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
-
-                    <Grid Margin="0,8,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Name="StartBtn" Grid.Row="0" Grid.Column="0" Content="Start Bot" Margin="0,0,8,8" MinHeight="30" Padding="12,4" Click="StartBtn_Click"/>
-                        <Button Name="StopBtn" Grid.Row="0" Grid.Column="1" Content="Stop Bot" Margin="0,0,8,8" MinHeight="30" Padding="12,4" Click="StopBtn_Click"/>
-                        <Button Name="InitBtn" Grid.Row="0" Grid.Column="2" Content="Inicialize" Margin="0,0,0,8" MinHeight="30" Padding="12,4" Click="InitBtn_Click"/>
-                        <Button Name="RpgCdBtn" Grid.Row="1" Grid.Column="0" Content="rpg cd" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="RpgCdBtn_Click"/>
-                        <Button Name="TradeAreaBtn" Grid.Row="1" Grid.Column="1" Content="Trade area" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TradeAreaBtn_Click"/>
-                        <Button Name="WishingTokenBtn" Grid.Row="1" Grid.Column="2" Content="Wishing token" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="WishingTokenBtn_Click"/>
-                        <Button Name="CompleteDungeonBtn" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Complete Dungeon" Margin="0,8,0,0" MinHeight="30" Padding="12,4" Click="CompleteDungeonBtn_Click"/>
-                        <Button Name="DuelBtn" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Content="Duel start" Margin="0,8,0,0" MinHeight="30" Padding="12,4" Click="DuelBtn_Click"/>
-                    </Grid>
-
-                    <TextBlock Text="Time cookie" Foreground="#ddd" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,6"/>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Name="TimeCookieDungeonBtn" Grid.Row="0" Grid.Column="0" Content="Dungeon" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDungeonBtn_Click"/>
-                        <Button Name="TimeCookieDuelBtn" Grid.Row="0" Grid.Column="1" Content="Duel" Margin="0,0,8,0" MinHeight="30" Padding="12,4" Click="TimeCookieDuelBtn_Click"/>
-                        <Button Name="TimeCookieCardHandBtn" Grid.Row="0" Grid.Column="2" Content="Card hand" Margin="0,0,0,0" MinHeight="30" Padding="12,4" Click="TimeCookieCardHandBtn_Click"/>
-                        <Button Name="SleepyPotionBtn" Grid.Row="1" Grid.Column="0" Content="Sleepy potion" Margin="0,8,8,0" MinHeight="30" Padding="12,4" Click="SleepyPotionBtn_Click"/>
-                    </Grid>
-                </StackPanel>
-
-                <controls:CooldownPanelControl x:Name="CooldownVisual" Grid.Row="1" Margin="0,12,0,0"/>
-            </Grid>
-        </Border>
-    </Grid>
+    </Border>
 </Window>

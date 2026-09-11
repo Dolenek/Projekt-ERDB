@@ -12,8 +12,6 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed partial class CooldownTracker
     {
-        private static readonly Brush ReadyBrush = CreateBrush(0x24, 0x63, 0x3C);
-        private static readonly Brush AlternateReadyBrush = CreateBrush(0x2F, 0x7A, 0x4A);
         private static readonly CooldownDefinition[] Definitions =
         {
             new CooldownDefinition("daily", "DailyCdRow", "DailyCdText", CooldownCategory.Rewards, "daily"),
@@ -44,13 +42,11 @@ namespace EpicRPGBot.UI.Services
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
 
-            for (var index = 0; index < Definitions.Length; index++)
+            foreach (var definition in Definitions)
             {
-                var definition = Definitions[index];
                 var label = root.FindName(definition.LabelName) as TextBlock;
                 var row = root.FindName(definition.RowName) as Border;
-                var readyBackground = index % 2 == 0 ? ReadyBrush : AlternateReadyBrush;
-                _entries[definition.CanonicalKey] = new CooldownEntry(label, row, readyBackground);
+                _entries[definition.CanonicalKey] = new CooldownEntry(label, row);
 
                 foreach (var alias in definition.Aliases)
                 {
@@ -271,13 +267,6 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
-        private static Brush CreateBrush(byte red, byte green, byte blue)
-        {
-            var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
-            brush.Freeze();
-            return brush;
-        }
-
         private static void UpdateEntryVisual(CooldownEntry entry)
         {
             if (entry == null)
@@ -287,12 +276,12 @@ namespace EpicRPGBot.UI.Services
 
             if (entry.Label != null)
             {
-                entry.Label.Text = entry.Remaining.HasValue ? FormatDuration(entry.Remaining.Value) : "Ready";
+                entry.Label.Text = entry.Remaining.HasValue ? FormatDuration(entry.Remaining.Value) : "READY";
             }
 
             if (entry.Row != null)
             {
-                entry.Row.Background = entry.Remaining.HasValue ? Brushes.Transparent : entry.ReadyBackground;
+                entry.Row.Background = Brushes.Transparent;
             }
         }
 
@@ -327,16 +316,14 @@ namespace EpicRPGBot.UI.Services
 
         private sealed class CooldownEntry
         {
-            public CooldownEntry(TextBlock label, Border row, Brush readyBackground)
+            public CooldownEntry(TextBlock label, Border row)
             {
                 Label = label;
                 Row = row;
-                ReadyBackground = readyBackground;
             }
 
             public TextBlock Label { get; }
             public Border Row { get; }
-            public Brush ReadyBackground { get; }
             public TimeSpan? Remaining { get; set; }
         }
     }

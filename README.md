@@ -46,6 +46,6 @@ Puzzle `.env`:
 
 Notes:
 - `Start Bot` sends `rpg cd` immediately, then schedules hunt/adventure/work/farm from the parsed cooldown snapshot instead of sending an opening burst.
-- `Inicialize` discovers cooldown baselines and saves them into the same local settings file.
+- `Initialize` discovers cooldown baselines and saves them into the same local settings file.
 - The embedded browser auto-clicks common Discord “continue in browser” prompts after navigation.
 - The MCP server launches the UI in explicit automation mode with a WebView2 DevTools port for screenshots and WebView inspection.

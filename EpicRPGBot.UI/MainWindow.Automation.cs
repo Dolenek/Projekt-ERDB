@@ -22,6 +22,10 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(RunningExperienceText, "RunningExperienceStat");
             SetAutomationIdentity(RunningProgressText, "RunningProgressStat");
             SetAutomationIdentity(ConsoleList, "ConsoleList");
+            SetAutomationIdentity(ActivitySearchBox, "ActivitySearchInput");
+            SetAutomationIdentity(ActivityKindFilter, "ActivityKindFilter");
+            SetAutomationIdentity(ActivityCollapseBtn, "ActivityCollapseButton");
+            SetAutomationIdentity(ActivityExpandBtn, "ActivityExpandButton");
             SetAutomationIdentity(DismantleBtn, "DismantleButton");
             SetAutomationIdentity(CraftingBtn, "CraftingButton");
             SetAutomationIdentity(SettingsBtn, "SettingsButton");
@@ -39,6 +43,8 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(DungeonWeb, "DungeonDiscordWebView");
             SetAutomationIdentity(DuelWeb, "DuelDiscordWebView");
             SetAutomationIdentity(InitHint, "InitHint");
+            SetAutomationIdentity(ConnectionStatusText, "DiscordStatusText");
+            SetAutomationIdentity(EngineStatusText, "EngineStatusText");
             SetAutomationIdentity(StartBtn, "StartButton");
             SetAutomationIdentity(StopBtn, "StopButton");
             SetAutomationIdentity(InitBtn, "InitializeButton");
@@ -48,6 +54,14 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(CompleteDungeonBtn, "CompleteDungeonButton");
             SetAutomationIdentity(DuelBtn, "DuelButton");
             SetAutomationIdentity(SleepyPotionBtn, "SleepyPotionButton");
+            SetAutomationIdentity(TimeCookieDungeonBtn, "TimeCookieDungeonButton");
+            SetAutomationIdentity(TimeCookieDuelBtn, "TimeCookieDuelButton");
+            SetAutomationIdentity(TimeCookieCardHandBtn, "TimeCookieCardHandButton");
+            SetAutomationIdentity(ControlCenterCollapseBtn, "ControlCenterCollapseButton");
+            SetAutomationIdentity(ControlCenterExpandBtn, "ControlCenterExpandButton");
+            SetAutomationIdentity(MinimizeBtn, "MinimizeButton");
+            SetAutomationIdentity(MaximizeRestoreBtn, "MaximizeRestoreButton");
+            SetAutomationIdentity(CloseWindowBtn, "CloseWindowButton");
             SetAutomationIdentity(CooldownVisual, "CooldownPanelControl");
             CooldownVisual?.ApplyAutomationIds();
 

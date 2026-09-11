@@ -1,68 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Window x:Class="EpicRPGBot.UI.Settings.GuildRaidSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Guild raid settings"
-        Width="430"
-        Height="380"
-        MinWidth="430"
-        MinHeight="380"
-        Background="#1e1f22"
-        Foreground="#ddd"
-        WindowStartupLocation="CenterOwner">
-    <Grid Margin="16">
+        Icon="/EpicRPGBot.UI;component/Assets/icon.png"
+        Width="680" Height="540"
+        MinWidth="540" MinHeight="430"
+        Background="#081119" Foreground="#F4F7FA"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize" UseLayoutRounding="True">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="78" ResizeBorderThickness="6"
+                            CornerRadius="0" GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Themes/SettingsDialogTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="Guild raid" FontSize="22" FontWeight="SemiBold"/>
-            <TextBlock Text="Changes save automatically." Foreground="#aaa" Margin="0,4,0,0"/>
-        </StackPanel>
-
-        <Border Grid.Row="1" Background="#242529" BorderBrush="#2f3136" BorderThickness="1" CornerRadius="6" Padding="12">
-            <StackPanel>
-                <TextBlock Text="Channel URL" Foreground="#aaa"/>
-                <TextBox Name="GuildRaidChannelUrlBox"
-                         Margin="0,4,0,0"
-                         Background="#1e1f22"
-                         Foreground="#ddd"
-                         BorderBrush="#3a3c42"/>
-
-                <TextBlock Text="Trigger text" Foreground="#aaa" Margin="0,12,0,0"/>
-                <TextBox Name="GuildRaidTriggerTextBox"
-                         Margin="0,4,0,0"
-                         Background="#1e1f22"
-                         Foreground="#ddd"
-                         BorderBrush="#3a3c42"/>
-
-                <TextBlock Text="Match mode" Foreground="#aaa" Margin="0,12,0,0"/>
-                <ComboBox Name="GuildRaidMatchModeBox"
-                          Margin="0,4,0,0"
-                          Background="#1e1f22"
-                          Foreground="#ddd"
-                          BorderBrush="#3a3c42">
-                    <ComboBoxItem Tag="contains" Content="Contains configured text"/>
-                    <ComboBoxItem Tag="exact" Content="Exact message match"/>
-                </ComboBox>
-
-                <TextBlock Text="Author filter (optional)" Foreground="#aaa" Margin="0,12,0,0"/>
-                <TextBox Name="GuildRaidAuthorFilterBox"
-                         Margin="0,4,0,0"
-                         Background="#1e1f22"
-                         Foreground="#ddd"
-                         BorderBrush="#3a3c42"/>
-            </StackPanel>
+        <Border Grid.Row="0" Background="{StaticResource TopBarBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="22,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Guild Raid" FontSize="22" FontWeight="Bold"/>
+                    <TextBlock Text="Message watcher and matching rules"
+                               Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
+                </StackPanel>
+                <Border Grid.Column="1" Background="{StaticResource SuccessDarkBrush}"
+                        BorderBrush="{StaticResource SuccessBrush}" BorderThickness="1"
+                        CornerRadius="10" Padding="9,3" Margin="0,0,10,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="AUTO-SAVE" Foreground="{StaticResource SuccessBrush}"
+                               FontSize="11" FontWeight="SemiBold"/>
+                </Border>
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinimizeBtn" Content="&#xE921;"
+                            Style="{StaticResource WindowControlButtonStyle}"/>
+                    <Button x:Name="MaximizeRestoreBtn" Content="&#xE922;"
+                            Style="{StaticResource WindowControlButtonStyle}"/>
+                    <Button x:Name="CloseWindowBtn" Content="&#xE8BB;"
+                            Style="{StaticResource CloseWindowButtonStyle}"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
-        <Button Grid.Row="2"
-                Name="CloseBtn"
-                Content="Close"
-                Width="88"
-                Height="30"
-                Margin="0,12,0,0"
-                HorizontalAlignment="Right"
-                Click="CloseBtn_Click"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" Padding="20,18">
+            <Border Style="{StaticResource SettingsCardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Watcher configuration" FontSize="16" FontWeight="SemiBold"
+                               Margin="0,0,0,14"/>
+                    <TextBlock Text="Channel URL" Style="{StaticResource SettingsFieldLabelStyle}"/>
+                    <TextBox x:Name="GuildRaidChannelUrlBox" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Trigger text" Style="{StaticResource SettingsFieldLabelStyle}"/>
+                    <TextBox x:Name="GuildRaidTriggerTextBox" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Match mode" Style="{StaticResource SettingsFieldLabelStyle}"/>
+                    <ComboBox x:Name="GuildRaidMatchModeBox" Margin="0,0,0,12">
+                        <ComboBoxItem Tag="contains" Content="Contains configured text"/>
+                        <ComboBoxItem Tag="exact" Content="Exact message match"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Author filter (optional)"
+                               Style="{StaticResource SettingsFieldLabelStyle}"/>
+                    <TextBox x:Name="GuildRaidAuthorFilterBox"/>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Background="{StaticResource TopBarBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                Padding="20,12">
+            <Grid>
+                <TextBlock Text="Changes are applied immediately."
+                           Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center"/>
+                <Button x:Name="CloseBtn" Content="Close"
+                        Style="{StaticResource SettingsFooterButtonStyle}"
+                        HorizontalAlignment="Right" Click="CloseBtn_Click"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

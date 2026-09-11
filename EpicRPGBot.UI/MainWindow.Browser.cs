@@ -10,6 +10,7 @@ namespace EpicRPGBot.UI
     {
         private async Task InitializeBrowsersAsync()
         {
+            SetDiscordStatus("Initializing", "WarningBrush");
             try
             {
                 SetInitHint("Initializing Discord tabs...");
@@ -20,10 +21,12 @@ namespace EpicRPGBot.UI
                 await _dungeonChatClient.EnsureInitializedAsync();
                 await _duelChatClient.EnsureInitializedAsync();
                 InitHint.Visibility = Visibility.Collapsed;
+                SetDiscordStatus("Ready", "SuccessBrush");
             }
             catch (Exception ex)
             {
                 SetInitHint("WebView2 init failed: " + ex.Message);
+                SetDiscordStatus("Error", "DangerBrush");
             }
         }
 
@@ -64,6 +67,7 @@ namespace EpicRPGBot.UI
             catch (Exception ex)
             {
                 SetInitHint("Navigate failed: " + ex.Message);
+                SetDiscordStatus("Error", "DangerBrush");
             }
         }
 

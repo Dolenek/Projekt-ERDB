@@ -21,7 +21,7 @@ Loop rules:
 Engine interaction:
 - If the normal bot engine is running when the loop starts, the app pauses it first.
 - When the loop stops, the app resumes the engine and refreshes scheduling with `rpg cd`.
-- While the loop is active, other bot-producing UI actions such as `Start Bot`, `Inicialize`, `rpg cd`, `Trade area`, `Crafting`, and `Dismantle` are ignored.
+- While the loop is active, other bot-producing UI actions such as `Start Bot`, `Initialize`, `rpg cd`, `Trade area`, `Crafting`, and `Dismantle` are ignored.
 
 Discord interaction:
 - The app targets the wish-menu buttons inside the specific EPIC RPG message that returned from `rpg use wishing token`.

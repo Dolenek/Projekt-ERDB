@@ -7,7 +7,7 @@ Behavior:
 - The `Work commands` button in the settings window opens a modal editor for all 15 areas.
 - Changes save immediately to the shared settings snapshot and the local `.ini` file.
 - `Start Bot` resolves the current work command from the saved area and the saved per-area map.
-- `Inicialize` uses that same resolved work command for its work baseline discovery step.
+- `Initialize` uses that same resolved work command for its work baseline discovery step.
 - Saved work commands are normalized to include the `rpg ` prefix when missing.
 
 Defaults:

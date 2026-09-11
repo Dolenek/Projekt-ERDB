@@ -28,7 +28,7 @@ Failure handling:
 - Skipped prompts also show a desktop balloon notification titled `Training prompt skipped`.
 
 Initialization:
-- `Inicialize` includes training.
+- `Initialize` includes training.
 - If training is ready in the opening `rpg cd`, the workflow sends `rpg tr`, solves the prompt, refreshes `rpg cd`, and saves the resulting `training_ms` baseline.
 
 Parsing inputs:

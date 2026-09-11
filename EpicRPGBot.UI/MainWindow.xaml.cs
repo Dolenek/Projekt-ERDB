@@ -103,6 +103,7 @@ namespace EpicRPGBot.UI
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            WindowWorkAreaChrome.ConstrainToWorkArea(this);
             Env.Load();
             BindUiState();
             _cooldownTracker.Start();
@@ -119,9 +120,9 @@ namespace EpicRPGBot.UI
 
         private void BindUiState()
         {
-            StatsList.ItemsSource = _last.Items;
-            ConsoleList.ItemsSource = _log.Items;
             _lastMessagesPanel = (Grid)FindName("LastMessagesPanel");
+            BindActivityUi();
+            ShowSidebarPanel(lastMessagesVisible: true, statsVisible: false, consoleVisible: false);
             BindStatsUi();
             RefreshBotControlButtonColors();
         }

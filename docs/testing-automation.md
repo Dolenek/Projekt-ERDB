@@ -57,20 +57,29 @@ Stable control IDs exposed by the UI:
 - `StartButton`, `StopButton`, `InitializeButton`
 - `RpgCdButton`, `TradeAreaButton`, `WishingTokenButton`
 - `DismantleButton`, `CraftingButton`, `SettingsButton`, `ReloadButton`, `GoChannelButton`
+- `DiscordStatusText`, `EngineStatusText`
+- `ActivitySearchInput`, `ActivityKindFilter`, `ActivityCollapseButton`, `ActivityExpandButton`
+- `ControlCenterCollapseButton`, `ControlCenterExpandButton`
+- `MinimizeButton`, `MaximizeRestoreButton`, `CloseWindowButton`
+- `TimeCookieDungeonButton`, `TimeCookieDuelButton`, `TimeCookieCardHandButton`, `SleepyPotionButton`
 - `HuntCountStat`, `AdventureCountStat`, `TrainingCountStat`, `WorkCountStat`, `FarmCountStat`, `LootboxCountStat`
 - `RunningCooldownsStat`, `RunningRewardsStat`, `RunningExperienceStat`, `RunningProgressStat`
-- `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`, `GuildBrowserTab`
-- `DiscordWebView`, `PlayerDiscordWebView`, `GuildDiscordWebView`
+- `BrowserTabs`, `BotBrowserTab`, `PlayerBrowserTab`, `GuildBrowserTab`, `DungeonBrowserTab`, `DuelBrowserTab`
+- `DiscordWebView`, `PlayerDiscordWebView`, `GuildDiscordWebView`, `DungeonDiscordWebView`, `DuelDiscordWebView`
 - `ConsoleList`, `LastMessagesList`, `CooldownsPanel`
 - `SettingsWindow`, `SettingsCloseButton`, `SettingsCardHandButton`
-- `SettingsChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
+- `SettingsMinimizeButton`, `SettingsMaximizeRestoreButton`, `SettingsWindowCloseButton`
+- `SettingsChannelUrlInput`, `SettingsDungeonListingChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`
 - `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsWorkCooldownInput`
 - `SettingsTrainingCooldownInput`
 - `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - `SettingsGuildRaidButton`
 - `CardHandSettingsWindow`, `CardHandAutoPlayInput`, `CardHandLoadDeckButton`, `CardHandDeckStatus`, `CardHandSettingsCloseButton`
+- `CardHandSettingsMinimizeButton`, `CardHandSettingsMaximizeRestoreButton`, `CardHandSettingsWindowCloseButton`
 - `CardHandWeight{Reward}` for each of the nine reward types
 - `GuildRaidSettingsWindow`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
+- `GuildRaidSettingsMinimizeButton`, `GuildRaidSettingsMaximizeRestoreButton`, `GuildRaidSettingsWindowCloseButton`
+- `WorkCommandsWindow`, `WorkCommandsCloseButton`, `WorkCommandsMinimizeButton`, `WorkCommandsMaximizeRestoreButton`, `WorkCommandsWindowCloseButton`
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
 - `CraftEpicFishAmountInput`, `CraftGoldenFishAmountInput`, `CraftBananaAmountInput`
 - `CraftStatusText`, `CraftStartButton`, `CraftCancelButton`

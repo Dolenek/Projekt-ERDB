@@ -25,7 +25,7 @@ Targets:
 Engine interaction:
 - If the normal engine was already running when the loop starts, it stays running during and after the workflow.
 - If the engine was stopped when the loop starts, the app starts it for the workflow and stops it again when the workflow ends.
-- While the loop is active, other bot-producing UI actions such as `Start Bot`, `Stop Bot`, `Inicialize`, `rpg cd`, `Trade area`, `Crafting`, `Dismantle`, and `Wishing token` are ignored.
+- While the loop is active, other bot-producing UI actions such as `Start`, `Stop`, `Initialize`, `Cooldowns`, `Trade area`, `Crafting`, `Dismantle`, and `Wishing token` are ignored.
 
 Logging:
 - The Console logs each major step with the `[time cookie]` prefix.

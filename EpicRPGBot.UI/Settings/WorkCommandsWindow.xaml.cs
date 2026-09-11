@@ -20,6 +20,7 @@ namespace EpicRPGBot.UI.Settings
             Rows = BuildRows(_settingsService.Current);
             DataContext = this;
             InitializeComponent();
+            DialogWindowShell.Attach(this, MinimizeBtn, MaximizeRestoreBtn, CloseWindowBtn);
             RegisterPersistence();
             ApplyAutomationSurface();
         }
@@ -106,6 +107,9 @@ namespace EpicRPGBot.UI.Settings
         {
             SetAutomationIdentity(this, "WorkCommandsWindow");
             SetAutomationIdentity(CloseBtn, "WorkCommandsCloseButton");
+            SetAutomationIdentity(MinimizeBtn, "WorkCommandsMinimizeButton");
+            SetAutomationIdentity(MaximizeRestoreBtn, "WorkCommandsMaximizeRestoreButton");
+            SetAutomationIdentity(CloseWindowBtn, "WorkCommandsWindowCloseButton");
         }
 
         private static void SetAutomationIdentity(DependencyObject element, string automationId)

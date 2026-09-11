@@ -9,7 +9,7 @@ Confirmation rules:
 
 Scope:
 - Applies to real `rpg ...` commands only.
-- Used by `Start Bot`, tracked hunt/adventure/work/farm/lootbox sends, queued/manual `rpg cd`, and the `Inicialize` workflow.
+- Used by `Start Bot`, tracked hunt/adventure/work/farm/lootbox sends, queued/manual `rpg cd`, and the `Initialize` workflow.
 - Does not apply to quick-time/event answers such as `RUN`, `CUT`, `LURE`, `CATCH`, `SUMMON`, `TIME TO FIGHT`, `I WANT THAT`, or similar prompt responses.
 - Does not apply to bot status/help/acknowledgement text such as `I am farming` or `Change work - ...`.
 

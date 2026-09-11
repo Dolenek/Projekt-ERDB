@@ -6,10 +6,10 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private static readonly SolidColorBrush InactiveBotControlBrush = Brushes.White;
-        private static readonly SolidColorBrush StartActiveBrush = Brushes.LightGreen;
-        private static readonly SolidColorBrush StopActiveBrush = Brushes.LightCoral;
-        private static readonly SolidColorBrush ExclusiveActiveBrush = Brushes.LightSkyBlue;
+        private static readonly SolidColorBrush InactiveBotControlBrush = CreateControlBrush(0x15, 0x21, 0x2C);
+        private static readonly SolidColorBrush StartActiveBrush = CreateControlBrush(0x17, 0x64, 0x3A);
+        private static readonly SolidColorBrush StopActiveBrush = CreateControlBrush(0x5B, 0x26, 0x30);
+        private static readonly SolidColorBrush ExclusiveActiveBrush = CreateControlBrush(0x0D, 0x65, 0x73);
 
         private void RefreshBotControlButtonColors()
         {
@@ -24,6 +24,7 @@ namespace EpicRPGBot.UI
             RefreshTimeCookieButton(TimeCookieDungeonBtn, TimeCookieTarget.Dungeon);
             RefreshTimeCookieButton(TimeCookieDuelBtn, TimeCookieTarget.Duel);
             RefreshTimeCookieButton(TimeCookieCardHandBtn, TimeCookieTarget.CardHand);
+            RefreshShellStatus();
         }
 
         private void RefreshDungeonButton()
@@ -35,7 +36,7 @@ namespace EpicRPGBot.UI
 
             var isActive = _isDungeonRunning;
             var canStart = string.IsNullOrWhiteSpace(_activeExclusiveBotOperation) || isActive;
-            CompleteDungeonBtn.Content = isActive ? "Stop Dungeon" : "Complete Dungeon";
+            CompleteDungeonBtn.Content = isActive ? "Stop dungeon" : "Complete dungeon";
             CompleteDungeonBtn.IsEnabled = canStart;
             CompleteDungeonBtn.Background = isActive ? ExclusiveActiveBrush : InactiveBotControlBrush;
         }
@@ -48,7 +49,7 @@ namespace EpicRPGBot.UI
             }
 
             var canStart = string.IsNullOrWhiteSpace(_activeExclusiveBotOperation) || _isDuelRunning;
-            DuelBtn.Content = _isDuelRunning ? "Stop Duel" : "Duel start";
+            DuelBtn.Content = _isDuelRunning ? "Stop duel" : "Start duel";
             DuelBtn.IsEnabled = canStart;
             DuelBtn.Background = _isDuelRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
         }
@@ -81,6 +82,13 @@ namespace EpicRPGBot.UI
                 !_isTimeCookieRunning &&
                 (!_isSleepyPotionRunning || _activeExclusiveBotOperation == SleepyPotionOperationName);
             SleepyPotionBtn.Background = _isSleepyPotionRunning ? ExclusiveActiveBrush : InactiveBotControlBrush;
+        }
+
+        private static SolidColorBrush CreateControlBrush(byte red, byte green, byte blue)
+        {
+            var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+            brush.Freeze();
+            return brush;
         }
     }
 }

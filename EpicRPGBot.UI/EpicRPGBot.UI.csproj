@@ -32,6 +32,9 @@
     <ApplicationDefinition Include="App.xaml" />
     <Page Include="Controls\CooldownPanelControl.xaml" />
     <Page Include="MainWindow.xaml" />
+    <Page Include="Themes\MainWindowTheme.xaml" />
+    <Page Include="Themes\ScrollBarTheme.xaml" />
+    <Page Include="Themes\SettingsDialogTheme.xaml" />
     <Page Include="Crafting\CraftingWindow.xaml" />
     <Page Include="Dismantling\DismantleWindow.xaml" />
     <Page Include="Settings\GuildRaidSettingsWindow.xaml" />
@@ -112,6 +115,7 @@
     <Compile Include="MainWindow.BotControls.cs" />
     <Compile Include="MainWindow.Bunny.cs" />
     <Compile Include="MainWindow.Browser.cs" />
+    <Compile Include="MainWindow.Chrome.cs" />
     <Compile Include="MainWindow.Console.cs" />
     <Compile Include="MainWindow.Crafting.cs" />
     <Compile Include="MainWindow.Dungeon.cs" />
@@ -122,6 +126,7 @@
     <Compile Include="MainWindow.GuildRaid.cs" />
     <Compile Include="MainWindow.Messages.cs" />
     <Compile Include="MainWindow.Settings.cs" />
+    <Compile Include="MainWindow.ShellState.cs" />
     <Compile Include="MainWindow.Sidebar.cs" />
     <Compile Include="MainWindow.SleepyPotion.cs" />
     <Compile Include="MainWindow.Stats.cs" />
@@ -144,6 +149,7 @@
     <Compile Include="Models\MessageItem.cs" />
     <Compile Include="Models\TrackedCooldownSnapshot.cs" />
     <Compile Include="Services\AppSettingsService.cs" />
+    <Compile Include="Services\ActivityEntryFilter.cs" />
     <Compile Include="Services\AreaWorkCommandSettings.cs" />
     <Compile Include="Services\PuzzleSelfTestRunner.cs" />
     <Compile Include="Services\PuzzleSolverService.cs" />
@@ -196,10 +202,15 @@
     <Compile Include="Services\TrackedCommandScheduler.cs" />
     <Compile Include="Services\UiDispatcher.cs" />
     <Compile Include="Services\WebViewEnvironmentFactory.cs" />
+    <Compile Include="Services\WindowWorkAreaChrome.cs" />
+    <Compile Include="Services\DialogWindowShell.cs" />
     <Compile Include="Settings\AreaWorkCommandRow.cs" />
     <Compile Include="Settings\GuildRaidSettingsWindow.xaml.cs" />
     <Compile Include="Settings\CardHandSettingsWindow.xaml.cs" />
     <Compile Include="Settings\SettingsWindow.xaml.cs" />
+    <Compile Include="Settings\SettingsWindow.Automation.cs" />
+    <Compile Include="Settings\SettingsWindow.Chrome.cs" />
+    <Compile Include="Settings\SettingsWindow.Persistence.cs" />
     <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
     <Compile Include="TimeCookie\TimeCookieLoopEvaluator.cs" />
     <Compile Include="TimeCookie\TimeCookieTarget.cs" />
@@ -212,6 +223,10 @@
     <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
     <Compile Include="WishingToken\WishingTokenReplyParser.cs" />
     <Compile Include="WishingToken\WishingTokenWorkflow.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\icon.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\items.json" Link="items.json" CopyToOutputDirectory="PreserveNewest" />

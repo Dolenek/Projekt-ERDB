@@ -11,7 +11,7 @@ UI behavior:
 
 Profile identity:
 - The app caches the player name parsed from the EPIC RPG `rpg p` profile header.
-- `Inicialize` refreshes that cached player name on the bot tab after the cooldown setup sequence finishes.
+- `Initialize` refreshes that cached player name on the bot tab after the cooldown setup sequence finishes.
 - If the cached name is empty when a dungeon run starts, the dungeon workflow refreshes it with `rpg p` before continuing.
 
 Workflow behavior:

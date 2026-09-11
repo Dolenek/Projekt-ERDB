@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI.Settings
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             InitializeComponent();
+            DialogWindowShell.Attach(this, MinimizeBtn, MaximizeRestoreBtn, CloseWindowBtn);
             ApplyAutomationSurface();
             RegisterSettingsPersistence();
             LoadSettings(_settingsService.LoadCurrent());
@@ -115,6 +116,9 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(GuildRaidMatchModeBox, "GuildRaidSettingsMatchModeInput");
             SetAutomationIdentity(GuildRaidAuthorFilterBox, "GuildRaidSettingsAuthorFilterInput");
             SetAutomationIdentity(CloseBtn, "GuildRaidSettingsCloseButton");
+            SetAutomationIdentity(MinimizeBtn, "GuildRaidSettingsMinimizeButton");
+            SetAutomationIdentity(MaximizeRestoreBtn, "GuildRaidSettingsMaximizeRestoreButton");
+            SetAutomationIdentity(CloseWindowBtn, "GuildRaidSettingsWindowCloseButton");
         }
 
         private static void SetAutomationIdentity(DependencyObject element, string automationId)
