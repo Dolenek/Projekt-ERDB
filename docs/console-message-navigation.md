@@ -3,8 +3,8 @@
 Console rows can carry an exact reference to the Discord message that produced
 the log. A navigable row uses the hand cursor, cyan message text and the tooltip
 `Double-click to show Discord message`. A single click keeps its normal selection
-behavior; double-clicking switches to the referenced internal Discord tab,
-centers the message and outlines it briefly.
+behavior; double-clicking always switches to the internal `Player` Discord tab,
+centers the referenced message and outlines it briefly.
 
 References contain the Discord DOM message ID, source tab role and channel URL.
 They come only from WebView snapshots and are never inferred from log text or a
@@ -24,9 +24,10 @@ Puzzle answers sent through the one-shot guarded submission path do not receive
 a link because that path does not confirm an outgoing Discord message ID. Guild,
 dungeon, duel, crafting and dismantling report streams also remain unlinked.
 
-Navigation first searches the referenced tab's current DOM. If the message is
-not present, the app builds an internal Discord guild-channel or DM permalink,
-navigates the existing WebView2 tab and searches again. It does not open an
+Navigation first searches the Player tab's current DOM. If the message is not
+present, the app builds an internal Discord guild-channel or DM permalink,
+navigates the Player WebView2 tab and searches again. The source-tab role remains
+part of the reference metadata but never selects Bot, Guild, Dungeon or Duel. It does not open an
 external browser, activate the application window or change guard foreground
 settings. Invalid, deleted or inaccessible targets produce one non-navigable
 warning. A failed permalink lookup restores the tab's previous URL. A second

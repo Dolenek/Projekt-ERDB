@@ -65,7 +65,7 @@ User-visible behaviors:
 Sidebar data:
 - `Messages` shows the rolling last 5 detected channel messages with timestamps.
 - `Stats` shows send counts for `hunt`, `adventure`, `work`, `farm`, and `lootbox`, plus live running-cooldown counts for all tracked cooldown rows, including totals for `Rewards`, `Experience`, and `Progress`.
-- `Console` shows structured log lines with severity dots for UI events, engine events, sent commands, and solver telemetry. Selected console lines copy their rendered log text to the clipboard with `Ctrl+C`. Rows carrying an exact Discord message reference are subtly accented; double-clicking one opens that message in its internal tab as described in [console message navigation](console-message-navigation.md).
+- `Console` shows structured log lines with severity dots for UI events, engine events, sent commands, and solver telemetry. Selected console lines copy their rendered log text to the clipboard with `Ctrl+C`. Rows carrying an exact Discord message reference are subtly accented; double-clicking one opens that message through the Player tab as described in [console message navigation](console-message-navigation.md).
 - Activity search filters the active Messages or Console collection without changing the underlying five-message buffer or 500-entry log retention. The log-kind selector is available only in Console.
 
 Browser behavior:

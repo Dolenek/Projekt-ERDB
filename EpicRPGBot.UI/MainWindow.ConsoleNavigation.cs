@@ -13,22 +13,22 @@ namespace EpicRPGBot.UI
 
         private ConsoleMessageNavigationRouter CreateConsoleMessageNavigationRouter()
         {
+            var playerNavigator = (IDiscordMessageNavigator)_playerChatClient;
             return new ConsoleMessageNavigationRouter(new List<NavigationRoute>
             {
-                CreateNavigationRoute(DiscordTabRole.Bot, SelectBotTab, _botChatClient),
-                CreateNavigationRoute(DiscordTabRole.Player, SelectPlayerTab, _playerChatClient),
-                CreateNavigationRoute(DiscordTabRole.Guild, SelectGuildTab, _guildChatClient),
-                CreateNavigationRoute(DiscordTabRole.Dungeon, SelectDungeonTab, _dungeonChatClient),
-                CreateNavigationRoute(DiscordTabRole.Duel, SelectDuelTab, _duelChatClient)
+                CreatePlayerNavigationRoute(DiscordTabRole.Bot, playerNavigator),
+                CreatePlayerNavigationRoute(DiscordTabRole.Player, playerNavigator),
+                CreatePlayerNavigationRoute(DiscordTabRole.Guild, playerNavigator),
+                CreatePlayerNavigationRoute(DiscordTabRole.Dungeon, playerNavigator),
+                CreatePlayerNavigationRoute(DiscordTabRole.Duel, playerNavigator)
             });
         }
 
-        private static NavigationRoute CreateNavigationRoute(
-            DiscordTabRole tabRole,
-            System.Action selectTab,
-            IDiscordChatClient chatClient)
+        private NavigationRoute CreatePlayerNavigationRoute(
+            DiscordTabRole sourceTabRole,
+            IDiscordMessageNavigator playerNavigator)
         {
-            return new NavigationRoute(tabRole, selectTab, (IDiscordMessageNavigator)chatClient);
+            return new NavigationRoute(sourceTabRole, SelectPlayerTab, playerNavigator);
         }
 
         private async void ConsoleList_MouseDoubleClick(object sender, MouseButtonEventArgs e)

@@ -14,7 +14,7 @@ namespace EpicRPGBot.UI.Services
             DiscordMessageReference reference,
             CancellationToken cancellationToken = default)
         {
-            if (_web.CoreWebView2 == null || reference?.IsComplete != true || reference.TabRole != _tabRole)
+            if (_web.CoreWebView2 == null || reference?.IsComplete != true)
             {
                 return false;
             }

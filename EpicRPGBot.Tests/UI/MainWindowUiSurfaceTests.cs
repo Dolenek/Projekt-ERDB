@@ -106,6 +106,9 @@ public sealed class MainWindowUiSurfaceTests
         Assert.Contains("FindClickedConsoleItem(e.OriginalSource as DependencyObject)", handlerCode);
         Assert.Contains("_isConsoleMessageNavigationRunning", handlerCode);
         Assert.DoesNotContain("ConsoleList.SelectedItem", handlerCode);
+        Assert.Contains("CreatePlayerNavigationRoute(DiscordTabRole.Bot, playerNavigator)", handlerCode);
+        Assert.Contains("new NavigationRoute(sourceTabRole, SelectPlayerTab, playerNavigator)", handlerCode);
+        Assert.DoesNotContain("SelectBotTab, _botChatClient", handlerCode);
     }
 
     [Fact]
