@@ -40,8 +40,11 @@ folder, then its parent directories; absolute paths are used directly.
    solving stays in the background by default; settings can opt into selecting
    the guard tab and activating the app on first detection.
 8. The `Everything seems fine ... keep playing` confirmation cancels any active
-   attempt and resumes scheduling. A delayed command result in that message is
-   still processed, and a fresh `rpg cd` snapshot resynchronizes timers.
+   attempt. If the same message already contains the interrupted command's real
+   result or interactive prompt, that result completes the original send without
+   another command. Otherwise the exact command is retried before normal scheduling
+   resumes. The puzzle-only reply never confirms the command or starts its cooldown.
+   A guard without a known originating command still resumes through `rpg cd`.
 
 The model score is a similarity, not a probability or a guarantee of correctness.
 See [recognition internals](puzzle-multisource-recognition.md) and

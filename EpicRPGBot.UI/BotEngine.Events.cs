@@ -29,7 +29,10 @@ namespace EpicRPGBot.UI
             }
 
             OnMessageSeen?.Invoke(snapshot);
-            _scheduler.HandleResponse(snapshot, _running);
+            if (ShouldApplySnapshotToScheduler(snapshot))
+            {
+                _scheduler.HandleResponse(snapshot, _running);
+            }
             EventCheck(snapshot);
         }
 
@@ -149,23 +152,8 @@ namespace EpicRPGBot.UI
         {
             var message = snapshot?.Text ?? string.Empty;
             var currentReference = DiscordMessageReference.FromSnapshot(snapshot);
-            if (GuardIncidentTracker.ContainsGuardClear(message))
+            if (TryCompleteGuardIncident(snapshot, currentReference))
             {
-                var cleared = _guardIncidentTracker.ClearIfActive(currentReference);
-                if (cleared != null)
-                {
-                    _puzzleSolver.CancelCurrentSolve();
-                    CompleteGuardSolve(_activeGuardMessageId);
-                    ResetGuardMessageTracking();
-                    _scheduler.ResumeAll(_running);
-                    if (QueueCooldownSnapshotRequest())
-                    {
-                        ReportSolverInfo("Queued 'rpg cd' after guard clear to resync scheduling.", currentReference);
-                    }
-                    OnGuardNotification?.Invoke(cleared);
-                    ReportSolverInfo(cleared.Message, currentReference);
-                }
-
                 return;
             }
 
@@ -176,8 +164,17 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            RegisterGuardDetection(snapshot, latestHasGuard, previousHasGuard);
+        }
+
+        private void RegisterGuardDetection(
+            DiscordMessageSnapshot snapshot,
+            bool latestHasGuard,
+            bool previousHasGuard)
+        {
             var targetSnapshot = ResolveGuardTargetSnapshot(latestHasGuard, previousHasGuard);
             var targetReference = DiscordMessageReference.FromSnapshot(targetSnapshot);
+            ObserveGuardIncident(targetSnapshot?.Id ?? string.Empty);
             var detectionInfo = latestHasGuard
                 ? "Puzzle detected in latest message."
                 : "Puzzle detected in previous message.";

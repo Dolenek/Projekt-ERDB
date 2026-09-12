@@ -20,7 +20,7 @@ namespace EpicRPGBot.UI
             string text,
             Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null)
         {
-            return await SendConfirmedCommandWithGlobalCooldownCoreAsync(
+            return await SendConfirmedCommandWithGuardRecoveryAsync(
                 text,
                 snapshot => OnCommandSent?.Invoke(text, snapshot),
                 onOutgoingSnapshotRegistered);
@@ -156,7 +156,7 @@ namespace EpicRPGBot.UI
             Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
             bool allowDuringGuard = false)
         {
-            var result = await SendConfirmedCommandWithGlobalCooldownCoreAsync(
+            var result = await SendConfirmedCommandWithGuardRecoveryAsync(
                 text,
                 onOutgoingRegistered,
                 onOutgoingSnapshotRegistered,
@@ -168,7 +168,9 @@ namespace EpicRPGBot.UI
             string text,
             Action<DiscordMessageSnapshot> onOutgoingRegistered,
             Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
-            bool allowDuringGuard = false)
+            bool allowDuringGuard = false,
+            bool allowDuringInteractivePrompt = false,
+            Action<GuardedCommandRecoveryRegistration> onGuardDetected = null)
         {
             while (true)
             {
@@ -177,7 +179,7 @@ namespace EpicRPGBot.UI
                     return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
-                if (!await WaitForInteractivePromptWindowAsync())
+                if (!await WaitForInteractivePromptWindowAsync(allowDuringInteractivePrompt))
                 {
                     return new ConfirmedCommandSendResult(null, null, 0);
                 }
@@ -198,7 +200,7 @@ namespace EpicRPGBot.UI
                     return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
-                if (!IsInteractivePromptPending())
+                if (allowDuringInteractivePrompt || !IsInteractivePromptPending())
                 {
                     break;
                 }
@@ -220,19 +222,35 @@ namespace EpicRPGBot.UI
                     return new ConfirmedCommandSendResult(null, null, 0);
                 }
 
-                var result = await _confirmedCommandSender.SendAsync(
-                    text,
-                    snapshot =>
-                    {
-                        _lastCommandSentUtc = DateTime.UtcNow;
-                        onOutgoingRegistered?.Invoke(snapshot);
-                        onOutgoingSnapshotRegistered?.Invoke(snapshot);
-                    },
-                    _stopCancellation.Token);
+                ConfirmedCommandSendResult result;
+                _activeConfirmedCommand = text;
+                try
+                {
+                    result = await _confirmedCommandSender.SendAsync(
+                        text,
+                        snapshot =>
+                        {
+                            _lastCommandSentUtc = DateTime.UtcNow;
+                            onOutgoingRegistered?.Invoke(snapshot);
+                            onOutgoingSnapshotRegistered?.Invoke(snapshot);
+                        },
+                        _stopCancellation.Token);
+                }
+                finally
+                {
+                    _activeConfirmedCommand = string.Empty;
+                }
 
                 if (result.IsConfirmed)
                 {
-                    OnCommandConfirmed?.Invoke(text, result.ReplyMessage);
+                    if (await TryHandleGuardedCommandResultAsync(
+                        result,
+                        text,
+                        onGuardDetected))
+                    {
+                        return result;
+                    }
+
                     ProcessObservedSnapshot(result.ReplyMessage, true);
                     await ProcessIncomingMessagesAsync();
                     return result;
@@ -324,8 +342,13 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task<bool> WaitForInteractivePromptWindowAsync()
+        private async Task<bool> WaitForInteractivePromptWindowAsync(bool allowDuringInteractivePrompt = false)
         {
+            if (allowDuringInteractivePrompt)
+            {
+                return true;
+            }
+
             while (IsInteractivePromptPending())
             {
                 try

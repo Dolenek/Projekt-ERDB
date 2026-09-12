@@ -84,6 +84,8 @@
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordAttachmentImageSource.cs" Link="Services\DiscordAttachmentImageSource.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\CooldownReductionCalculator.cs" Link="Services\CooldownReductionCalculator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuardIncidentTracker.cs" Link="Services\GuardIncidentTracker.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuardedCommandContinuationClassifier.cs" Link="Services\GuardedCommandContinuationClassifier.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuardedCommandRecoveryCoordinator.cs" Link="Services\GuardedCommandRecoveryCoordinator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidOutcomeWatch.cs" Link="Services\GuildRaidOutcomeWatch.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidResponseClassifier.cs" Link="Services\GuildRaidResponseClassifier.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidMatchModes.cs" Link="Services\GuildRaidMatchModes.cs" />

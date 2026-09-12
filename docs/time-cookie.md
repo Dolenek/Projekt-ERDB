@@ -14,6 +14,7 @@ Loop rules:
 - It lets the normal tracked automation batch finish first, including any training prompt handling.
 - If the selected target cooldown is already `Ready`, the loop stops and leaves that target unused for the player.
 - Otherwise it sends `rpg use time cookie`.
+- If EPIC GUARD interrupts `rpg cd`, a tracked command, or `rpg use time cookie`, a real result attached to the guard-clear message completes that send directly. Otherwise the interrupted command is retried, and the loop continues from the real reply.
 - After the time-cookie reduction is parsed, the full cooldown panel visual is reduced immediately and then any newly-ready automated tracked commands are allowed to finish before the next cycle.
 - The loop stops instead of guessing when `rpg cd` fails, `rpg use time cookie` fails, or the reply does not contain a recognized `X minute(s) ahead` reduction.
 

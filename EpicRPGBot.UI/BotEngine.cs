@@ -124,6 +124,7 @@ namespace EpicRPGBot.UI
 
             _running = true;
             _guardIncidentTracker.Reset();
+            _guardedCommandRecovery.Reset();
             ResetGuardMessageTracking();
             _interactivePromptGate.Reset();
             _messageReactionGate.Reset();
@@ -149,6 +150,7 @@ namespace EpicRPGBot.UI
             _awaitingStartupMessageCutoff = false;
             _startupCutoffMessageId = string.Empty;
             _guardIncidentTracker.Reset();
+            _guardedCommandRecovery.Reset();
             ResetGuardMessageTracking();
             _puzzleSolver.Dispose();
             _stopCancellation.Cancel();

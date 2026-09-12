@@ -104,5 +104,35 @@ namespace EpicRPGBot.Tests.Training
             Assert.Equal("yes", resolution.AnswerText);
             Assert.Equal("yes", resolution.PreferredButtonLabel);
         }
+
+        [Fact]
+        public void Parse_FishPromptAttachedToGuardClear_ResolvesChoice()
+        {
+            var parser = new TrainingPromptParser();
+            var snapshot = new DiscordMessageSnapshot(
+                "training-after-guard",
+                "EPIC GUARD: Everything seems fine testplayer, keep playing\n" +
+                TestPlayerName + " is training in the river!",
+                renderedText:
+                    "EPIC GUARD: Everything seems fine testplayer, keep playing\n" +
+                    TestPlayerName + " is training in the river!\n" +
+                    "What is the name of this fish? :EPICfish:\n" +
+                    "1 - normie fish\n2 - golden fish\n3 - EPIC fish\n" +
+                    "Answer with a 1, 2 or 3! You have 15 seconds!",
+                buttons: new List<DiscordMessageButton>
+                {
+                    new DiscordMessageButton("normie fish", 0, 0),
+                    new DiscordMessageButton("golden fish", 0, 1),
+                    new DiscordMessageButton("EPIC fish", 0, 2)
+                });
+
+            var resolution = parser.Parse(snapshot);
+
+            Assert.True(resolution.IsTrainingPrompt);
+            Assert.True(resolution.IsResolved);
+            Assert.Equal(TrainingPromptKind.FishChoice, resolution.Kind);
+            Assert.Equal("3", resolution.AnswerText);
+            Assert.Equal("EPIC fish", resolution.PreferredButtonLabel);
+        }
     }
 }

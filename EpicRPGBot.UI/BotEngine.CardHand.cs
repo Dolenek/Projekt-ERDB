@@ -31,9 +31,12 @@ namespace EpicRPGBot.UI
             var acquired = false;
             try
             {
+                var firstPrompt = await SendCardHandCommandAsync(settings);
+                if (firstPrompt == null) return;
+
                 await _sendGate.WaitAsync(_stopCancellation.Token);
                 acquired = true;
-                await PlayCardHandInSendLaneAsync(settings, _stopCancellation.Token);
+                await PlayCardHandRoundsAsync(firstPrompt, settings, _stopCancellation.Token);
             }
             catch (OperationCanceledException)
             {
@@ -50,29 +53,26 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task PlayCardHandInSendLaneAsync(
-            CardHandSettingsSnapshot settings,
-            CancellationToken cancellationToken)
+        private async Task<DiscordMessageSnapshot> SendCardHandCommandAsync(
+            CardHandSettingsSnapshot settings)
         {
-            await RespectMinimumCommandGapAsync();
-            var send = await _confirmedCommandSender.SendAsync(
+            var send = await SendConfirmedCommandWithGuardRecoveryAsync(
                 "rpg card hand",
                 RegisterCardHandCommand,
-                cancellationToken);
+                allowDuringInteractivePrompt: true);
             _activeCardHandMessageReference = DiscordMessageReference.FromSnapshot(
                 send.ReplyMessage ?? send.OutgoingMessage);
             if (!send.IsConfirmed)
             {
                 RetryCardHandSoon("Card hand command was not confirmed.");
-                return;
+                return null;
             }
 
-            OnCommandConfirmed?.Invoke("rpg card hand", send.ReplyMessage);
-            ProcessObservedSnapshot(send.ReplyMessage, true);
-            if (TrackedCommandResponseClassifier.TryParseWaitAtLeast(send.ReplyMessage.Text, out _)) return;
+            if (TrackedCommandResponseClassifier.TryParseWaitAtLeast(send.ReplyMessage.Text, out _))
+                return null;
             if (!settings.IsDeckLoaded)
                 ReportCardHandInfo("No deck is loaded; all cards are treated as unowned.");
-            await PlayCardHandRoundsAsync(send.ReplyMessage, settings, cancellationToken);
+            return send.ReplyMessage;
         }
 
         private void RegisterCardHandCommand(DiscordMessageSnapshot snapshot)

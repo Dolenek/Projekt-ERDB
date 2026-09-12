@@ -59,6 +59,7 @@
     <Compile Include="Automation\AutomationOptions.cs" />
     <Compile Include="Automation\AutomationRuntime.cs" />
     <Compile Include="BotEngine.Commands.cs" />
+    <Compile Include="BotEngine.CommandRecovery.cs" />
     <Compile Include="BotEngine.CardHand.cs" />
     <Compile Include="BotEngine.TrackedCommands.cs" />
     <Compile Include="BotEngine.Bunny.cs" />
@@ -197,6 +198,8 @@
     <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
+    <Compile Include="Services\GuardedCommandContinuationClassifier.cs" />
+    <Compile Include="Services\GuardedCommandRecoveryCoordinator.cs" />
     <Compile Include="Services\ConsoleMessageNavigationRouter.cs" />
     <Compile Include="Services\IDiscordChatClient.cs" />
     <Compile Include="Services\IDiscordMessageNavigator.cs" />
