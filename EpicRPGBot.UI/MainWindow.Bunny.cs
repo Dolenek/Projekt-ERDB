@@ -6,16 +6,16 @@ namespace EpicRPGBot.UI
     {
         private void WireBunnyEvents(BotEngine engine)
         {
-            engine.OnBunnyInfo += message =>
+            engine.OnBunnyInfo += (message, reference) =>
             {
-                UiDispatcher.OnUI(() => _log.Info("[pet] " + message));
+                UiDispatcher.OnUI(() => _log.Info("[pet] " + message, reference));
             };
 
-            engine.OnBunnyAlert += message =>
+            engine.OnBunnyAlert += (message, reference) =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    _log.Warning("[pet] " + message);
+                    _log.Warning("[pet] " + message, reference);
                     _alertService.ShowBunnyAlert(this, message);
                 });
             };

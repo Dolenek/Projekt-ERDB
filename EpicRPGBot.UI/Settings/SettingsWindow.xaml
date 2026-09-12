@@ -155,7 +155,10 @@
                         <CheckBox x:Name="AscendedCheckBox"
                                   Content="Ascended — allow farm below area 4" Margin="0,0,0,11"/>
                         <CheckBox x:Name="AutoDeleteDungeonChannelCheckBox"
-                                  Content="Automatically delete the dungeon channel after a win"/>
+                                  Content="Automatically delete the dungeon channel after a win"
+                                  Margin="0,0,0,11"/>
+                        <CheckBox x:Name="BringGuardAlertsToForegroundCheckBox"
+                                  Content="Bring the EPIC GUARD tab and app to the foreground"/>
                     </StackPanel>
                 </Border>
             </Grid>

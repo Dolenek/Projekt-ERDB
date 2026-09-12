@@ -22,16 +22,19 @@ namespace EpicRPGBot.UI
             }
 
             var plan = _bunnyCatchPlanBuilder.Build(parseResult);
+            var messageReference = DiscordMessageReference.FromSnapshot(snapshot);
             if (plan.UsedFallback)
             {
-                RaiseBunnyAlert(plan.Summary);
+                RaiseBunnyAlert(plan.Summary, messageReference);
             }
 
-            _ = AnswerBunnyPromptAsync(plan);
+            _ = AnswerBunnyPromptAsync(plan, messageReference);
             return true;
         }
 
-        private async Task AnswerBunnyPromptAsync(BunnyCatchPlan plan)
+        private async Task AnswerBunnyPromptAsync(
+            BunnyCatchPlan plan,
+            DiscordMessageReference messageReference)
         {
             var sendGateHeld = false;
             try
@@ -41,7 +44,7 @@ namespace EpicRPGBot.UI
 
                 if (string.IsNullOrWhiteSpace(plan?.ReplyText))
                 {
-                    RaiseBunnyAlert("Bunny reply was empty and could not be sent.");
+                    RaiseBunnyAlert("Bunny reply was empty and could not be sent.", messageReference);
                     return;
                 }
 
@@ -49,19 +52,19 @@ namespace EpicRPGBot.UI
                 var sent = await _chatClient.SendMessageAsync(plan.ReplyText, _stopCancellation.Token);
                 if (!sent)
                 {
-                    RaiseBunnyAlert("Bunny reply failed to send: " + plan.Summary);
+                    RaiseBunnyAlert("Bunny reply failed to send: " + plan.Summary, messageReference);
                     return;
                 }
 
                 _lastCommandSentUtc = DateTime.UtcNow;
-                ReportBunnyInfo(plan.Summary);
+                ReportBunnyInfo(plan.Summary, messageReference);
             }
             catch (OperationCanceledException)
             {
             }
             catch (Exception ex)
             {
-                RaiseBunnyAlert("Bunny prompt handling failed: " + ex.Message);
+                RaiseBunnyAlert("Bunny prompt handling failed: " + ex.Message, messageReference);
             }
             finally
             {
@@ -73,24 +76,24 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private void ReportBunnyInfo(string message)
+        private void ReportBunnyInfo(string message, DiscordMessageReference messageReference)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
 
-            OnBunnyInfo?.Invoke(message);
+            OnBunnyInfo?.Invoke(message, messageReference);
         }
 
-        private void RaiseBunnyAlert(string message)
+        private void RaiseBunnyAlert(string message, DiscordMessageReference messageReference)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
 
-            OnBunnyAlert?.Invoke(message);
+            OnBunnyAlert?.Invoke(message, messageReference);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace EpicRPGBot.UI
         {
             return await SendConfirmedCommandWithGlobalCooldownCoreAsync(
                 text,
-                () => OnCommandSent?.Invoke(text),
+                snapshot => OnCommandSent?.Invoke(text, snapshot),
                 onOutgoingSnapshotRegistered);
         }
 
@@ -44,10 +44,10 @@ namespace EpicRPGBot.UI
             {
                 var sent = await SendConfirmedCommandWithGlobalCooldownAsync(
                     command,
-                    () =>
+                    snapshot =>
                     {
                         _scheduler.RegisterPending(kind);
-                        OnCommandSent?.Invoke(command);
+                        OnCommandSent?.Invoke(command, snapshot);
                     });
 
                 if (sent)
@@ -86,7 +86,11 @@ namespace EpicRPGBot.UI
                     return;
                 }
 
-                await SendConfirmedCommandWithGlobalCooldownAsync("rpg cd", () => OnCommandSent?.Invoke("rpg cd"), null, false);
+                await SendConfirmedCommandWithGlobalCooldownAsync(
+                    "rpg cd",
+                    snapshot => OnCommandSent?.Invoke("rpg cd", snapshot),
+                    null,
+                    false);
             }
             finally
             {
@@ -125,18 +129,19 @@ namespace EpicRPGBot.UI
             {
                 return await SendConfirmedCommandWithGlobalCooldownAsync(
                     text,
-                    () => OnCommandSent?.Invoke(text),
+                    snapshot => OnCommandSent?.Invoke(text, snapshot),
                     onOutgoingRegistered,
                     allowDuringGuard);
             }
 
-            var ok = await SendRawWithGlobalCooldownAsync(text, allowDuringGuard);
-            if (ok)
-            {
-                OnCommandSent?.Invoke(text);
-            }
-
-            return ok;
+            return await SendRawWithGlobalCooldownAsync(
+                text,
+                allowDuringGuard,
+                snapshot =>
+                {
+                    OnCommandSent?.Invoke(text, snapshot);
+                    onOutgoingRegistered?.Invoke(snapshot);
+                });
         }
 
         internal async Task WaitForSendLaneIdleAsync()
@@ -147,7 +152,7 @@ namespace EpicRPGBot.UI
 
         private async Task<bool> SendConfirmedCommandWithGlobalCooldownAsync(
             string text,
-            Action onOutgoingRegistered,
+            Action<DiscordMessageSnapshot> onOutgoingRegistered,
             Action<Models.DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
             bool allowDuringGuard = false)
         {
@@ -161,7 +166,7 @@ namespace EpicRPGBot.UI
 
         private async Task<ConfirmedCommandSendResult> SendConfirmedCommandWithGlobalCooldownCoreAsync(
             string text,
-            Action onOutgoingRegistered,
+            Action<DiscordMessageSnapshot> onOutgoingRegistered,
             Action<DiscordMessageSnapshot> onOutgoingSnapshotRegistered = null,
             bool allowDuringGuard = false)
         {
@@ -220,7 +225,7 @@ namespace EpicRPGBot.UI
                     snapshot =>
                     {
                         _lastCommandSentUtc = DateTime.UtcNow;
-                        onOutgoingRegistered?.Invoke();
+                        onOutgoingRegistered?.Invoke(snapshot);
                         onOutgoingSnapshotRegistered?.Invoke(snapshot);
                     },
                     _stopCancellation.Token);
@@ -245,7 +250,10 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async Task<bool> SendRawWithGlobalCooldownAsync(string text, bool allowDuringGuard = false)
+        private async Task<bool> SendRawWithGlobalCooldownAsync(
+            string text,
+            bool allowDuringGuard = false,
+            Action<DiscordMessageSnapshot> onOutgoingRegistered = null)
         {
             while (true)
             {
@@ -297,13 +305,14 @@ namespace EpicRPGBot.UI
                     return false;
                 }
 
-                var ok = await _chatClient.SendMessageAsync(text, _stopCancellation.Token);
-                if (ok)
+                var outgoing = await _chatClient.SendMessageAndWaitForOutgoingAsync(text, _stopCancellation.Token);
+                if (outgoing != null)
                 {
                     _lastCommandSentUtc = DateTime.UtcNow;
+                    onOutgoingRegistered?.Invoke(outgoing);
                 }
 
-                return ok;
+                return outgoing != null;
             }
             catch (OperationCanceledException)
             {

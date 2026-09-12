@@ -73,12 +73,13 @@ namespace EpicRPGBot.UI
                     _log.Info("[guild][guard] " + notification.Message);
                 }
 
-                if (notification.ShouldBringToFront)
+                var bringToForeground = ShouldBringGuardAlertToForeground(notification);
+                if (bringToForeground)
                 {
                     SelectGuildTab();
                 }
 
-                _alertService.ShowGuardAlert(this, notification);
+                _alertService.ShowGuardAlert(this, notification, bringToForeground);
             });
         }
     }

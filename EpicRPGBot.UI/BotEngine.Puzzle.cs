@@ -27,7 +27,7 @@ namespace EpicRPGBot.UI
                     if (sent)
                     {
                         _lastCommandSentUtc = DateTime.UtcNow;
-                        OnCommandSent?.Invoke(answer);
+                        OnCommandSent?.Invoke(answer, null);
                     }
                     return sent;
                 }

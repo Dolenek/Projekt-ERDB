@@ -15,6 +15,7 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(AreaBox, "SettingsAreaInput");
             SetAutomationIdentity(AscendedCheckBox, "SettingsAscendedInput");
             SetAutomationIdentity(AutoDeleteDungeonChannelCheckBox, "SettingsAutoDeleteDungeonChannelInput");
+            SetAutomationIdentity(BringGuardAlertsToForegroundCheckBox, "SettingsBringGuardAlertsToForegroundInput");
             SetAutomationIdentity(HuntCdBox, "SettingsHuntCooldownInput");
             SetAutomationIdentity(AdventureCdBox, "SettingsAdventureCooldownInput");
             SetAutomationIdentity(TrainingCdBox, "SettingsTrainingCooldownInput");

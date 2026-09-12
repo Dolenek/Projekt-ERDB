@@ -276,10 +276,22 @@ namespace EpicRPGBot.UI.Services
     if (author.includes('EPIC RPG') || text.includes('EPIC RPG')) continue;
     const normalizedText = text.toLowerCase().replace(/\s+/g, ' ').trim();
     if (normalizedText.includes(target) || normalizedText.includes(detectionToken)) {{
-      return JSON.stringify({{ id, text, author }});
+      return JSON.stringify({{
+        id,
+        text,
+        author,
+        tabRole: window.__epicRpGBotTabRole || '',
+        channelUrl: window.location.href || ''
+      }});
     }}
   }}
-  return JSON.stringify({{ id: '', text: '', author: '' }});
+  return JSON.stringify({{
+    id: '',
+    text: '',
+    author: '',
+    tabRole: window.__epicRpGBotTabRole || '',
+    channelUrl: window.location.href || ''
+  }});
 }})();
 ";
 
@@ -287,16 +299,8 @@ namespace EpicRPGBot.UI.Services
             {
                 var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
                 var payload = DiscordScriptParsing.UnquoteJson(json);
-                var id = DiscordScriptParsing.ExtractField(payload, "id");
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    return null;
-                }
-
-                return new DiscordMessageSnapshot(
-                    id,
-                    DiscordScriptParsing.ExtractField(payload, "text"),
-                    DiscordScriptParsing.ExtractField(payload, "author"));
+                var snapshot = DiscordScriptParsing.ParseSnapshot(payload);
+                return string.IsNullOrWhiteSpace(snapshot?.Id) ? null : snapshot;
             }
             catch
             {

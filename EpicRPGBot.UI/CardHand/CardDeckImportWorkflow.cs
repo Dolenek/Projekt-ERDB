@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI.CardHand
@@ -22,14 +23,14 @@ namespace EpicRPGBot.UI.CardHand
         }
 
         public async Task<CardDeckImportResult> RunAsync(
-            Action onOutgoingRegistered,
+            Action<DiscordMessageSnapshot> onOutgoingRegistered,
             CancellationToken cancellationToken)
         {
             try
             {
                 var command = await _commandSender.SendAsync(
                     "rpg card deck",
-                    snapshot => onOutgoingRegistered?.Invoke(),
+                    snapshot => onOutgoingRegistered?.Invoke(snapshot),
                     cancellationToken);
                 if (!command.IsConfirmed)
                     return Failure("EPIC RPG did not confirm the card deck command.");

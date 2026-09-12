@@ -1,3 +1,4 @@
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using Xunit;
 
@@ -11,6 +12,7 @@ public sealed class DiscordScriptParsingTests
         const string json = """
             {"id":"1","text":"80 cf","author":"opponent","authorId":"123",
              "createdAtUtc":"2026-09-11T08:30:00.000Z",
+             "tabRole":"bot","channelUrl":"https://discord.com/channels/111111111111111/222222222222222",
              "reactions":[{"name":"white_check_mark","isMine":true,"count":2}]}
             """;
 
@@ -19,6 +21,8 @@ public sealed class DiscordScriptParsingTests
         Assert.Equal("1", snapshot?.Id);
         Assert.Equal("123", snapshot?.AuthorId);
         Assert.Equal(new DateTimeOffset(2026, 9, 11, 8, 30, 0, TimeSpan.Zero), snapshot?.CreatedAtUtc);
+        Assert.Equal(DiscordTabRole.Bot, snapshot?.SourceTabRole);
+        Assert.Equal("https://discord.com/channels/111111111111111/222222222222222", snapshot?.ChannelUrl);
         var reaction = Assert.Single(snapshot!.Reactions);
         Assert.Equal("white_check_mark", reaction.Name);
         Assert.True(reaction.IsMine);
@@ -33,6 +37,8 @@ public sealed class DiscordScriptParsingTests
         Assert.Equal(string.Empty, snapshot?.AuthorId);
         Assert.Null(snapshot?.CreatedAtUtc);
         Assert.Empty(snapshot!.Reactions);
+        Assert.Equal(DiscordTabRole.Unknown, snapshot.SourceTabRole);
+        Assert.Equal(string.Empty, snapshot.ChannelUrl);
     }
 
     [Fact]

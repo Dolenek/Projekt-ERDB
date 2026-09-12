@@ -66,13 +66,18 @@
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordChannelReference.cs" Link="Models\DiscordChannelReference.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageMention.cs" Link="Models\DiscordMessageMention.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageReaction.cs" Link="Models\DiscordMessageReaction.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageReference.cs" Link="Models\DiscordMessageReference.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\DiscordMessageSnapshot.cs" Link="Models\DiscordMessageSnapshot.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\DiscordTabRole.cs" Link="Models\DiscordTabRole.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\GuardAlertNotification.cs" Link="Models\GuardAlertNotification.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AreaWorkCommandSettings.cs" Link="Services\AreaWorkCommandSettings.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ActivityEntryFilter.cs" Link="Services\ActivityEntryFilter.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AppSettingsService.cs" Link="Services\AppSettingsService.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordCommandSendPolicy.cs" Link="Services\DiscordCommandSendPolicy.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordMessagePermalink.cs" Link="Services\DiscordMessagePermalink.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordTabRoleCatalog.cs" Link="Services\DiscordTabRoleCatalog.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\ConsoleMessageNavigationRouter.cs" Link="Services\ConsoleMessageNavigationRouter.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordChannelMentionParser.cs" Link="Services\DiscordChannelMentionParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordScriptParsing.cs" Link="Services\DiscordScriptParsing.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfiguredWorkCommandCatalog.cs" Link="Services\ConfiguredWorkCommandCatalog.cs" />
@@ -85,9 +90,11 @@
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordChatClient.cs" Link="Services\IDiscordChatClient.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\IDiscordMessageNavigator.cs" Link="Services\IDiscordMessageNavigator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDuelDiscordClient.cs" Link="Services\IDuelDiscordClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordAttachmentImageClient.cs" Link="Services\IDiscordAttachmentImageClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\InteractivePromptGate.cs" Link="Services\InteractivePromptGate.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\InMemoryLog.cs" Link="Services\InMemoryLog.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\LocalSettingsStore.cs" Link="Services\LocalSettingsStore.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\MessageReactionGate.cs" Link="Services\MessageReactionGate.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ProfileMessageParser.cs" Link="Services\ProfileMessageParser.cs" />

@@ -22,6 +22,8 @@ namespace EpicRPGBot.UI.Settings
             AscendedCheckBox.Unchecked += OnAscendedChanged;
             AutoDeleteDungeonChannelCheckBox.Checked += OnAutoDeleteDungeonChannelChanged;
             AutoDeleteDungeonChannelCheckBox.Unchecked += OnAutoDeleteDungeonChannelChanged;
+            BringGuardAlertsToForegroundCheckBox.Checked += OnGuardAlertPresentationChanged;
+            BringGuardAlertsToForegroundCheckBox.Unchecked += OnGuardAlertPresentationChanged;
             UseAtMeFallback.Checked += OnFallbackChanged;
             UseAtMeFallback.Unchecked += OnFallbackChanged;
         }
@@ -42,6 +44,7 @@ namespace EpicRPGBot.UI.Settings
             FarmCdBox.Text = settings.FarmMs;
             LootboxCdBox.Text = settings.LootboxMs;
             AutoDeleteDungeonChannelCheckBox.IsChecked = settings.AutoDeleteDungeonChannel;
+            BringGuardAlertsToForegroundCheckBox.IsChecked = settings.BringGuardAlertsToForeground;
 
             _loadingSettings = false;
         }
@@ -62,6 +65,11 @@ namespace EpicRPGBot.UI.Settings
         }
 
         private void OnAutoDeleteDungeonChannelChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
+        private void OnGuardAlertPresentationChanged(object sender, RoutedEventArgs e)
         {
             PersistSettings();
         }
@@ -92,7 +100,8 @@ namespace EpicRPGBot.UI.Settings
                 _settingsService.Current.GuildRaidTriggerText,
                 _settingsService.Current.GuildRaidMatchMode,
                 _settingsService.Current.GuildRaidAuthorFilter,
-                _settingsService.Current.CardHand));
+                _settingsService.Current.CardHand,
+                BringGuardAlertsToForegroundCheckBox.IsChecked == true));
         }
     }
 }

@@ -182,7 +182,9 @@ namespace EpicRPGBot.UI.Services
                 ParseMentions(item),
                 GetString(item, "authorId"),
                 ParseTimestamp(item),
-                ParseReactions(item));
+                ParseReactions(item),
+                DiscordTabRoleCatalog.Parse(GetString(item, "tabRole")),
+                GetString(item, "channelUrl"));
         }
 
         private static IReadOnlyList<DiscordMessageButton> ParseButtons(JsonElement item)

@@ -15,7 +15,9 @@ namespace EpicRPGBot.UI.Models
             IReadOnlyList<DiscordMessageMention> mentions = null,
             string authorId = null,
             DateTimeOffset? createdAtUtc = null,
-            IReadOnlyList<DiscordMessageReaction> reactions = null)
+            IReadOnlyList<DiscordMessageReaction> reactions = null,
+            DiscordTabRole sourceTabRole = DiscordTabRole.Unknown,
+            string channelUrl = null)
         {
             Id = id ?? string.Empty;
             Text = text ?? string.Empty;
@@ -26,6 +28,8 @@ namespace EpicRPGBot.UI.Models
             AuthorId = authorId ?? string.Empty;
             CreatedAtUtc = createdAtUtc;
             Reactions = reactions?.Where(reaction => reaction != null).ToArray() ?? new DiscordMessageReaction[0];
+            SourceTabRole = sourceTabRole;
+            ChannelUrl = channelUrl ?? string.Empty;
         }
 
         public string Id { get; }
@@ -37,5 +41,7 @@ namespace EpicRPGBot.UI.Models
         public string AuthorId { get; }
         public DateTimeOffset? CreatedAtUtc { get; }
         public IReadOnlyList<DiscordMessageReaction> Reactions { get; }
+        public DiscordTabRole SourceTabRole { get; }
+        public string ChannelUrl { get; }
     }
 }

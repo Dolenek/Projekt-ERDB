@@ -197,10 +197,10 @@
                                 </Grid>
 
                                 <Grid x:Name="ConsolePanel" Visibility="Collapsed">
-                                    <ListBox x:Name="ConsoleList" HorizontalContentAlignment="Stretch" SelectionMode="Extended" PreviewKeyDown="ConsoleList_PreviewKeyDown">
+                                    <ListBox x:Name="ConsoleList" HorizontalContentAlignment="Stretch" SelectionMode="Extended" PreviewKeyDown="ConsoleList_PreviewKeyDown" MouseDoubleClick="ConsoleList_MouseDoubleClick">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="2,3">
+                                                <Grid x:Name="ConsoleLogRow" Margin="2,3">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="14"/>
                                                         <ColumnDefinition Width="66"/>
@@ -208,7 +208,7 @@
                                                     </Grid.ColumnDefinitions>
                                                     <Ellipse x:Name="LogKindDot" Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                                     <TextBlock Grid.Column="1" Text="{Binding At, StringFormat={}{0:HH:mm:ss}}" Foreground="{StaticResource MutedTextBrush}"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding Message}" TextWrapping="Wrap"/>
+                                                    <TextBlock x:Name="ConsoleLogMessage" Grid.Column="2" Text="{Binding Message}" TextWrapping="Wrap"/>
                                                 </Grid>
                                                 <DataTemplate.Triggers>
                                                     <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Command}">
@@ -222,6 +222,11 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Kind}" Value="{x:Static models:LogKind.Engine}">
                                                         <Setter TargetName="LogKindDot" Property="Fill" Value="{StaticResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CanNavigate}" Value="True">
+                                                        <Setter TargetName="ConsoleLogRow" Property="Cursor" Value="Hand"/>
+                                                        <Setter TargetName="ConsoleLogRow" Property="ToolTip" Value="Double-click to show Discord message"/>
+                                                        <Setter TargetName="ConsoleLogMessage" Property="Foreground" Value="{StaticResource AccentBrush}"/>
                                                     </DataTrigger>
                                                 </DataTemplate.Triggers>
                                             </DataTemplate>

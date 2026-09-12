@@ -10,11 +10,16 @@ namespace EpicRPGBot.Tests.Services
         public void RegisterDetection_ActivatesIncidentUntilClear()
         {
             var tracker = new GuardIncidentTracker();
+            var reference = new DiscordMessageReference(
+                "chat-messages-333333333333333",
+                DiscordTabRole.Bot,
+                "https://discord.com/channels/111111111111111/222222222222222");
 
-            var notification = tracker.RegisterDetection("Puzzle detected in latest message.");
+            var notification = tracker.RegisterDetection("Puzzle detected in latest message.", reference);
 
             Assert.NotNull(notification);
             Assert.Equal(GuardAlertKind.FirstDetected, notification.Kind);
+            Assert.Same(reference, notification.MessageReference);
             Assert.True(tracker.IsActive);
 
             var cleared = tracker.ClearIfActive();

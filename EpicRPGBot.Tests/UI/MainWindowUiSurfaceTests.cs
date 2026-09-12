@@ -71,6 +71,7 @@ public sealed class MainWindowUiSurfaceTests
             "ChannelUrlBox", "DungeonListingChannelUrlBox", "UseAtMeFallback", "AreaBox",
             "HuntCdBox", "AdventureCdBox", "TrainingCdBox", "WorkCdBox", "FarmCdBox",
             "LootboxCdBox", "AscendedCheckBox", "AutoDeleteDungeonChannelCheckBox",
+            "BringGuardAlertsToForegroundCheckBox",
             "WorkCommandsBtn", "GuildRaidBtn", "CardHandBtn", "CloseBtn"
         };
         Assert.All(requiredNames, name => Assert.Contains(name, namedElements));
@@ -85,6 +86,26 @@ public sealed class MainWindowUiSurfaceTests
         Assert.Contains("WindowWorkAreaChrome.ConstrainToWorkArea(this)", mainWindowCode);
         Assert.True(File.Exists(Path.Combine(repositoryRoot, "EpicRPGBot.UI", "Assets", "icon.png")));
         Assert.False(File.Exists(Path.Combine(repositoryRoot, "icon.png")));
+    }
+
+    [Fact]
+    public void ConsoleRowsExposeMessageNavigationOnlyForNavigableEntries()
+    {
+        var document = LoadUiXaml("MainWindow.xaml");
+        var consoleList = GetNamedElement(document, "ConsoleList");
+        var navigableTrigger = document.Descendants()
+            .First(element =>
+                element.Name.LocalName == "DataTrigger" &&
+                element.Attribute("Binding")?.Value == "{Binding CanNavigate}");
+        var setters = navigableTrigger.Elements().ToList();
+        var handlerCode = LoadUiText("MainWindow.ConsoleNavigation.cs");
+
+        Assert.Equal("ConsoleList_MouseDoubleClick", consoleList.Attribute("MouseDoubleClick")?.Value);
+        Assert.Contains(setters, setter => setter.Attribute("Property")?.Value == "Cursor" && setter.Attribute("Value")?.Value == "Hand");
+        Assert.Contains(setters, setter => setter.Attribute("Property")?.Value == "ToolTip" && setter.Attribute("Value")?.Value == "Double-click to show Discord message");
+        Assert.Contains("FindClickedConsoleItem(e.OriginalSource as DependencyObject)", handlerCode);
+        Assert.Contains("_isConsoleMessageNavigationRunning", handlerCode);
+        Assert.DoesNotContain("ConsoleList.SelectedItem", handlerCode);
     }
 
     [Fact]

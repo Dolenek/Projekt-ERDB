@@ -26,6 +26,7 @@ namespace EpicRPGBot.UI
         private readonly IDiscordChatClient _guildChatClient;
         private readonly IDiscordChatClient _dungeonChatClient;
         private readonly IDuelDiscordClient _duelChatClient;
+        private readonly ConsoleMessageNavigationRouter _consoleMessageNavigationRouter;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly ConfirmedCommandSender _dungeonConfirmedCommandSender;
         private readonly AppSettingsService _settingsService;
@@ -74,6 +75,7 @@ namespace EpicRPGBot.UI
                 DuelWeb,
                 "duel",
                 message => _log.Info("[duel] " + message));
+            _consoleMessageNavigationRouter = CreateConsoleMessageNavigationRouter();
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
             _settingsService = new AppSettingsService(new LocalSettingsStore());

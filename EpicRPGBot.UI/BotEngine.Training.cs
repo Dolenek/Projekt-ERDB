@@ -23,7 +23,7 @@ namespace EpicRPGBot.UI
 
             if (!resolution.IsResolved)
             {
-                RaiseTrainingAlert(resolution.Summary);
+                RaiseTrainingAlert(resolution.Summary, DiscordMessageReference.FromSnapshot(snapshot));
                 return true;
             }
 
@@ -64,11 +64,15 @@ namespace EpicRPGBot.UI
                     return;
                 }
 
-                RaiseTrainingAlert($"Training prompt confirmation timed out: {resolution.Summary}");
+                RaiseTrainingAlert(
+                    $"Training prompt confirmation timed out: {resolution.Summary}",
+                    DiscordMessageReference.FromSnapshot(snapshot));
             }
             catch (Exception ex)
             {
-                RaiseTrainingAlert("Training prompt handling failed: " + ex.Message);
+                RaiseTrainingAlert(
+                    "Training prompt handling failed: " + ex.Message,
+                    DiscordMessageReference.FromSnapshot(snapshot));
             }
             finally
             {
@@ -86,7 +90,9 @@ namespace EpicRPGBot.UI
 
             if (string.IsNullOrWhiteSpace(resolution.AnswerText))
             {
-                RaiseTrainingAlert($"Training prompt answer failed to send: {resolution.Summary}");
+                RaiseTrainingAlert(
+                    $"Training prompt answer failed to send: {resolution.Summary}",
+                    DiscordMessageReference.FromSnapshot(snapshot));
                 return false;
             }
 
@@ -98,7 +104,9 @@ namespace EpicRPGBot.UI
                 return true;
             }
 
-            RaiseTrainingAlert($"Training prompt answer failed to send: {resolution.Summary}");
+            RaiseTrainingAlert(
+                $"Training prompt answer failed to send: {resolution.Summary}",
+                DiscordMessageReference.FromSnapshot(snapshot));
             return false;
         }
 
@@ -177,14 +185,16 @@ namespace EpicRPGBot.UI
                 message.IndexOf("Well done", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        private void RaiseTrainingAlert(string message)
+        private void RaiseTrainingAlert(
+            string message,
+            DiscordMessageReference messageReference)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
 
-            OnTrainingAlert?.Invoke(message);
+            OnTrainingAlert?.Invoke(message, messageReference);
         }
 
         private static bool LabelsMatch(string left, string right)

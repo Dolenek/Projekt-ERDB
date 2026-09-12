@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
@@ -22,7 +23,9 @@ namespace EpicRPGBot.UI
             if (updateCursor)
             {
                 _previousMessageId = _lastMessageId;
+                _previousMessageSnapshot = _lastMessageSnapshot;
                 _lastMessageId = snapshot.Id;
+                _lastMessageSnapshot = snapshot;
             }
 
             OnMessageSeen?.Invoke(snapshot);
@@ -33,7 +36,7 @@ namespace EpicRPGBot.UI
         private void EventCheck(Models.DiscordMessageSnapshot snapshot)
         {
             var msg = snapshot?.Text ?? string.Empty;
-            HandleGuardMessage(msg);
+            HandleGuardMessage(snapshot);
             if (IsGuardIncidentActive)
             {
                 _previousMessageText = msg;
@@ -142,11 +145,13 @@ namespace EpicRPGBot.UI
             _previousMessageText = msg;
         }
 
-        private void HandleGuardMessage(string message)
+        private void HandleGuardMessage(DiscordMessageSnapshot snapshot)
         {
+            var message = snapshot?.Text ?? string.Empty;
+            var currentReference = DiscordMessageReference.FromSnapshot(snapshot);
             if (GuardIncidentTracker.ContainsGuardClear(message))
             {
-                var cleared = _guardIncidentTracker.ClearIfActive();
+                var cleared = _guardIncidentTracker.ClearIfActive(currentReference);
                 if (cleared != null)
                 {
                     _puzzleSolver.CancelCurrentSolve();
@@ -155,10 +160,10 @@ namespace EpicRPGBot.UI
                     _scheduler.ResumeAll(_running);
                     if (QueueCooldownSnapshotRequest())
                     {
-                        ReportSolverInfo("Queued 'rpg cd' after guard clear to resync scheduling.");
+                        ReportSolverInfo("Queued 'rpg cd' after guard clear to resync scheduling.", currentReference);
                     }
                     OnGuardNotification?.Invoke(cleared);
-                    ReportSolverInfo(cleared.Message);
+                    ReportSolverInfo(cleared.Message, currentReference);
                 }
 
                 return;
@@ -171,24 +176,25 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            var targetMessageId = ResolveGuardTargetMessageId(latestHasGuard, previousHasGuard);
+            var targetSnapshot = ResolveGuardTargetSnapshot(latestHasGuard, previousHasGuard);
+            var targetReference = DiscordMessageReference.FromSnapshot(targetSnapshot);
             var detectionInfo = latestHasGuard
                 ? "Puzzle detected in latest message."
                 : "Puzzle detected in previous message.";
-            var notification = _guardIncidentTracker.RegisterDetection(detectionInfo);
+            var notification = _guardIncidentTracker.RegisterDetection(detectionInfo, targetReference);
             if (notification != null)
             {
                 OnGuardNotification?.Invoke(notification);
             }
 
-            ReportSolverInfo(detectionInfo);
+            ReportSolverInfo(detectionInfo, targetReference);
             _scheduler.PauseAll();
-            if (!TryBeginGuardSolve(targetMessageId))
+            if (!TryBeginGuardSolve(targetSnapshot))
             {
                 return;
             }
 
-            _ = SolvePuzzleAsync(targetMessageId);
+            _ = SolvePuzzleAsync(targetSnapshot.Id);
         }
 
         private void HandleChangeWork(string message)
@@ -269,7 +275,7 @@ namespace EpicRPGBot.UI
                     (text, token) => SendPuzzleAnswerAsync(targetMessageId, text, token),
                     _scheduler.PauseAll,
                     () => IsCurrentPuzzle(targetMessageId),
-                    ReportSolverInfo);
+                    info => ReportSolverInfo(info));
             }
             finally
             {
@@ -277,9 +283,9 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private void ReportSolverInfo(string info)
+        private void ReportSolverInfo(string info, DiscordMessageReference reference = null)
         {
-            OnSolverInfo?.Invoke(info);
+            OnSolverInfo?.Invoke(info, reference ?? _guardMessageReference);
         }
         private static Task SafeDelay(int milliseconds, CancellationToken cancellationToken)
         {

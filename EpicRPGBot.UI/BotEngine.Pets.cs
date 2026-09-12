@@ -33,7 +33,7 @@ namespace EpicRPGBot.UI
                 var result = await _confirmedCommandSender.SendAsync(command, snapshot =>
                 {
                     _lastCommandSentUtc = DateTime.UtcNow;
-                    OnCommandSent?.Invoke(command);
+                    OnCommandSent?.Invoke(command, snapshot);
                 }, token);
                 return result;
             }

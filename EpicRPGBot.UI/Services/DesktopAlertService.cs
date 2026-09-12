@@ -24,7 +24,8 @@ namespace EpicRPGBot.UI.Services
             };
         }
 
-        public void ShowGuardAlert(Window window, GuardAlertNotification notification)
+        public void ShowGuardAlert(Window window, GuardAlertNotification notification,
+            bool bringToForeground)
         {
             if (notification == null)
             {
@@ -41,7 +42,7 @@ namespace EpicRPGBot.UI.Services
                 ShowBalloon(notification);
             }
 
-            if (notification.ShouldBringToFront)
+            if (bringToForeground && notification.ShouldBringToFront)
             {
                 BringToFront(window);
             }

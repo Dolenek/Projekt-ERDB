@@ -8,7 +8,7 @@ Layout:
 - `Work commands`, `Guild raid`, and `Card Hand` use the same responsive shell, fixed footer, auto-save badge, window controls, and work-area clamping.
 - The advanced dialogs show their complete content at the default size; reduced heights use only a dark vertical scrollbar.
 - Left column: `Discord` channel and dungeon-listing URLs, the `Fallback to @me if empty` toggle, and launchers for focused advanced dialogs.
-- Right column: area, `Ascended`, `Auto delete dungeon channel after a win`, and hunt/adventure/training/work/farm/lootbox cooldown baselines.
+- Right column: area, `Ascended`, dungeon-channel cleanup, EPIC GUARD foreground behavior, and hunt/adventure/training/work/farm/lootbox cooldown baselines.
 - `Close` button only; there is no separate save/apply action
 - `Work commands` opens a second modal with editable work-command text rows for areas `1..15`
 - `Guild raid` opens a second modal with guild-raid channel, trigger text, match mode, and optional author filter
@@ -19,6 +19,7 @@ Persistence model:
 - The settings window loads from the shared in-memory settings snapshot when it opens.
 - Every edit saves immediately back to the shared snapshot and the backing `.ini` file.
 - Existing keys are preserved. Card-hand keys store the enabled flag, nine weights, deck-loaded flag, sorted owned-card codes, and successful-load UTC timestamp.
+- `Bring the EPIC GUARD tab and app to the foreground` is disabled by default. It controls tab switching and window activation together without disabling guard sound or system notifications.
 
 Runtime behavior:
 - `Go to channel` reads the current saved settings snapshot, not a textbox on the main window.
@@ -27,12 +28,13 @@ Runtime behavior:
 - `Initialize` updates the saved hunt/adventure/training/work/farm/lootbox baseline values through the shared settings service after parsing refreshed cooldowns.
 - `Initialize` also refreshes the cached profile player name through the shared settings service after parsing `rpg p`.
 - The guild-raid dialog updates the always-on guild watcher live through the same shared settings service.
+- Guard solving and submission continue in the background when foreground presentation is disabled. Enabling it makes the first detection select the relevant Discord tab and activate the app window.
 - Closing and reopening the settings window always shows the latest persisted values.
 
 Automation IDs:
 - Main window launcher: `SettingsButton`
 - Dialog root: `SettingsWindow`
-- Dialog fields: `SettingsChannelUrlInput`, `SettingsDungeonListingChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`, `SettingsAscendedInput`, `SettingsAutoDeleteDungeonChannelInput`
+- Dialog fields: `SettingsChannelUrlInput`, `SettingsDungeonListingChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`, `SettingsAscendedInput`, `SettingsAutoDeleteDungeonChannelInput`, `SettingsBringGuardAlertsToForegroundInput`
 - Cooldown fields: `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsTrainingCooldownInput`, `SettingsWorkCooldownInput`, `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - Dialog actions: `SettingsWorkCommandsButton`, `SettingsGuildRaidButton`, `SettingsCardHandButton`, `SettingsCloseButton`
 - Window chrome: `SettingsMinimizeButton`, `SettingsMaximizeRestoreButton`, `SettingsWindowCloseButton`

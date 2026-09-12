@@ -32,6 +32,12 @@ namespace EpicRPGBot.UI
             return settings.IsFarmAllowed(10);
         }
 
+        private bool ShouldBringGuardAlertToForeground(GuardAlertNotification notification)
+        {
+            return notification?.ShouldBringToFront == true &&
+                   GetCurrentSettings().BringGuardAlertsToForeground;
+        }
+
         private void HookAppSettings()
         {
             _settingsService.SettingsChanged += OnAppSettingsChanged;
@@ -97,7 +103,9 @@ namespace EpicRPGBot.UI
             var result = _engine != null && _engine.IsRunning
                 ? await _engine.ImportCardDeckAsync(_cardDeckImportWorkflow)
                 : await _cardDeckImportWorkflow.RunAsync(
-                    () => _log.Command("Message (rpg card deck) sent"),
+                    snapshot => _log.Command(
+                        "Message (rpg card deck) sent",
+                        Models.DiscordMessageReference.FromSnapshot(snapshot)),
                     CancellationToken.None);
             if (result.Success)
             {

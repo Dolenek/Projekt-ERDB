@@ -36,7 +36,9 @@ folder, then its parent directories; absolute paths are used directly.
 6. Sending uses the shared lane, rechecks the active challenge and cancellation
    before Enter, and makes one submission without retries.
 7. An uncertain result, unavailable image or error leaves manual resolution
-   active. Desktop alerts and ten-second reminders continue while waiting.
+   active. Desktop alerts and ten-second reminders continue while waiting. Guard
+   solving stays in the background by default; settings can opt into selecting
+   the guard tab and activating the app on first detection.
 8. The `Everything seems fine ... keep playing` confirmation cancels any active
    attempt and resumes scheduling. A delayed command result in that message is
    still processed, and a fresh `rpg cd` snapshot resynchronizes timers.

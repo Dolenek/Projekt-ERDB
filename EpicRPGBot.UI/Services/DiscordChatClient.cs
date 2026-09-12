@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 
@@ -9,7 +10,7 @@ namespace EpicRPGBot.UI.Services
     public sealed partial class DiscordChatClient : IDiscordChatClient, IDuelDiscordClient, IDiscordAttachmentImageClient
     {
         private readonly WebView2 _web;
-        private readonly string _tabRole;
+        private readonly DiscordTabRole _tabRole;
         private readonly Action<string> _telemetry;
         private bool _navigationHandlerAttached;
         private bool _roleMarkerRegistered;
@@ -22,7 +23,11 @@ namespace EpicRPGBot.UI.Services
         public DiscordChatClient(WebView2 web, string tabRole, Action<string> telemetry = null)
         {
             _web = web ?? throw new ArgumentNullException(nameof(web));
-            _tabRole = string.IsNullOrWhiteSpace(tabRole) ? "bot" : tabRole.Trim().ToLowerInvariant();
+            _tabRole = DiscordTabRoleCatalog.Parse(tabRole);
+            if (_tabRole == DiscordTabRole.Unknown)
+            {
+                _tabRole = DiscordTabRole.Bot;
+            }
             _telemetry = telemetry;
         }
 
@@ -119,7 +124,7 @@ namespace EpicRPGBot.UI.Services
 
         private string BuildRoleMarkerScript()
         {
-            var role = EscapeJavaScriptString(_tabRole);
+            var role = EscapeJavaScriptString(DiscordTabRoleCatalog.ToMarker(_tabRole));
             return $@"
 (() => {{
   window.__epicRpGBotTabRole = '{role}';

@@ -23,6 +23,8 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            var messageReference = DiscordMessageReference.FromSnapshot(snapshot);
+
             if (!string.IsNullOrWhiteSpace(snapshot.Text))
             {
                 _last.Add(snapshot.Text);
@@ -36,17 +38,21 @@ namespace EpicRPGBot.UI
             var trackerUpdated = _cooldownTracker.ApplyMessage(snapshot.Text);
             if (trackerUpdated)
             {
-                SyncEngineFromTrackedCooldowns("Cooldown snapshot received");
+                SyncEngineFromTrackedCooldowns("Cooldown snapshot received", messageReference);
             }
 
             if (TimeCookieMessageParser.TryParseReduction(snapshot.Text, out var reduction) &&
                 _cooldownTracker.ApplyTimeCookieReduction(reduction))
             {
-                _log.Info($"Time cookie detected: reduced cooldown visuals by {(int)reduction.TotalMinutes} minute(s).");
-                SyncEngineFromTrackedCooldowns("Tracked cooldowns reduced from time cookie");
+                _log.Info(
+                    $"Time cookie detected: reduced cooldown visuals by {(int)reduction.TotalMinutes} minute(s).",
+                    messageReference);
+                SyncEngineFromTrackedCooldowns(
+                    "Tracked cooldowns reduced from time cookie",
+                    messageReference);
             }
 
-            TryUpdateConfiguredAreaFromProfile(snapshot.Text);
+            TryUpdateConfiguredAreaFromProfile(snapshot.Text, messageReference);
         }
 
         private bool TryRememberProcessedMessage(string messageId)
@@ -75,11 +81,15 @@ namespace EpicRPGBot.UI
             }
 
             _engine.Stop();
-            _log.Engine("Engine stopped: EPIC RPG said to end the previous command first.");
+            _log.Engine(
+                "Engine stopped: EPIC RPG said to end the previous command first.",
+                DiscordMessageReference.FromSnapshot(snapshot));
             return true;
         }
 
-        private void SyncEngineFromTrackedCooldowns(string source)
+        private void SyncEngineFromTrackedCooldowns(
+            string source,
+            DiscordMessageReference messageReference = null)
         {
             if (_engine == null || !_engine.IsRunning)
             {
@@ -89,15 +99,17 @@ namespace EpicRPGBot.UI
             var snapshot = _cooldownTracker.GetTrackedSnapshot();
             if (_engine.TryInitializeFromCooldownSnapshot(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox, snapshot.CardHand))
             {
-                _log.Engine(source + "; command scheduling initialized");
+                _log.Engine(source + "; command scheduling initialized", messageReference);
                 return;
             }
 
             _engine.SyncTrackedCooldowns(snapshot.Daily, snapshot.Weekly, snapshot.Hunt, snapshot.Adventure, snapshot.Training, snapshot.Work, snapshot.Farm, snapshot.Lootbox, snapshot.CardHand);
-            _log.Engine(source + "; scheduling resynced from tracked cooldowns");
+            _log.Engine(source + "; scheduling resynced from tracked cooldowns", messageReference);
         }
 
-        private void TryUpdateConfiguredAreaFromProfile(string message)
+        private void TryUpdateConfiguredAreaFromProfile(
+            string message,
+            DiscordMessageReference messageReference)
         {
             if (!ProfileMessageParser.TryParseMaxArea(message, out var maxArea))
             {
@@ -112,7 +124,9 @@ namespace EpicRPGBot.UI
             }
 
             _settingsService.Save(currentSettings.WithArea(maxArea.ToString()));
-            _log.Info($"Profile detected: updated configured area to {maxArea} from profile max area.");
+            _log.Info(
+                $"Profile detected: updated configured area to {maxArea} from profile max area.",
+                messageReference);
         }
     }
 }

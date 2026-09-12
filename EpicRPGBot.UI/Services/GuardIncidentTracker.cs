@@ -33,14 +33,16 @@ namespace EpicRPGBot.UI.Services
                    message.IndexOf("keep playing", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        public GuardAlertNotification RegisterDetection(string detectionInfo)
+        public GuardAlertNotification RegisterDetection(
+            string detectionInfo,
+            DiscordMessageReference messageReference = null)
         {
             var now = DateTime.UtcNow;
             if (!_isActive)
             {
                 _isActive = true;
                 _lastAlertUtc = now;
-                return new GuardAlertNotification(GuardAlertKind.FirstDetected, detectionInfo);
+                return new GuardAlertNotification(GuardAlertKind.FirstDetected, detectionInfo, messageReference);
             }
 
             if (now - _lastAlertUtc < ReminderInterval)
@@ -49,10 +51,13 @@ namespace EpicRPGBot.UI.Services
             }
 
             _lastAlertUtc = now;
-            return new GuardAlertNotification(GuardAlertKind.Reminder, "EPIC GUARD is still active.");
+            return new GuardAlertNotification(
+                GuardAlertKind.Reminder,
+                "EPIC GUARD is still active.",
+                messageReference);
         }
 
-        public GuardAlertNotification ClearIfActive()
+        public GuardAlertNotification ClearIfActive(DiscordMessageReference messageReference = null)
         {
             if (!_isActive)
             {
@@ -60,7 +65,10 @@ namespace EpicRPGBot.UI.Services
             }
 
             Reset();
-            return new GuardAlertNotification(GuardAlertKind.Cleared, "EPIC GUARD cleared; everything seems fine.");
+            return new GuardAlertNotification(
+                GuardAlertKind.Cleared,
+                "EPIC GUARD cleared; everything seems fine.",
+                messageReference);
         }
 
         public void Reset()

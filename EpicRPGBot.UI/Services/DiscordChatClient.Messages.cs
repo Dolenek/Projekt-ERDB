@@ -167,7 +167,9 @@ namespace EpicRPGBot.UI.Services
     renderedText: '',
     buttons: [],
     mentions: [],
-    reactions: []
+    reactions: [],
+    tabRole: window.__epicRpGBotTabRole || '',
+    channelUrl: window.location.href || ''
   }});
   const getAuthor = (item) => {{
     const header = item.querySelector('h3');
@@ -324,7 +326,9 @@ namespace EpicRPGBot.UI.Services
     renderedText: renderTextWithoutButtons(item),
     buttons: getVisibleButtons(item),
     mentions: getMentions(item),
-    reactions: getReactions(item)
+    reactions: getReactions(item),
+    tabRole: window.__epicRpGBotTabRole || '',
+    channelUrl: window.location.href || ''
   }});
 {body}
 }})();

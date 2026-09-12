@@ -123,6 +123,7 @@
     <Compile Include="MainWindow.Browser.cs" />
     <Compile Include="MainWindow.Chrome.cs" />
     <Compile Include="MainWindow.Console.cs" />
+    <Compile Include="MainWindow.ConsoleNavigation.cs" />
     <Compile Include="MainWindow.Crafting.cs" />
     <Compile Include="MainWindow.Dungeon.cs" />
     <Compile Include="MainWindow.Duel.cs" />
@@ -149,7 +150,9 @@
     <Compile Include="Models\DiscordChannelReference.cs" />
     <Compile Include="Models\DiscordMessageMention.cs" />
     <Compile Include="Models\DiscordMessageReaction.cs" />
+    <Compile Include="Models\DiscordMessageReference.cs" />
     <Compile Include="Models\DiscordMessageSnapshot.cs" />
+    <Compile Include="Models\DiscordTabRole.cs" />
     <Compile Include="Models\GuardAlertNotification.cs" />
     <Compile Include="Models\LogEntry.cs" />
     <Compile Include="Models\MessageItem.cs" />
@@ -163,6 +166,8 @@
     <Compile Include="Services\ChatMessagePoller.cs" />
     <Compile Include="Services\ConfirmedCommandSender.cs" />
     <Compile Include="Services\DiscordCommandSendPolicy.cs" />
+    <Compile Include="Services\DiscordMessagePermalink.cs" />
+    <Compile Include="Services\DiscordTabRoleCatalog.cs" />
     <Compile Include="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="Services\CooldownReductionCalculator.cs" />
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />
@@ -179,6 +184,7 @@
     <Compile Include="Services\DiscordChatClient.DuelNavigation.cs" />
     <Compile Include="Services\DiscordChatClient.PuzzleImages.cs" />
     <Compile Include="Services\DiscordChatClient.Messages.cs" />
+    <Compile Include="Services\DiscordChatClient.MessageNavigation.cs" />
     <Compile Include="Services\DiscordChatClient.Sidebar.cs" />
     <Compile Include="Services\DiscordChatClient.cs" />
     <Compile Include="Services\DiscordChannelReferenceParser.cs" />
@@ -191,7 +197,9 @@
     <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
+    <Compile Include="Services\ConsoleMessageNavigationRouter.cs" />
     <Compile Include="Services\IDiscordChatClient.cs" />
+    <Compile Include="Services\IDiscordMessageNavigator.cs" />
     <Compile Include="Services\IDuelDiscordClient.cs" />
     <Compile Include="Services\IDiscordAttachmentImageClient.cs" />
     <Compile Include="Services\InMemoryLog.cs" />

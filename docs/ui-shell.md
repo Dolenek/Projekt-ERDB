@@ -59,13 +59,13 @@ User-visible behaviors:
 - After a guild-raid send, the watcher keeps the guild tab under a temporary quiz/result watch and blocks further watched sends until one of those replies arrives.
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - `Initialize` also refreshes the cached profile player name from `rpg p`.
-- If the bot detects the quiz challenge while the player tab is selected, the UI switches back to the bot tab and shows the existing alert.
+- Puzzle detection keeps the current tab and window focus by default while sound and system notifications continue. The settings window can opt into selecting the relevant guard tab and activating the app on first detection.
 - The last-message/cooldown pipeline deduplicates Discord messages by message id so snapshots and time-cookie reductions are not applied twice.
 
 Sidebar data:
 - `Messages` shows the rolling last 5 detected channel messages with timestamps.
 - `Stats` shows send counts for `hunt`, `adventure`, `work`, `farm`, and `lootbox`, plus live running-cooldown counts for all tracked cooldown rows, including totals for `Rewards`, `Experience`, and `Progress`.
-- `Console` shows structured log lines with severity dots for UI events, engine events, sent commands, and solver telemetry. Selected console lines copy their rendered log text to the clipboard with `Ctrl+C`.
+- `Console` shows structured log lines with severity dots for UI events, engine events, sent commands, and solver telemetry. Selected console lines copy their rendered log text to the clipboard with `Ctrl+C`. Rows carrying an exact Discord message reference are subtly accented; double-clicking one opens that message in its internal tab as described in [console message navigation](console-message-navigation.md).
 - Activity search filters the active Messages or Console collection without changing the underlying five-message buffer or 500-entry log retention. The log-kind selector is available only in Console.
 
 Browser behavior:

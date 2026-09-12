@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Threading.Tasks;
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
@@ -62,11 +63,13 @@ namespace EpicRPGBot.UI
                 UiDispatcher.OnUI(RefreshBotControlButtonColors);
             };
 
-            engine.OnCommandSent += command =>
+            engine.OnCommandSent += (command, snapshot) =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    _log.Command($"Message ({command}) sent");
+                    _log.Command(
+                        $"Message ({command}) sent",
+                        DiscordMessageReference.FromSnapshot(snapshot));
                     TrackSentCommandStats(command);
                 });
             };
@@ -88,25 +91,25 @@ namespace EpicRPGBot.UI
                 });
             };
 
-            engine.OnTrainingAlert += message =>
+            engine.OnTrainingAlert += (message, reference) =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    _log.Warning("[training] " + message);
+                    _log.Warning("[training] " + message, reference);
                     _alertService.ShowTrainingAlert(this, message);
                 });
             };
 
-            engine.OnCardHandInfo += message =>
+            engine.OnCardHandInfo += (message, reference) =>
             {
-                UiDispatcher.OnUI(() => _log.Info("[card hand] " + message));
+                UiDispatcher.OnUI(() => _log.Info("[card hand] " + message, reference));
             };
 
-            engine.OnCardHandAlert += message =>
+            engine.OnCardHandAlert += (message, reference) =>
             {
                 UiDispatcher.OnUI(() =>
                 {
-                    _log.Warning("[card hand] " + message);
+                    _log.Warning("[card hand] " + message, reference);
                     _alertService.ShowCardHandAlert(this, message);
                 });
             };
@@ -116,9 +119,9 @@ namespace EpicRPGBot.UI
                 UiDispatcher.OnUI(() => HandleObservedMessage(snapshot));
             };
 
-            engine.OnSolverInfo += info =>
+            engine.OnSolverInfo += (info, reference) =>
             {
-                UiDispatcher.OnUI(() => _log.Info("[solver] " + info));
+                UiDispatcher.OnUI(() => _log.Info("[solver] " + info, reference));
             };
         }
 
@@ -151,8 +154,10 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            var sent = (await _confirmedCommandSender.SendAsync("rpg cd")).IsConfirmed;
-            _log.Info(sent ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.");
+            var result = await _confirmedCommandSender.SendAsync("rpg cd");
+            _log.Info(
+                result.IsConfirmed ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.",
+                DiscordMessageReference.FromSnapshot(result.OutgoingMessage));
         }
 
         private void ApplyConfirmedCommandCooldown(string command)
@@ -217,11 +222,11 @@ namespace EpicRPGBot.UI
 
             if (notification.Kind == Models.GuardAlertKind.FirstDetected)
             {
-                _log.Warning("[guard] " + notification.Message);
+                _log.Warning("[guard] " + notification.Message, notification.MessageReference);
                 return;
             }
 
-            _log.Info("[guard] " + notification.Message);
+            _log.Info("[guard] " + notification.Message, notification.MessageReference);
         }
 
         private void ShowGuardNotification(Models.GuardAlertNotification notification)
@@ -231,12 +236,13 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            if (notification.ShouldBringToFront)
+            var bringToForeground = ShouldBringGuardAlertToForeground(notification);
+            if (bringToForeground)
             {
                 SelectBotTab();
             }
 
-            _alertService.ShowGuardAlert(this, notification);
+            _alertService.ShowGuardAlert(this, notification, bringToForeground);
         }
 
         private BotEngine CreateEngine()

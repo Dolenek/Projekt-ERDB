@@ -4,6 +4,7 @@ Canonical documentation describes the current `EpicRPGBot.UI` application and it
 
 Canonical pages:
 - [UI shell](docs/ui-shell.md)
+- [Console message navigation](docs/console-message-navigation.md)
 - [Crafting](docs/crafting.md)
 - [Dismantling](docs/dismantling.md)
 - [Area trading](docs/area-trading.md)

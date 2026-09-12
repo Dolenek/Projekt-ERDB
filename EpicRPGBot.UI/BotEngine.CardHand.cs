@@ -15,6 +15,7 @@ namespace EpicRPGBot.UI
         private const int CardHandReplyTimeoutMs = 20000;
         private const int CardHandReplyScanCount = 30;
         private bool _cardHandAutomationEnabled = true;
+        private DiscordMessageReference _activeCardHandMessageReference;
 
         private async Task RunCardHandAsync()
         {
@@ -43,6 +44,7 @@ namespace EpicRPGBot.UI
             }
             finally
             {
+                _activeCardHandMessageReference = null;
                 _interactivePromptGate.EndCardHand();
                 if (acquired) _sendGate.Release();
             }
@@ -55,8 +57,10 @@ namespace EpicRPGBot.UI
             await RespectMinimumCommandGapAsync();
             var send = await _confirmedCommandSender.SendAsync(
                 "rpg card hand",
-                snapshot => RegisterCardHandCommand(),
+                RegisterCardHandCommand,
                 cancellationToken);
+            _activeCardHandMessageReference = DiscordMessageReference.FromSnapshot(
+                send.ReplyMessage ?? send.OutgoingMessage);
             if (!send.IsConfirmed)
             {
                 RetryCardHandSoon("Card hand command was not confirmed.");
@@ -71,11 +75,11 @@ namespace EpicRPGBot.UI
             await PlayCardHandRoundsAsync(send.ReplyMessage, settings, cancellationToken);
         }
 
-        private void RegisterCardHandCommand()
+        private void RegisterCardHandCommand(DiscordMessageSnapshot snapshot)
         {
             _lastCommandSentUtc = DateTime.UtcNow;
             _scheduler.RegisterPending(TrackedCommandKind.CardHand);
-            OnCommandSent?.Invoke("rpg card hand");
+            OnCommandSent?.Invoke("rpg card hand", snapshot);
         }
 
         private async Task PlayCardHandRoundsAsync(
@@ -90,11 +94,14 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            _activeCardHandMessageReference = DiscordMessageReference.FromSnapshot(current);
+
             var discarded = new List<CardId>();
             CardHandState previousState = null;
             CardHandAction previousAction = null;
             for (var round = 1; round <= 3; round++)
             {
+                _activeCardHandMessageReference = DiscordMessageReference.FromSnapshot(current);
                 var parsed = _cardHandPromptParser.Parse(current);
                 var state = TryBuildLiveState(parsed, discarded, previousState, previousAction);
                 var action = await ChooseOrPassAsync(state, parsed, settings, cancellationToken);
@@ -115,6 +122,7 @@ namespace EpicRPGBot.UI
                 }
 
                 ProcessObservedSnapshot(next, true);
+                _activeCardHandMessageReference = DiscordMessageReference.FromSnapshot(next);
                 if (_cardHandPromptParser.IsResult(next))
                 {
                     ReportCardHandInfo("Card hand completed successfully.");
@@ -273,13 +281,14 @@ namespace EpicRPGBot.UI
 
         private void StopForCardHandFailure(string message)
         {
-            OnCardHandAlert?.Invoke(message);
+            OnCardHandAlert?.Invoke(message, _activeCardHandMessageReference);
             Stop();
         }
 
         private void ReportCardHandInfo(string message)
         {
-            if (!string.IsNullOrWhiteSpace(message)) OnCardHandInfo?.Invoke(message);
+            if (!string.IsNullOrWhiteSpace(message))
+                OnCardHandInfo?.Invoke(message, _activeCardHandMessageReference);
         }
 
         public void UpdateCardHandSettings(CardHandSettingsSnapshot settings)
@@ -303,10 +312,10 @@ namespace EpicRPGBot.UI
                 acquired = true;
                 await RespectMinimumCommandGapAsync();
                 return await workflow.RunAsync(
-                    () =>
+                    snapshot =>
                     {
                         _lastCommandSentUtc = DateTime.UtcNow;
-                        OnCommandSent?.Invoke("rpg card deck");
+                        OnCommandSent?.Invoke("rpg card deck", snapshot);
                     },
                     _stopCancellation.Token);
             }

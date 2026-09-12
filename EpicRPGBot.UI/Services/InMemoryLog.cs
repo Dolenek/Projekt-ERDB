@@ -13,6 +13,18 @@ namespace EpicRPGBot.UI.Services
         public void Error(string message) => Append(new LogEntry(LogKind.Error, message));
         public void Engine(string message) => Append(new LogEntry(LogKind.Engine, message));
 
+        public void Info(string message, DiscordMessageReference reference) =>
+            Append(new LogEntry(LogKind.Info, message, reference));
+
+        public void Command(string message, DiscordMessageReference reference) =>
+            Append(new LogEntry(LogKind.Command, message, reference));
+
+        public void Warning(string message, DiscordMessageReference reference) =>
+            Append(new LogEntry(LogKind.Warning, message, reference));
+
+        public void Engine(string message, DiscordMessageReference reference) =>
+            Append(new LogEntry(LogKind.Engine, message, reference));
+
         public void Append(LogEntry entry)
         {
             Items.Add(entry);

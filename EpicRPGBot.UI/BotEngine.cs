@@ -44,6 +44,8 @@ namespace EpicRPGBot.UI
         private string _lastMessageId = string.Empty;
         private string _previousMessageId = string.Empty;
         private string _previousMessageText = string.Empty;
+        private DiscordMessageSnapshot _lastMessageSnapshot;
+        private DiscordMessageSnapshot _previousMessageSnapshot;
         private string _startupCutoffMessageId = string.Empty;
         private int _queuedCooldownSnapshot;
         private bool _running;
@@ -102,16 +104,16 @@ namespace EpicRPGBot.UI
 
         public event Action OnEngineStarted;
         public event Action OnEngineStopped;
-        public event Action<string> OnCommandSent;
+        public event Action<string, DiscordMessageSnapshot> OnCommandSent;
         public event Action<string, DiscordMessageSnapshot> OnCommandConfirmed;
         public event Action<GuardAlertNotification> OnGuardNotification;
-        public event Action<string> OnBunnyInfo;
-        public event Action<string> OnBunnyAlert;
-        public event Action<string> OnTrainingAlert;
-        public event Action<string> OnCardHandAlert;
-        public event Action<string> OnCardHandInfo;
+        public event Action<string, DiscordMessageReference> OnBunnyInfo;
+        public event Action<string, DiscordMessageReference> OnBunnyAlert;
+        public event Action<string, DiscordMessageReference> OnTrainingAlert;
+        public event Action<string, DiscordMessageReference> OnCardHandAlert;
+        public event Action<string, DiscordMessageReference> OnCardHandInfo;
         public event Action<DiscordMessageSnapshot> OnMessageSeen;
-        public event Action<string> OnSolverInfo;
+        public event Action<string, DiscordMessageReference> OnSolverInfo;
 
         public void Start()
         {

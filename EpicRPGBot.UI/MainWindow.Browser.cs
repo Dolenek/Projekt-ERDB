@@ -109,6 +109,11 @@ namespace EpicRPGBot.UI
             SelectBrowserTab(BotBrowserTab);
         }
 
+        private void SelectPlayerTab()
+        {
+            SelectBrowserTab(PlayerBrowserTab);
+        }
+
         private void SelectDungeonTab()
         {
             SelectBrowserTab(DungeonBrowserTab);
@@ -117,6 +122,11 @@ namespace EpicRPGBot.UI
         private void SelectGuildTab()
         {
             SelectBrowserTab(GuildBrowserTab);
+        }
+
+        private void SelectDuelTab()
+        {
+            SelectBrowserTab(DuelBrowserTab);
         }
 
         private void SelectBrowserTab(TabItem tab)
