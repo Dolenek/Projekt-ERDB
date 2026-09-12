@@ -23,6 +23,7 @@ Startup flow:
 11. Start the guild watcher so it can monitor the guild tab even while the main bot engine is stopped.
 
 User-visible behaviors:
+- `Pets` opens the [pet menu](pet-menu.md) with inventory selection, protections and manual/automatic fusion. The bot remains paused while the modal menu is open.
 - `Dismantle` opens a modal dismantling window for log, fish, and banana dismantle requests.
 - `Crafting` opens a modal crafting window for log, fish, and banana craft requests.
 - `Settings` opens a modal settings window with the editable Discord channel, `Ascended`, per-area work-command access, and bot-parameter fields.

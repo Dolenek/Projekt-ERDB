@@ -266,6 +266,9 @@ namespace EpicRPGBot.UI.Services
   }}
   for (let i = items.length - 1; i >= startIndex; i--) {{
     const item = items[i];
+    // Discord replaces optimistic message IDs after server acknowledgement.
+    // Only register delivered messages; pending/failed IDs cannot anchor replies.
+    if (item.querySelector('[class*=""isSending""], [class*=""isFailed""]')) continue;
     const id = item.id || '';
     if (!id || id === previousId) continue;
     const author = getAuthor(item);

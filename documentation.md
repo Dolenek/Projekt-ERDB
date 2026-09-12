@@ -18,6 +18,8 @@ Canonical pages:
 - [Training automation](docs/training-automation.md)
 - [Bunny automation](docs/bunny-automation.md)
 - [Pet automation](docs/pet-automation.md)
+- [Pet menu](docs/pet-menu.md)
+- [Pet fusion](docs/pet-fusion.md)
 - [Wishing token](docs/wishing-token.md)
 - [Time cookie](docs/time-cookie.md)
 - [Sleepy potion](docs/sleepy-potion.md)

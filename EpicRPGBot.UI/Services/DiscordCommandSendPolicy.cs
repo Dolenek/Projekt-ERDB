@@ -21,7 +21,9 @@ namespace EpicRPGBot.UI.Services
         public static bool AllowsBlindResend(string command)
         {
             var normalizedCommand = NormalizeWhitespace(command);
-            return !IsDungeonEntryCommand(normalizedCommand) && !IsDuelCommand(normalizedCommand);
+            return !IsDungeonEntryCommand(normalizedCommand) && !IsDuelCommand(normalizedCommand) &&
+                !normalizedCommand.StartsWith("rpg pets fusion ", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(normalizedCommand, "rpg pets fusion", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsDungeonEntryCommand(string normalizedCommand)

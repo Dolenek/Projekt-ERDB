@@ -170,6 +170,15 @@ namespace EpicRPGBot.UI.Services
     reactions: []
   }});
   const getAuthor = (item) => {{
+    const header = item.querySelector('h3');
+    const username = header?.querySelector('[id^=""message-username-""], [class*=""username""]');
+    if (username?.textContent?.trim()) return username.textContent.trim();
+    const labelledIds = (item.getAttribute('aria-labelledby') || '').split(/\s+/);
+    for (const id of labelledIds) {{
+      if (!id.startsWith('message-username-')) continue;
+      const label = document.getElementById(id);
+      if (label?.textContent?.trim()) return label.textContent.trim();
+    }}
     const selectors = [
       '[id^=""message-username-""]',
       'h3 span[role=""button""]',

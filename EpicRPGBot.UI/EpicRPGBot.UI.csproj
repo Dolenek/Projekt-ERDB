@@ -36,6 +36,7 @@
     <Page Include="Themes\ScrollBarTheme.xaml" />
     <Page Include="Themes\SettingsDialogTheme.xaml" />
     <Page Include="Crafting\CraftingWindow.xaml" />
+    <Page Include="Pets\PetsWindow.xaml" />
     <Page Include="Dismantling\DismantleWindow.xaml" />
     <Page Include="Settings\GuildRaidSettingsWindow.xaml" />
     <Page Include="Settings\CardHandSettingsWindow.xaml" />
@@ -45,6 +46,9 @@
 
   <ItemGroup>
     <Compile Include="App.xaml.cs" />
+    <Compile Include="Pets\*.cs" />
+    <Compile Include="MainWindow.Pets.cs" />
+    <Compile Include="BotEngine.Pets.cs" />
     <Compile Include="AreaTrading\AreaTradePlanCatalog.cs" />
     <Compile Include="AreaTrading\AreaTradeStep.cs" />
     <Compile Include="AreaTrading\AreaTradeStepKind.cs" />

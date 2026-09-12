@@ -314,6 +314,7 @@
                                         <Button x:Name="DismantleBtn" Grid.Column="1" Content="Dismantle" Style="{StaticResource ActionButtonStyle}" Margin="2,0,0,0" Click="DismantleBtn_Click"/>
                                     </Grid>
 
+                                    <Button x:Name="PetsBtn" Content="Pets" Style="{StaticResource ActionButtonStyle}" Click="PetsBtn_Click" AutomationProperties.AutomationId="PetsButton" Margin="0,4,0,0"/>
                                     <TextBlock Text="Runs" Style="{StaticResource ControlSectionTitleStyle}"/>
                                     <Grid Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>

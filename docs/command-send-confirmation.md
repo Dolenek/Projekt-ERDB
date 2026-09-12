@@ -4,6 +4,9 @@
 
 Confirmation rules:
 - Step 1: Discord must show the outgoing command as a new chat message.
+- Outgoing registration skips Discord's `isSending` and `isFailed` message states.
+  An optimistic message has a temporary ID that Discord can replace on delivery;
+  only the delivered message ID anchors reply confirmation.
 - Step 2: A newer message from the `EPIC RPG` author must appear after that outgoing command.
 - The send lane stays blocked until both steps succeed or the retry budget is exhausted.
 
@@ -14,6 +17,7 @@ Scope:
 - Does not apply to bot status/help/acknowledgement text such as `I am farming` or `Change work - ...`.
 
 Retries and timing:
+- `rpg pets fusion` never uses blind resend. The [pet fusion workflow](pet-fusion.md) validates replies and reloads inventory before planning another step.
 - Outgoing registration is polled for up to about 4 seconds.
 - After the outgoing `rpg ...` message becomes visible, the sender waits 500 ms before it starts looking for the EPIC RPG reply.
 - EPIC RPG reply confirmation is polled for up to 10 seconds after each registered send.

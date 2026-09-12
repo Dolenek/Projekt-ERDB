@@ -1,5 +1,7 @@
 # Pet Automation
 
+For inventory management and fusion, see [Pet menu](pet-menu.md) and [Pet fusion](pet-fusion.md).
+
 `EpicRPGBot.UI` uses the same fast catch planner for the post-training pet prompts that appear after `rpg tr`.
 
 Runtime behavior:
