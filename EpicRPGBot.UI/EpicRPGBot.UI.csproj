@@ -107,6 +107,8 @@
     <Compile Include="Dungeon\DungeonLobbyParser.cs" />
     <Compile Include="Dungeon\DungeonMessageInteraction.cs" />
     <Compile Include="Dungeon\DungeonRunResult.cs" />
+    <Compile Include="Dungeon\DungeonTurnActionGate.cs" />
+    <Compile Include="Dungeon\DungeonWorkflow.Battle.cs" />
     <Compile Include="Dungeon\DungeonWorkflow.cs" />
     <Compile Include="Duel\*.cs" />
     <Compile Include="Env.cs" />

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
@@ -8,7 +7,7 @@ using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI.Dungeon
 {
-    public sealed class DungeonWorkflow
+    public sealed partial class DungeonWorkflow
     {
         private const int BattlePollDelayMs = 1000;
         private const int BattleInactivityTimeoutMs = 60000;
@@ -365,113 +364,6 @@ namespace EpicRPGBot.UI.Dungeon
             return true;
         }
 
-        private async Task<bool> WaitForEncounterAsync(CancellationToken cancellationToken)
-        {
-            var waitedMs = 0;
-            while (waitedMs < EncounterTimeoutMs)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var state = _battleStateParser.Parse(await _chatClient.GetRecentMessagesAsync(ResultScanCount), _getCurrentSettings().ProfilePlayerName);
-                if (state.HasEncounter)
-                {
-                    return true;
-                }
-
-                await Task.Delay(BattlePollDelayMs, cancellationToken);
-                waitedMs += BattlePollDelayMs;
-            }
-
-            return false;
-        }
-
-        private async Task<DungeonRunResult> RunBattleLoopAsync(Action<string> report, CancellationToken cancellationToken)
-        {
-            var lastActivitySignature = string.Empty;
-            var lastActionSignature = string.Empty;
-            var idleMs = 0;
-
-            while (idleMs < BattleInactivityTimeoutMs)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var snapshots = await _chatClient.GetRecentMessagesAsync(ResultScanCount);
-                var state = _battleStateParser.Parse(snapshots, _getCurrentSettings().ProfilePlayerName);
-                if (state.HasVictory)
-                {
-                    await TryDeleteDungeonChannelAsync(state.DeletePrompt, report, cancellationToken);
-                    return DungeonRunResult.CompletedResult("Dungeon completed.");
-                }
-
-                if (state.HasFailure)
-                {
-                    return DungeonRunResult.FailedResult("Dungeon stopped: battle ended in failure.");
-                }
-
-                if (!string.Equals(lastActivitySignature, state.ActivitySignature, StringComparison.Ordinal))
-                {
-                    lastActivitySignature = state.ActivitySignature;
-                    idleMs = 0;
-                }
-
-                if (state.ShouldBite &&
-                    !string.IsNullOrWhiteSpace(state.ActionSignature) &&
-                    !string.Equals(lastActionSignature, state.ActionSignature, StringComparison.Ordinal))
-                {
-                    if (!await _chatClient.SendMessageAsync("bite", cancellationToken))
-                    {
-                        return DungeonRunResult.FailedResult("Dungeon stopped: failed to send 'bite'.");
-                    }
-
-                    report?.Invoke("Turn detected. Sent bite.");
-                    lastActionSignature = state.ActionSignature;
-                    idleMs = 0;
-                }
-
-                await Task.Delay(BattlePollDelayMs, cancellationToken);
-                idleMs += BattlePollDelayMs;
-            }
-
-            return DungeonRunResult.FailedResult("Dungeon stopped: battle state was inactive for 60 seconds.");
-        }
-
-        private async Task TryDeleteDungeonChannelAsync(
-            DiscordMessageSnapshot deletePrompt,
-            Action<string> report,
-            CancellationToken cancellationToken)
-        {
-            if (!_getCurrentSettings().AutoDeleteDungeonChannel)
-            {
-                return;
-            }
-
-            var prompt = deletePrompt ?? await _entryPromptWatcher.WaitForButtonPromptAsync(
-                "Delete dungeon channel",
-                ResultScanCount,
-                DeletePromptTimeoutMs,
-                BattlePollDelayMs,
-                cancellationToken);
-            if (prompt == null || !await ClickButtonByLabelAsync(prompt, "Delete dungeon channel", cancellationToken))
-            {
-                report?.Invoke("Auto delete skipped: delete button was not available.");
-                return;
-            }
-
-            report?.Invoke("Deleted dungeon channel.");
-        }
-
-        private async Task<bool> ClickButtonByLabelAsync(
-            DiscordMessageSnapshot snapshot,
-            string buttonLabel,
-            CancellationToken cancellationToken)
-        {
-            if (snapshot?.Buttons == null)
-            {
-                return false;
-            }
-
-            var button = snapshot.Buttons.FirstOrDefault(candidate => DungeonMessageInteraction.LabelsMatch(candidate.Label, buttonLabel));
-            return button != null &&
-                   await _chatClient.ClickMessageButtonAsync(snapshot.Id, button.RowIndex, button.ColumnIndex, cancellationToken);
-        }
         private enum DungeonEntryAttemptResult
         {
             Failed = 0,

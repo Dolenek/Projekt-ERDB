@@ -16,6 +16,7 @@ namespace EpicRPGBot.UI.Duel
         private static readonly TimeSpan PromptWaitTimeout = TimeSpan.FromSeconds(10);
         private readonly IDuelDiscordClient _chatClient;
         private readonly DuelMessageParser _messageParser;
+        private readonly DuelMentionState _mentionState = new DuelMentionState();
         private readonly Func<DateTimeOffset> _utcNow;
 
         public DuelIncomingWatcher(
@@ -37,10 +38,12 @@ namespace EpicRPGBot.UI.Duel
                 cancellationToken);
             var channelIds = channels.Select(channel => channel.Id).ToArray();
             var current = await _chatClient.GetChannelMentionCountsAsync(channelIds, cancellationToken);
-            return channelIds.ToDictionary(
+            var baseline = channelIds.ToDictionary(
                 channelId => channelId,
                 channelId => ReadCount(current, channelId),
                 StringComparer.Ordinal);
+            _mentionState.Reset();
+            return baseline;
         }
 
         public async Task<DuelIncomingRequest> WaitForRequestAsync(
@@ -86,14 +89,9 @@ namespace EpicRPGBot.UI.Duel
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var current = await _chatClient.GetChannelMentionCountsAsync(channelIds, cancellationToken);
-                var signaled = channels.Where(channel =>
-                    ReadCount(current, channel.Id) > ReadBaselineCount(baseline, channel.Id)).ToArray();
-                foreach (var channelId in channelIds)
-                {
-                    baseline[channelId] = ReadCount(current, channelId);
-                }
+                var signaled = _mentionState.FindIncreases(channels, current, baseline);
 
-                if (signaled.Length > 0)
+                if (signaled.Count > 0)
                 {
                     return signaled;
                 }
@@ -132,6 +130,11 @@ namespace EpicRPGBot.UI.Duel
                     .FirstOrDefault();
                 if (first != null)
                 {
+                    if (!string.Equals(currentChannelId, first.Channel.Id, StringComparison.Ordinal))
+                    {
+                        await EnsureChannelLoadedAsync(first.Channel, cancellationToken);
+                    }
+
                     return first;
                 }
 
@@ -181,11 +184,6 @@ namespace EpicRPGBot.UI.Duel
         }
 
         private static int ReadCount(IReadOnlyDictionary<string, int> counts, string channelId)
-        {
-            return counts != null && counts.TryGetValue(channelId, out var count) ? count : 0;
-        }
-
-        private static int ReadBaselineCount(IDictionary<string, int> counts, string channelId)
         {
             return counts != null && counts.TryGetValue(channelId, out var count) ? count : 0;
         }

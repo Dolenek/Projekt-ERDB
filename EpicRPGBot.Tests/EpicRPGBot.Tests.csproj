@@ -52,6 +52,8 @@
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonLobbyParser.cs" Link="Dungeon\DungeonLobbyParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonMessageInteraction.cs" Link="Dungeon\DungeonMessageInteraction.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonRunResult.cs" Link="Dungeon\DungeonRunResult.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonTurnActionGate.cs" Link="Dungeon\DungeonTurnActionGate.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonWorkflow.Battle.cs" Link="Dungeon\DungeonWorkflow.Battle.cs" />
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonWorkflow.cs" Link="Dungeon\DungeonWorkflow.cs" />
     <Compile Include="..\EpicRPGBot.UI\Duel\*.cs" Link="Duel\%(Filename)%(Extension)" />
     <Compile Include="..\EpicRPGBot.UI\Models\AppSettingsSnapshot.cs" Link="Models\AppSettingsSnapshot.cs" />

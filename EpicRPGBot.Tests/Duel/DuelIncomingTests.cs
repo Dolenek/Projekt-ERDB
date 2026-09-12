@@ -17,9 +17,9 @@ public sealed class DuelIncomingTests
             client.MessagesByUrl[channel.Url] = new List<DiscordMessageSnapshot>();
         }
 
-        client.MessagesByUrl[channels[2].Url].Add(Request("newer", "firendr", now.AddSeconds(2)));
+        client.MessagesByUrl[channels[2].Url].Add(Request("older", "firendr", now.AddSeconds(1)));
         client.MessagesByUrl[channels[0].Url].Add(Request("wrong-target", "somebody", now));
-        client.MessagesByUrl[channels[3].Url].Add(Request("older", "firendr", now.AddSeconds(1)));
+        client.MessagesByUrl[channels[3].Url].Add(Request("newer", "firendr", now.AddSeconds(2)));
         client.MentionCounts[channels[2].Id] = 1;
         client.MentionCounts[channels[3].Id] = 1;
         var watcher = new DuelIncomingWatcher(client, new DuelMessageParser());
@@ -37,8 +37,8 @@ public sealed class DuelIncomingTests
             default);
 
         Assert.Equal("older", request.Classification.Message.Id);
-        Assert.Equal("dueling-4", request.Channel.Name);
-        Assert.Equal(new[] { channels[2].Url, channels[3].Url }, client.NavigatedUrls);
+        Assert.Equal("dueling-3", request.Channel.Name);
+        Assert.Equal(new[] { channels[2].Url, channels[3].Url, channels[2].Url }, client.NavigatedUrls);
     }
 
     [Fact]
@@ -104,6 +104,23 @@ public sealed class DuelIncomingTests
         Assert.Equal(new[] { channels[0].Url }, client.NavigatedUrls);
     }
 
+    [Fact]
+    public void MentionStateDoesNotReopenChannelUntilBadgeIsStablyCleared()
+    {
+        var channel = CreateDuelingChannels()[0];
+        var channels = new[] { channel };
+        var baseline = new Dictionary<string, int> { [channel.Id] = 0 };
+        var state = new DuelMentionState();
+
+        Assert.Single(state.FindIncreases(channels, Counts(channel, 1), baseline));
+        Assert.Empty(state.FindIncreases(channels, Counts(channel, 0), baseline));
+        Assert.Empty(state.FindIncreases(channels, Counts(channel, 1), baseline));
+        Assert.Empty(state.FindIncreases(channels, Counts(channel, 0), baseline));
+        Assert.Empty(state.FindIncreases(channels, Counts(channel, 0), baseline));
+        Assert.Empty(state.FindIncreases(channels, Counts(channel, 0), baseline));
+        Assert.Single(state.FindIncreases(channels, Counts(channel, 1), baseline));
+    }
+
     private static DiscordMessageSnapshot Request(string id, string target, DateTimeOffset timestamp)
     {
         var text = $"challenger — duel\nchallenger sent a Duel request to {target}.!\n" +
@@ -121,4 +138,8 @@ public sealed class DuelIncomingTests
             .Select(index => new DiscordChannelReference(index.ToString(), $"dueling-{index}", $"duel{index}"))
             .ToArray();
     }
+
+    private static IReadOnlyDictionary<string, int> Counts(
+        DiscordChannelReference channel,
+        int count) => new Dictionary<string, int> { [channel.Id] = count };
 }

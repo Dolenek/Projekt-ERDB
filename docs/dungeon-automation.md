@@ -29,7 +29,7 @@ Workflow behavior:
 12. If EPIC RPG says one partner is in the middle of a command, wait 5 seconds and retry `rpg dung` up to 2 times.
 13. If all 2 retries still hit the same busy-partner reply, stop trying to enter that dungeon and return to waiting for a fresh `Take me there` invite.
 14. Click `yes` on the entry prompt.
-15. During battle, whenever the latest encounter state says it is the cached player’s turn, send `bite`.
+15. During battle, send one `bite` when the latest encounter state names the cached player and exposes an enabled `BITE` action. Edits and disabled buttons from that already-submitted turn do not trigger another action; a later `bite` is allowed after the previous turn becomes inactive.
 16. Stop when the recent dungeon messages confirm a win, failure, cancellation, or timeout.
 
 Battle rules:

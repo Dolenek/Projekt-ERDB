@@ -10,7 +10,6 @@ namespace EpicRPGBot.UI.Dungeon
             bool hasVictory,
             bool hasFailure,
             string activitySignature,
-            string actionSignature,
             DiscordMessageSnapshot deletePrompt)
         {
             HasEncounter = hasEncounter;
@@ -18,7 +17,6 @@ namespace EpicRPGBot.UI.Dungeon
             HasVictory = hasVictory;
             HasFailure = hasFailure;
             ActivitySignature = activitySignature ?? string.Empty;
-            ActionSignature = actionSignature ?? string.Empty;
             DeletePrompt = deletePrompt;
         }
 
@@ -31,8 +29,6 @@ namespace EpicRPGBot.UI.Dungeon
         public bool HasFailure { get; }
 
         public string ActivitySignature { get; }
-
-        public string ActionSignature { get; }
 
         public DiscordMessageSnapshot DeletePrompt { get; }
     }

@@ -13,7 +13,7 @@ namespace EpicRPGBot.UI.Dungeon
         {
             if (snapshots == null || snapshots.Count == 0)
             {
-                return new DungeonBattleState(false, false, false, false, string.Empty, string.Empty, null);
+                return new DungeonBattleState(false, false, false, false, string.Empty, null);
             }
 
             var deletePrompt = FindDeletePrompt(snapshots);
@@ -28,7 +28,6 @@ namespace EpicRPGBot.UI.Dungeon
                 victory,
                 failure,
                 BuildActivitySignature(snapshots),
-                BuildActionSignature(battleMessage),
                 deletePrompt);
         }
 
@@ -80,14 +79,19 @@ namespace EpicRPGBot.UI.Dungeon
         private static bool IsPlayerTurn(DiscordMessageSnapshot snapshot, string playerName)
         {
             var normalizedPlayer = NormalizeName(playerName);
-            if (string.IsNullOrWhiteSpace(normalizedPlayer))
+            if (string.IsNullOrWhiteSpace(normalizedPlayer) || !HasAvailableBiteAction(snapshot))
             {
                 return false;
             }
 
             var normalizedText = NormalizeText(snapshot?.RenderedText ?? snapshot?.Text);
             return normalizedText.Contains("its" + normalizedPlayer + "sturn") ||
-                   normalizedText.Contains("whatwillyoudo" + normalizedPlayer);
+                    normalizedText.Contains("whatwillyoudo" + normalizedPlayer);
+        }
+
+        private static bool HasAvailableBiteAction(DiscordMessageSnapshot snapshot)
+        {
+            return snapshot?.Buttons?.Any(button => LabelsMatch(button.Label, "BITE")) == true;
         }
 
         private static bool IsVictory(string text)
@@ -116,13 +120,6 @@ namespace EpicRPGBot.UI.Dungeon
                 snapshots
                     .Skip(Math.Max(0, snapshots.Count - 3))
                     .Select(snapshot => (snapshot?.Id ?? string.Empty) + "|" + (snapshot?.RenderedText ?? snapshot?.Text ?? string.Empty)));
-        }
-
-        private static string BuildActionSignature(DiscordMessageSnapshot snapshot)
-        {
-            return snapshot == null
-                ? string.Empty
-                : (snapshot.Id ?? string.Empty) + "|" + (snapshot.RenderedText ?? snapshot.Text ?? string.Empty);
         }
 
         private static bool LabelsMatch(string left, string right)

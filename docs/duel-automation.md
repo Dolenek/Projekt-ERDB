@@ -30,7 +30,8 @@ Outgoing recovery:
 Feed fallback:
 - When the initial queue is exhausted, post exactly `<level> cf` in the player's own listing band.
 - Keep the normal engine running while monitoring mention badges for all four duel channels without a timeout.
-- Capture existing mention counts, remain in the player's listing channel, and navigate only when a fixed duel channel receives a new mention badge.
+- Capture existing mention counts, remain in the player's listing channel, and navigate only when a fixed duel channel receives a new mention. Counts come from Discord's live unread state so monitoring continues while the Duel tab is hidden; rendered badges are a compatibility fallback.
+- A handled badge must remain cleared for three polls before that channel is armed again. This prevents a stale or briefly missing sidebar badge from reopening the same channel.
 - After a badge appears, wait up to 10 seconds in that channel for a new active request addressed to the profile name; unrelated mentions return to passive waiting.
 - Accept the first new request addressed to the profile name, even if its level is outside the normal reward range.
 - Pause the engine before finding and clicking `yes` by label with retries, then make no weapon choice, intentionally feeding the opponent.

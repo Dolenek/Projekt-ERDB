@@ -60,11 +60,6 @@ namespace EpicRPGBot.UI.Duel
                     processed,
                     report,
                     cancellationToken);
-                if (!await _chatClient.NavigateToChannelAndWaitAsync(request.Channel.Url, cancellationToken))
-                {
-                    throw new InvalidOperationException($"Duel channel '#{request.Channel.Name}' did not load.");
-                }
-
                 await pauseBotAsync();
                 setChallengeState(true);
                 var outcome = await _attemptRunner.AcceptAndWaitAsync(
