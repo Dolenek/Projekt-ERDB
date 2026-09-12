@@ -110,6 +110,7 @@
     <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptParser.cs" Link="Training\TrainingPromptParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptResolution.cs" Link="Training\TrainingPromptResolution.cs" />
     <Compile Include="..\EpicRPGBot.UI\Training\TrainingPromptSignal.cs" Link="Training\TrainingPromptSignal.cs" />
+    <Compile Include="..\EpicRPGBot.UI\WorkCommands\*.cs" Link="WorkCommands\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />

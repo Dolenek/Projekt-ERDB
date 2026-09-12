@@ -228,6 +228,7 @@
     <Compile Include="Settings\SettingsWindow.Automation.cs" />
     <Compile Include="Settings\SettingsWindow.Chrome.cs" />
     <Compile Include="Settings\SettingsWindow.Persistence.cs" />
+    <Compile Include="Settings\WorkCommandsWindow.AutoBest.cs" />
     <Compile Include="Settings\WorkCommandsWindow.xaml.cs" />
     <Compile Include="TimeCookie\TimeCookieLoopEvaluator.cs" />
     <Compile Include="TimeCookie\TimeCookieTarget.cs" />
@@ -240,6 +241,8 @@
     <Compile Include="WishingToken\WishingTokenReplyKind.cs" />
     <Compile Include="WishingToken\WishingTokenReplyParser.cs" />
     <Compile Include="WishingToken\WishingTokenWorkflow.cs" />
+    <Compile Include="WorkCommands\*.cs" />
+    <Compile Include="BotEngine.WorkCommands.cs" />
   </ItemGroup>
 
   <ItemGroup>

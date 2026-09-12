@@ -116,7 +116,7 @@ public sealed class MainWindowUiSurfaceTests
     {
         var requiredNames = new Dictionary<string, string[]>
         {
-            ["WorkCommandsWindow.xaml"] = ["CloseBtn", "MinimizeBtn", "MaximizeRestoreBtn", "CloseWindowBtn"],
+            ["WorkCommandsWindow.xaml"] = ["AutoBestBtn", "AutoBestProgress", "AutoBestStatusText", "CloseBtn", "MinimizeBtn", "MaximizeRestoreBtn", "CloseWindowBtn"],
             ["GuildRaidSettingsWindow.xaml"] = ["GuildRaidChannelUrlBox", "GuildRaidTriggerTextBox", "GuildRaidMatchModeBox", "GuildRaidAuthorFilterBox", "CloseBtn"],
             ["CardHandSettingsWindow.xaml"] = ["AutoPlayCheckBox", "LoadDeckButton", "DeckStatusText", "TimeCapsuleWeightBox", "CloseButton"]
         };

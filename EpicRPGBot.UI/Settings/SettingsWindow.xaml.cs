@@ -1,8 +1,10 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Services;
+using EpicRPGBot.UI.WorkCommands;
 
 namespace EpicRPGBot.UI.Settings
 {
@@ -10,19 +12,29 @@ namespace EpicRPGBot.UI.Settings
     {
         private readonly AppSettingsService _settingsService;
         private readonly Func<Task<CardDeckImportResult>> _loadCardDeck;
+        private readonly Func<CancellationToken, Task<AutoBestWorkCommandResult>> _loadAutoBestWorkCommands;
         private bool _loadingSettings;
 
         public SettingsWindow(AppSettingsService settingsService)
-            : this(settingsService, null)
+            : this(settingsService, null, null)
         {
         }
 
         public SettingsWindow(
             AppSettingsService settingsService,
             Func<Task<CardDeckImportResult>> loadCardDeck)
+            : this(settingsService, loadCardDeck, null)
+        {
+        }
+
+        public SettingsWindow(
+            AppSettingsService settingsService,
+            Func<Task<CardDeckImportResult>> loadCardDeck,
+            Func<CancellationToken, Task<AutoBestWorkCommandResult>> loadAutoBestWorkCommands)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _loadCardDeck = loadCardDeck;
+            _loadAutoBestWorkCommands = loadAutoBestWorkCommands;
             InitializeComponent();
             ApplyAutomationSurface();
             RegisterSettingsPersistence();
@@ -36,7 +48,9 @@ namespace EpicRPGBot.UI.Settings
 
         private void WorkCommandsBtn_Click(object sender, RoutedEventArgs e)
         {
-            var workCommandsWindow = new WorkCommandsWindow(_settingsService)
+            var workCommandsWindow = new WorkCommandsWindow(
+                _settingsService,
+                _loadAutoBestWorkCommands)
             {
                 Owner = this
             };

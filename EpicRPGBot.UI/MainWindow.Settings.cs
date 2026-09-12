@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Settings;
+using EpicRPGBot.UI.WorkCommands;
 
 namespace EpicRPGBot.UI
 {
@@ -53,6 +54,11 @@ namespace EpicRPGBot.UI
         {
             _cooldownTracker.RefreshWorkAliases(settings?.WorkCommands);
             _engine?.UpdateCardHandSettings(settings?.CardHand);
+            if (settings != null)
+            {
+                _engine?.UpdateWorkCommand(
+                    settings.ResolveWorkCommandForArea(settings.GetAreaOrDefault(10)));
+            }
         }
 
         private int GetConfiguredHuntMs()
@@ -87,12 +93,54 @@ namespace EpicRPGBot.UI
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
         {
-            var settingsWindow = new SettingsWindow(_settingsService, LoadCardDeckFromSettingsAsync)
+            var settingsWindow = new SettingsWindow(
+                _settingsService,
+                LoadCardDeckFromSettingsAsync,
+                LoadAutoBestWorkCommandsAsync)
             {
                 Owner = this
             };
 
             settingsWindow.ShowDialog();
+        }
+
+        private async Task<AutoBestWorkCommandResult> LoadAutoBestWorkCommandsAsync(
+            CancellationToken cancellationToken)
+        {
+            if (!_botChatClient.IsReady)
+            {
+                return AutoBestWorkCommandResult.Failure("Discord is not ready.");
+            }
+
+            var ascended = _settingsService.Current.Ascended;
+            var result = _engine != null && _engine.IsRunning
+                ? await _engine.LoadAutoBestWorkCommandsAsync(
+                    _autoBestWorkCommandWorkflow,
+                    ascended,
+                    cancellationToken)
+                : await _autoBestWorkCommandWorkflow.RunAsync(
+                    ascended,
+                    LogAutoBestOutgoingCommand,
+                    cancellationToken);
+            if (result.Success)
+            {
+                _log.Info("[work commands] " + result.Message);
+            }
+            else
+            {
+                _log.Warning("[work commands] " + result.Message);
+            }
+
+            return result;
+        }
+
+        private void LogAutoBestOutgoingCommand(
+            string command,
+            DiscordMessageSnapshot snapshot)
+        {
+            _log.Command(
+                $"Message ({command}) sent",
+                DiscordMessageReference.FromSnapshot(snapshot));
         }
 
         private async Task<CardDeckImportResult> LoadCardDeckFromSettingsAsync()

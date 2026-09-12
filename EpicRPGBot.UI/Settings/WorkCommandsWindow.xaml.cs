@@ -2,27 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
+using EpicRPGBot.UI.WorkCommands;
 
 namespace EpicRPGBot.UI.Settings
 {
     public partial class WorkCommandsWindow : Window
     {
         private readonly AppSettingsService _settingsService;
+        private readonly Func<CancellationToken, Task<AutoBestWorkCommandResult>> _loadAutoBestWorkCommands;
+        private CancellationTokenSource _autoBestCancellation;
+        private bool _applyingBulkSelection;
 
         public WorkCommandsWindow(AppSettingsService settingsService)
+            : this(settingsService, null)
+        {
+        }
+
+        public WorkCommandsWindow(
+            AppSettingsService settingsService,
+            Func<CancellationToken, Task<AutoBestWorkCommandResult>> loadAutoBestWorkCommands)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+            _loadAutoBestWorkCommands = loadAutoBestWorkCommands;
             Rows = BuildRows(_settingsService.Current);
             DataContext = this;
             InitializeComponent();
             DialogWindowShell.Attach(this, MinimizeBtn, MaximizeRestoreBtn, CloseWindowBtn);
             RegisterPersistence();
             ApplyAutomationSurface();
+            AutoBestBtn.IsEnabled = _loadAutoBestWorkCommands != null;
+            Closed += OnWindowClosed;
         }
 
         public ObservableCollection<AreaWorkCommandRow> Rows { get; }
@@ -49,6 +65,11 @@ namespace EpicRPGBot.UI.Settings
 
         private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (_applyingBulkSelection)
+            {
+                return;
+            }
+
             if (!string.Equals(e.PropertyName, nameof(AreaWorkCommandRow.CommandText), StringComparison.Ordinal))
             {
                 return;
@@ -110,6 +131,8 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(MinimizeBtn, "WorkCommandsMinimizeButton");
             SetAutomationIdentity(MaximizeRestoreBtn, "WorkCommandsMaximizeRestoreButton");
             SetAutomationIdentity(CloseWindowBtn, "WorkCommandsWindowCloseButton");
+            SetAutomationIdentity(AutoBestBtn, "WorkCommandsAutoBestButton");
+            SetAutomationIdentity(AutoBestStatusText, "WorkCommandsAutoBestStatus");
         }
 
         private static void SetAutomationIdentity(DependencyObject element, string automationId)

@@ -14,6 +14,7 @@ using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 using EpicRPGBot.UI.TimeCookie;
 using EpicRPGBot.UI.WishingToken;
+using EpicRPGBot.UI.WorkCommands;
 
 namespace EpicRPGBot.UI
 {
@@ -44,6 +45,7 @@ namespace EpicRPGBot.UI
         private readonly DuelWorkflow _duelWorkflow;
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
         private readonly CardDeckImportWorkflow _cardDeckImportWorkflow;
+        private readonly AutoBestWorkCommandWorkflow _autoBestWorkCommandWorkflow;
         private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Queue<string> _processedMessageOrder = new Queue<string>();
 
@@ -93,6 +95,7 @@ namespace EpicRPGBot.UI
                 _settingsService);
             _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
             _cardDeckImportWorkflow = new CardDeckImportWorkflow(_botChatClient);
+            _autoBestWorkCommandWorkflow = new AutoBestWorkCommandWorkflow(_botChatClient);
             _puzzleSelfTestRunner = new PuzzleSelfTestRunner();
             _alertService = new DesktopAlertService();
             _messagePoller = new ChatMessagePoller(_botChatClient);

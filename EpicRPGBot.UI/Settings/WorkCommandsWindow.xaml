@@ -68,9 +68,29 @@
                       HorizontalScrollBarVisibility="Disabled" Padding="20,18">
             <Border Style="{StaticResource SettingsCardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Area commands" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="Each command is normalized when its field loses focus."
-                               Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,14"/>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="Area commands" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Each command is normalized when its field loses focus."
+                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button x:Name="AutoBestBtn" Grid.Column="1" Content="Auto-Best"
+                                Style="{StaticResource BaseButtonStyle}" MinWidth="116"
+                                VerticalAlignment="Center" Click="AutoBestBtn_Click"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <ProgressBar x:Name="AutoBestProgress" Width="80" Height="5"
+                                     Margin="0,0,10,0" VerticalAlignment="Center"
+                                     IsIndeterminate="True" Visibility="Collapsed"/>
+                        <TextBlock x:Name="AutoBestStatusText"
+                                   Text="Loads profile data and replaces all area commands."
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding Rows}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
