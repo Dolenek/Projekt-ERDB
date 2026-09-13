@@ -46,6 +46,9 @@ folder, then its parent directories; absolute paths are used directly.
    present yet. The puzzle-only reply never confirms the command or starts its
    cooldown. A guard without a known originating command still resumes through
    `rpg cd`.
+9. Tracked timers are paused only on the first detection of an incident. Duplicate
+   latest/previous-message detections keep the original remaining delays, so every
+   paused command resumes after the guard clears.
 
 The model score is a similarity, not a probability or a guarantee of correctness.
 See [recognition internals](puzzle-multisource-recognition.md) and

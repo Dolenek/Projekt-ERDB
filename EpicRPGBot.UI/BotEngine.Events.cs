@@ -189,7 +189,10 @@ namespace EpicRPGBot.UI
             }
 
             ReportSolverInfo(detectionInfo, targetReference);
-            _scheduler.PauseAll();
+            if (notification?.Kind == GuardAlertKind.FirstDetected)
+            {
+                _scheduler.PauseAll();
+            }
             if (!TryBeginGuardSolve(targetSnapshot))
             {
                 return;

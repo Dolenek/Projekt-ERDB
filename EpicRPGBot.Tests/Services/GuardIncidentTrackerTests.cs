@@ -37,5 +37,18 @@ namespace EpicRPGBot.Tests.Services
             Assert.False(GuardIncidentTracker.ContainsGuardClear("keep playing"));
             Assert.True(GuardIncidentTracker.ContainsGuardClear("EPIC GUARD: Everything seems fine now, keep playing"));
         }
+
+        [Fact]
+        public void RegisterDetection_DuplicateDoesNotStartAnotherIncident()
+        {
+            var tracker = new GuardIncidentTracker();
+
+            var first = tracker.RegisterDetection("Puzzle detected in latest message.");
+            var duplicate = tracker.RegisterDetection("Puzzle detected in previous message.");
+
+            Assert.Equal(GuardAlertKind.FirstDetected, first?.Kind);
+            Assert.Null(duplicate);
+            Assert.True(tracker.IsActive);
+        }
     }
 }

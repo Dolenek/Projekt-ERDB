@@ -256,7 +256,6 @@ namespace EpicRPGBot.UI.Services
             var timer = GetTimer(kind);
             if (!timer.IsEnabled || !dueUtc.HasValue)
             {
-                SetPausedDelay(kind, null);
                 return;
             }
 
