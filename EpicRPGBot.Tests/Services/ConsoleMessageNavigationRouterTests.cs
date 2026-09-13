@@ -9,11 +9,17 @@ public sealed class ConsoleMessageNavigationRouterTests
     [Fact]
     public async Task NavigateAsync_SelectsMatchingTabAndNavigatesOnce()
     {
-        var navigator = new RecordingNavigator(true);
+        var callOrder = new List<string>();
+        var navigator = new RecordingNavigator(true, () => callOrder.Add("navigate"));
         var selections = 0;
         var router = new ConsoleMessageNavigationRouter(new[]
         {
-            new NavigationRoute(DiscordTabRole.Bot, () => selections++, navigator)
+            new NavigationRoute(DiscordTabRole.Bot, _ =>
+            {
+                selections++;
+                callOrder.Add("select");
+                return Task.CompletedTask;
+            }, navigator)
         });
         var reference = CompleteReference(DiscordTabRole.Bot);
 
@@ -23,6 +29,7 @@ public sealed class ConsoleMessageNavigationRouterTests
         Assert.Equal(1, selections);
         Assert.Equal(1, navigator.CallCount);
         Assert.Same(reference, navigator.LastReference);
+        Assert.Equal(new[] { "select", "navigate" }, callOrder);
     }
 
     [Fact]
@@ -32,7 +39,11 @@ public sealed class ConsoleMessageNavigationRouterTests
         var selections = 0;
         var router = new ConsoleMessageNavigationRouter(new[]
         {
-            new NavigationRoute(DiscordTabRole.Bot, () => selections++, navigator)
+            new NavigationRoute(DiscordTabRole.Bot, _ =>
+            {
+                selections++;
+                return Task.CompletedTask;
+            }, navigator)
         });
 
         Assert.False(await router.NavigateAsync(CompleteReference(DiscordTabRole.Guild)));
@@ -50,10 +61,12 @@ public sealed class ConsoleMessageNavigationRouterTests
     private sealed class RecordingNavigator : IDiscordMessageNavigator
     {
         private readonly bool _result;
+        private readonly Action? _onNavigate;
 
-        public RecordingNavigator(bool result)
+        public RecordingNavigator(bool result, Action? onNavigate = null)
         {
             _result = result;
+            _onNavigate = onNavigate;
         }
 
         public int CallCount { get; private set; }
@@ -64,6 +77,7 @@ public sealed class ConsoleMessageNavigationRouterTests
             CancellationToken cancellationToken = default)
         {
             CallCount++;
+            _onNavigate?.Invoke();
             LastReference = reference;
             return Task.FromResult(_result);
         }

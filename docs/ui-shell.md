@@ -15,12 +15,11 @@ Startup flow:
 3. Load saved local settings from `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini` into an in-memory settings snapshot.
 4. Bind the last-message list and in-memory console log.
 5. Use the saved channel URL, fallback flag, area, and hunt/adventure/work/farm/lootbox baselines as the runtime defaults for navigation and automation.
-6. Warm all five Discord tabs once during startup so each WebView2 surface is realized before the user switches tabs.
-7. Initialize all five WebView2 tabs with a shared persistent profile under `%LocalAppData%/EpicRPGBot.UI/WebView2`.
-8. Navigate the bot, player, and dungeon tabs to the saved bot channel URL, navigate the duel tab to its fixed `dueling-2` channel, and use `https://discord.com/channels/@me` as the configured-channel fallback.
-9. If guild-raid settings are complete, navigate the guild tab to the saved guild-raid channel URL.
-10. Start polling the bot tab for the last visible message every 2 seconds.
-11. Start the guild watcher so it can monitor the guild tab even while the main bot engine is stopped.
+6. Create lightweight hosts for all five Discord tabs without creating their WebView2 surfaces.
+7. Initialize the Bot and Player WebView2 sessions with the shared persistent profile under `%LocalAppData%/EpicRPGBot.UI/WebView2`; both remain active for the lifetime of the app.
+8. Navigate Bot and Player to the saved bot channel URL, using `https://discord.com/channels/@me` as the configured-channel fallback.
+9. Start polling the permanently active Bot tab for the last visible message every 2 seconds.
+10. Start the Guild watcher only when its saved `Active` setting and channel configuration are valid; Dungeon and Duel remain unloaded until selected or requested by their workflow.
 
 User-visible behaviors:
 - `Pets` opens the [pet menu](pet-menu.md) with inventory selection, protections and manual/automatic fusion. The bot remains paused while the modal menu is open.
@@ -34,7 +33,7 @@ User-visible behaviors:
 - `Complete dungeon` starts an exclusive run that first performs `Trade area` on the bot tab in its currently open channel, then switches to the dedicated Dungeon tab for the listing-channel signup; while active, the button changes to `Stop dungeon`.
 - `Start duel` loads the profile through the channel currently held by the Bot tab and runs matchmaking in the dedicated Duel tab without forcing it into the foreground; while active, the button changes to `Stop duel`.
 - `Start` starts the automation engine, then sends `rpg cd` through the bot tab and waits for the cooldown snapshot before scheduling commands.
-- `Stop` stops engine timers but keeps all five tabs open.
+- `Stop` stops engine timers; optional tabs without a remaining activity reason are disposed independently, while Bot and Player remain active.
 - The title bar shows `Stopped`, `Running`, or the active exclusive workflow. Discord status progresses through `Initializing`, `Ready`, or `Error`.
 - `Start` uses the green primary treatment, `Stop` uses a restrained red treatment, and active exclusive workflow buttons use the cyan treatment.
 - `Initialize` starts with one opening `rpg cd` snapshot, skips tracked commands that are already on cooldown in that snapshot, and only saves refreshed baselines for commands that were ready to initialize.
@@ -55,7 +54,7 @@ User-visible behaviors:
 - If the engine is stopped when `Time cookie` starts, the UI starts it for the workflow and stops it again when the workflow ends; if it was already running, it keeps running throughout the workflow.
 - Any change in the settings window is saved immediately to local settings.
 - The `Work commands` settings modal also auto-saves each per-area command change immediately.
-- The guild watcher stays active while the app is open and sends `rpg guild raid` from the guild tab when a watched message matches the configured rule.
+- The guild watcher stays active independently of the bot engine only while its saved `Active` setting and configuration are valid, and sends `rpg guild raid` from the Guild tab when a watched message matches the configured rule.
 - After a guild-raid send, the watcher keeps the guild tab under a temporary quiz/result watch and blocks further watched sends until one of those replies arrives.
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - `Initialize` also refreshes the cached profile player name from `rpg p`.
@@ -69,6 +68,7 @@ Sidebar data:
 - Activity search filters the active Messages or Console collection without changing the underlying five-message buffer or 500-entry log retention. The log-kind selector is available only in Console.
 
 Browser behavior:
+- WebView2 surfaces follow the demand-managed lifecycle documented in [Discord WebView lifecycle](webview-lifecycle.md).
 - The app enables WebView2 devtools, zoom controls, and default context menus.
 - On navigation completion it auto-clicks common Discord interstitials such as `Continue in browser`.
 - Message sending, polling, and puzzle solving are targeted at the bot tab composer, not the player tab.

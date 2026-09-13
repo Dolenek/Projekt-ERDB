@@ -101,7 +101,8 @@ namespace EpicRPGBot.UI.Settings
                 _settingsService.Current.GuildRaidMatchMode,
                 _settingsService.Current.GuildRaidAuthorFilter,
                 _settingsService.Current.CardHand,
-                BringGuardAlertsToForegroundCheckBox.IsChecked == true));
+                BringGuardAlertsToForegroundCheckBox.IsChecked == true,
+                _settingsService.Current.GuildRaidWatcherActive));
         }
     }
 }

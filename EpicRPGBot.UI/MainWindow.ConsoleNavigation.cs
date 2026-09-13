@@ -28,7 +28,7 @@ namespace EpicRPGBot.UI
             DiscordTabRole sourceTabRole,
             IDiscordMessageNavigator playerNavigator)
         {
-            return new NavigationRoute(sourceTabRole, SelectPlayerTab, playerNavigator);
+            return new NavigationRoute(sourceTabRole, SelectPlayerTabAsync, playerNavigator);
         }
 
         private async void ConsoleList_MouseDoubleClick(object sender, MouseButtonEventArgs e)

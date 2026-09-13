@@ -11,7 +11,7 @@ Layout:
 - Right column: area, `Ascended`, dungeon-channel cleanup, EPIC GUARD foreground behavior, and hunt/adventure/training/work/farm/lootbox cooldown baselines.
 - `Close` button only; there is no separate save/apply action
 - `Work commands` opens a second modal with editable work-command text rows for areas `1..15` and a one-shot `Auto-Best` profile loader
-- `Guild raid` opens a second modal with guild-raid channel, trigger text, match mode, and optional author filter
+- `Guild raid` opens a second modal with an `Active` toggle, guild-raid channel, trigger text, match mode, and optional author filter. `Active` defaults to off and controls whether the Guild watcher keeps its WebView loaded in the background.
 - `Card Hand` opens a second modal for auto-play, nine reward weights, and the persisted deck-ownership import; see [Card hand automation](card-hand-automation.md)
 
 Persistence model:

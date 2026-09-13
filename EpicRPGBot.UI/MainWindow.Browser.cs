@@ -1,25 +1,27 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
+using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
+        private bool _browserSessionsInitialized;
+        private int _browserSelectionVersion;
+        private DiscordWebViewSession _selectedBrowserSession;
+
         private async Task InitializeBrowsersAsync()
         {
             SetDiscordStatus("Initializing", "WarningBrush");
             try
             {
-                SetInitHint("Initializing Discord tabs...");
-                await WarmUpBrowserTabsAsync();
-                await _botChatClient.EnsureInitializedAsync();
-                await _playerChatClient.EnsureInitializedAsync();
-                await _guildChatClient.EnsureInitializedAsync();
-                await _dungeonChatClient.EnsureInitializedAsync();
-                await _duelChatClient.EnsureInitializedAsync();
+                SetInitHint("Initializing Discord...");
+                await _botWebViewSession.SetDemandAsync(
+                    DiscordWebViewActivityReason.Permanent,
+                    true);
                 InitHint.Visibility = Visibility.Collapsed;
                 SetDiscordStatus("Ready", "SuccessBrush");
             }
@@ -28,47 +30,101 @@ namespace EpicRPGBot.UI
                 SetInitHint("WebView2 init failed: " + ex.Message);
                 SetDiscordStatus("Error", "DangerBrush");
             }
+            finally
+            {
+                _browserSessionsInitialized = true;
+                await ReconcileSelectedBrowserSessionAsync();
+                await KeepPlayerBrowserSessionActiveAsync();
+            }
         }
 
-        private async Task WarmUpBrowserTabsAsync()
+        private async Task KeepPlayerBrowserSessionActiveAsync()
         {
-            if (BrowserTabs == null || BotBrowserTab == null || PlayerBrowserTab == null || GuildBrowserTab == null || DungeonBrowserTab == null || DuelBrowserTab == null)
+            try
+            {
+                await _playerWebViewSession.SetDemandAsync(
+                    DiscordWebViewActivityReason.Permanent,
+                    true);
+            }
+            catch (Exception ex)
+            {
+                _log.Warning("[browser] Player tab permanent activation failed: " + ex.Message);
+            }
+        }
+
+        private async void BrowserTabs_SelectionChanged(
+            object sender,
+            SelectionChangedEventArgs e)
+        {
+            if (!_browserSessionsInitialized || !ReferenceEquals(e.Source, BrowserTabs))
             {
                 return;
             }
 
-            var originalSelection = BrowserTabs.SelectedItem;
-            await ShowTabAsync(BotBrowserTab);
-            await ShowTabAsync(PlayerBrowserTab);
-            await ShowTabAsync(GuildBrowserTab);
-            await ShowTabAsync(DungeonBrowserTab);
-            await ShowTabAsync(DuelBrowserTab);
-            BrowserTabs.SelectedItem = originalSelection ?? BotBrowserTab;
-            BrowserTabs.UpdateLayout();
+            await ReconcileSelectedBrowserSessionAsync();
         }
 
-        private async Task ShowTabAsync(TabItem tab)
+        private async Task ReconcileSelectedBrowserSessionAsync()
         {
-            BrowserTabs.SelectedItem = tab;
-            BrowserTabs.UpdateLayout();
-            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded);
+            var selectionVersion = ++_browserSelectionVersion;
+            var nextSession = GetBrowserSession(BrowserTabs.SelectedItem as TabItem);
+            var previousSession = _selectedBrowserSession;
+            _selectedBrowserSession = nextSession;
+
+            if (previousSession != null && !ReferenceEquals(previousSession, nextSession))
+            {
+                await SetSelectedDemandSafeAsync(previousSession, false);
+            }
+
+            if (nextSession == null)
+            {
+                return;
+            }
+
+            await SetSelectedDemandSafeAsync(nextSession, true);
+            if (selectionVersion != _browserSelectionVersion &&
+                !ReferenceEquals(nextSession, GetBrowserSession(BrowserTabs.SelectedItem as TabItem)))
+            {
+                await SetSelectedDemandSafeAsync(nextSession, false);
+            }
         }
 
-        private async Task NavigateStartupTabsAsync()
+        private async Task SetSelectedDemandSafeAsync(
+            DiscordWebViewSession session,
+            bool isSelected)
         {
             try
             {
-                var channelUrl = GetChannelUrl();
-                await _botChatClient.NavigateToChannelAsync(channelUrl);
-                await _playerChatClient.NavigateToChannelAsync(channelUrl);
-                await _dungeonChatClient.NavigateToChannelAsync(channelUrl);
-                await _duelChatClient.NavigateToChannelAsync(Duel.DuelChannelCatalog.OutgoingDuelChannelUrl);
+                await session.SetDemandAsync(
+                    DiscordWebViewActivityReason.Selected,
+                    isSelected);
             }
             catch (Exception ex)
             {
-                SetInitHint("Navigate failed: " + ex.Message);
-                SetDiscordStatus("Error", "DangerBrush");
+                _log.Warning("[browser] Discord tab activation failed: " + ex.Message);
             }
+        }
+
+        private DiscordWebViewSession GetBrowserSession(TabItem tab)
+        {
+            if (ReferenceEquals(tab, BotBrowserTab)) return _botWebViewSession;
+            if (ReferenceEquals(tab, PlayerBrowserTab)) return _playerWebViewSession;
+            if (ReferenceEquals(tab, GuildBrowserTab)) return _guildWebViewSession;
+            if (ReferenceEquals(tab, DungeonBrowserTab)) return _dungeonWebViewSession;
+            if (ReferenceEquals(tab, DuelBrowserTab)) return _duelWebViewSession;
+            return null;
+        }
+
+        private string GetGuildInitialUrl()
+        {
+            return GetCurrentSettings().TryResolveGuildRaidChannelUrl(out var channelUrl)
+                ? channelUrl
+                : GetChannelUrl();
+        }
+
+        private string GetDungeonInitialUrl()
+        {
+            return GetCurrentSettings().ResolveDungeonListingChannelUrl();
         }
 
         private async Task NavigateBotTabAsync()
@@ -90,13 +146,8 @@ namespace EpicRPGBot.UI
 
         private void ReloadBtn_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                _botChatClient.Reload();
-            }
-            catch
-            {
-            }
+            try { _botChatClient.Reload(); }
+            catch { }
         }
 
         private async void GoChannelBtn_Click(object sender, RoutedEventArgs e)
@@ -104,34 +155,29 @@ namespace EpicRPGBot.UI
             await NavigateBotTabAsync();
         }
 
-        private void SelectBotTab()
-        {
-            SelectBrowserTab(BotBrowserTab);
-        }
+        private void SelectBotTab() => SelectBrowserTab(BotBrowserTab);
 
-        private void SelectPlayerTab()
-        {
-            SelectBrowserTab(PlayerBrowserTab);
-        }
+        private void SelectPlayerTab() => SelectBrowserTab(PlayerBrowserTab);
 
-        private void SelectDungeonTab()
-        {
-            SelectBrowserTab(DungeonBrowserTab);
-        }
+        private void SelectDungeonTab() => SelectBrowserTab(DungeonBrowserTab);
 
-        private void SelectGuildTab()
+        private void SelectGuildTab() => SelectBrowserTab(GuildBrowserTab);
+
+        private async Task SelectPlayerTabAsync(CancellationToken cancellationToken)
         {
-            SelectBrowserTab(GuildBrowserTab);
+            SelectPlayerTab();
+            await _playerWebViewSession.SetDemandAsync(
+                DiscordWebViewActivityReason.Selected,
+                true,
+                cancellationToken);
         }
 
         private void SelectBrowserTab(TabItem tab)
         {
-            if (BrowserTabs == null || tab == null)
+            if (BrowserTabs != null && tab != null)
             {
-                return;
+                BrowserTabs.SelectedItem = tab;
             }
-
-            BrowserTabs.SelectedItem = tab;
         }
 
         private void SetInitHint(string text)

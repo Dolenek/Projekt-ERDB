@@ -14,14 +14,12 @@ namespace EpicRPGBot.UI
         {
             if (_isDuelRunning)
             {
-                _duelCancellation?.Cancel();
-                _log.Info("[duel] Cancellation requested.");
+                RequestDuelCancellation();
                 return;
             }
 
-            if (ShouldBlockForExclusiveBotOperation(DuelOperationName) || !_duelChatClient.IsReady)
+            if (ShouldBlockForExclusiveBotOperation(DuelOperationName))
             {
-                _log.Info("[duel] Duel tab is not ready or another workflow is active.");
                 return;
             }
 
@@ -31,18 +29,28 @@ namespace EpicRPGBot.UI
             }
 
             BeginDuelRun();
+            await RunDuelWithWebViewAsync();
+        }
+
+        private void RequestDuelCancellation()
+        {
+            _duelCancellation?.Cancel();
+            _log.Info("[duel] Cancellation requested.");
+        }
+
+        private async Task RunDuelWithWebViewAsync()
+        {
+            Services.DiscordWebViewLease webViewLease = null;
             try
             {
-                var result = await _duelWorkflow.RunAsync(
-                    message => _log.Info("[duel] " + message),
-                    PauseBotForDuelAsync,
-                    ResumeBotForDuelMatchmakingAsync,
+                webViewLease = await _duelWebViewSession.AcquireAsync(
+                    Services.DiscordWebViewActivityReason.Workflow,
                     _duelCancellation.Token);
-                _log.Info("[duel] " + result.Summary);
-                if (!result.RequiresBotToRemainStopped)
-                {
-                    await ResumeBotForDuelMatchmakingAsync();
-                }
+                await ExecuteDuelWorkflowAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                _log.Info("[duel] Cancelled.");
             }
             catch (Exception ex)
             {
@@ -51,6 +59,24 @@ namespace EpicRPGBot.UI
             finally
             {
                 EndDuelRun();
+                if (webViewLease != null)
+                {
+                    await webViewLease.ReleaseAsync();
+                }
+            }
+        }
+
+        private async Task ExecuteDuelWorkflowAsync()
+        {
+            var result = await _duelWorkflow.RunAsync(
+                message => _log.Info("[duel] " + message),
+                PauseBotForDuelAsync,
+                ResumeBotForDuelMatchmakingAsync,
+                _duelCancellation.Token);
+            _log.Info("[duel] " + result.Summary);
+            if (!result.RequiresBotToRemainStopped)
+            {
+                await ResumeBotForDuelMatchmakingAsync();
             }
         }
 

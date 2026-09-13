@@ -9,11 +9,15 @@ namespace EpicRPGBot.UI.Services
 {
     public sealed partial class DiscordChatClient : IDiscordChatClient, IDuelDiscordClient, IDiscordAttachmentImageClient
     {
-        private readonly WebView2 _web;
+        private readonly IDiscordWebViewReference _webViewReference;
         private readonly DiscordTabRole _tabRole;
         private readonly Action<string> _telemetry;
+        private WebView2 _configuredWebView;
         private bool _navigationHandlerAttached;
         private bool _roleMarkerRegistered;
+
+        private WebView2 _web => _webViewReference.Current ??
+            throw new InvalidOperationException("Discord WebView is not active.");
 
         public DiscordChatClient(WebView2 web)
             : this(web, "bot", null)
@@ -21,8 +25,16 @@ namespace EpicRPGBot.UI.Services
         }
 
         public DiscordChatClient(WebView2 web, string tabRole, Action<string> telemetry = null)
+            : this(new FixedDiscordWebViewReference(web), tabRole, telemetry)
         {
-            _web = web ?? throw new ArgumentNullException(nameof(web));
+        }
+
+        internal DiscordChatClient(
+            IDiscordWebViewReference webViewReference,
+            string tabRole,
+            Action<string> telemetry = null)
+        {
+            _webViewReference = webViewReference ?? throw new ArgumentNullException(nameof(webViewReference));
             _tabRole = DiscordTabRoleCatalog.Parse(tabRole);
             if (_tabRole == DiscordTabRole.Unknown)
             {
@@ -31,21 +43,57 @@ namespace EpicRPGBot.UI.Services
             _telemetry = telemetry;
         }
 
-        public bool IsReady => _web.CoreWebView2 != null;
+        public bool IsReady => _webViewReference.Current?.CoreWebView2 != null;
 
         public async Task EnsureInitializedAsync()
         {
-            if (_web.CoreWebView2 == null)
+            var webView = _web;
+            PrepareWebViewGeneration(webView);
+            if (webView.CoreWebView2 == null)
             {
                 var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EpicRPGBot.UI", "WebView2");
                 Directory.CreateDirectory(dataDir);
                 var env = await WebViewEnvironmentFactory.CreateAsync(dataDir);
-                await _web.EnsureCoreWebView2Async(env);
+                await webView.EnsureCoreWebView2Async(env);
             }
 
             ConfigureSettings();
             await EnsureRoleMarkerAsync();
             AttachNavigationHandler();
+        }
+
+        internal void ReleaseWebView(WebView2 webView)
+        {
+            if (!ReferenceEquals(_configuredWebView, webView))
+            {
+                return;
+            }
+
+            if (_navigationHandlerAttached)
+            {
+                webView.NavigationCompleted -= OnNavigationCompleted;
+            }
+
+            _configuredWebView = null;
+            _navigationHandlerAttached = false;
+            _roleMarkerRegistered = false;
+        }
+
+        private void PrepareWebViewGeneration(WebView2 webView)
+        {
+            if (ReferenceEquals(_configuredWebView, webView))
+            {
+                return;
+            }
+
+            if (_configuredWebView != null && _navigationHandlerAttached)
+            {
+                _configuredWebView.NavigationCompleted -= OnNavigationCompleted;
+            }
+
+            _configuredWebView = webView;
+            _navigationHandlerAttached = false;
+            _roleMarkerRegistered = false;
         }
 
         public void Reload()

@@ -49,6 +49,7 @@ namespace EpicRPGBot.UI.Services
             _store.SetString("guild_raid_trigger_text", snapshot.GuildRaidTriggerText);
             _store.SetString("guild_raid_match_mode", snapshot.GuildRaidMatchMode);
             _store.SetString("guild_raid_author_filter", snapshot.GuildRaidAuthorFilter);
+            _store.SetBool("guild_raid_active", snapshot.GuildRaidWatcherActive);
             _store.SetBool("bring_guard_alerts_to_foreground", snapshot.BringGuardAlertsToForeground);
             CardHandSettingsPersistence.Write(_store, snapshot.CardHand);
 
@@ -79,7 +80,8 @@ namespace EpicRPGBot.UI.Services
                 _store.GetString("guild_raid_match_mode", defaults.GuildRaidMatchMode),
                 _store.GetString("guild_raid_author_filter", defaults.GuildRaidAuthorFilter),
                 CardHandSettingsPersistence.Read(_store),
-                _store.GetBool("bring_guard_alerts_to_foreground", defaults.BringGuardAlertsToForeground));
+                _store.GetBool("bring_guard_alerts_to_foreground", defaults.BringGuardAlertsToForeground),
+                _store.GetBool("guild_raid_active", defaults.GuildRaidWatcherActive));
         }
     }
 }

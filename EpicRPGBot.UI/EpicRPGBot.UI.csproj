@@ -169,6 +169,14 @@
     <Compile Include="Services\DiscordCommandSendPolicy.cs" />
     <Compile Include="Services\DiscordMessagePermalink.cs" />
     <Compile Include="Services\DiscordTabRoleCatalog.cs" />
+    <Compile Include="Services\DiscordWebViewActivityReason.cs" />
+    <Compile Include="Services\DiscordWebViewDemandTracker.cs" />
+    <Compile Include="Services\DiscordWebViewFactory.cs" />
+    <Compile Include="Services\DiscordWebViewLifecycle.cs" />
+    <Compile Include="Services\DiscordWebViewLease.cs" />
+    <Compile Include="Services\DiscordWebViewReference.cs" />
+    <Compile Include="Services\DiscordWebViewSession.cs" />
+    <Compile Include="Services\DiscordWebViewSession.Lifecycle.cs" />
     <Compile Include="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="Services\CooldownReductionCalculator.cs" />
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />
@@ -197,6 +205,7 @@
     <Compile Include="Services\GuildRaidMatchModes.cs" />
     <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
+    <Compile Include="Services\GuildRaidWatcherPolicy.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
     <Compile Include="Services\GuardedCommandContinuationClassifier.cs" />
     <Compile Include="Services\GuardedCommandRecoveryCoordinator.cs" />

@@ -28,6 +28,8 @@ namespace EpicRPGBot.UI.Settings
             GuildRaidTriggerTextBox.TextChanged += OnSettingsChanged;
             GuildRaidAuthorFilterBox.TextChanged += OnSettingsChanged;
             GuildRaidMatchModeBox.SelectionChanged += OnMatchModeChanged;
+            GuildRaidActiveCheckBox.Checked += OnActiveChanged;
+            GuildRaidActiveCheckBox.Unchecked += OnActiveChanged;
         }
 
         private void LoadSettings(AppSettingsSnapshot settings)
@@ -37,6 +39,7 @@ namespace EpicRPGBot.UI.Settings
             GuildRaidChannelUrlBox.Text = settings.GuildRaidChannelUrl;
             GuildRaidTriggerTextBox.Text = settings.GuildRaidTriggerText;
             GuildRaidAuthorFilterBox.Text = settings.GuildRaidAuthorFilter;
+            GuildRaidActiveCheckBox.IsChecked = settings.GuildRaidWatcherActive;
             SelectMatchMode(settings.GuildRaidMatchMode);
 
             _loadingSettings = false;
@@ -52,6 +55,11 @@ namespace EpicRPGBot.UI.Settings
             PersistSettings();
         }
 
+        private void OnActiveChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
         private void PersistSettings()
         {
             if (_loadingSettings)
@@ -63,7 +71,8 @@ namespace EpicRPGBot.UI.Settings
                 .WithGuildRaidChannelUrl(GuildRaidChannelUrlBox.Text?.Trim() ?? string.Empty)
                 .WithGuildRaidTriggerText(GuildRaidTriggerTextBox.Text?.Trim() ?? string.Empty)
                 .WithGuildRaidMatchMode(GetSelectedMatchMode())
-                .WithGuildRaidAuthorFilter(GuildRaidAuthorFilterBox.Text?.Trim() ?? string.Empty);
+                .WithGuildRaidAuthorFilter(GuildRaidAuthorFilterBox.Text?.Trim() ?? string.Empty)
+                .WithGuildRaidWatcherActive(GuildRaidActiveCheckBox.IsChecked == true);
             _settingsService.Save(updated);
         }
 
@@ -115,6 +124,7 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(GuildRaidTriggerTextBox, "GuildRaidSettingsTriggerInput");
             SetAutomationIdentity(GuildRaidMatchModeBox, "GuildRaidSettingsMatchModeInput");
             SetAutomationIdentity(GuildRaidAuthorFilterBox, "GuildRaidSettingsAuthorFilterInput");
+            SetAutomationIdentity(GuildRaidActiveCheckBox, "GuildRaidSettingsActiveInput");
             SetAutomationIdentity(CloseBtn, "GuildRaidSettingsCloseButton");
             SetAutomationIdentity(MinimizeBtn, "GuildRaidSettingsMinimizeButton");
             SetAutomationIdentity(MaximizeRestoreBtn, "GuildRaidSettingsMaximizeRestoreButton");

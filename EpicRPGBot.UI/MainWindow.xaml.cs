@@ -27,6 +27,11 @@ namespace EpicRPGBot.UI
         private readonly IDiscordChatClient _guildChatClient;
         private readonly IDiscordChatClient _dungeonChatClient;
         private readonly IDuelDiscordClient _duelChatClient;
+        private readonly DiscordWebViewSession _botWebViewSession;
+        private readonly DiscordWebViewSession _playerWebViewSession;
+        private readonly DiscordWebViewSession _guildWebViewSession;
+        private readonly DiscordWebViewSession _dungeonWebViewSession;
+        private readonly DiscordWebViewSession _duelWebViewSession;
         private readonly ConsoleMessageNavigationRouter _consoleMessageNavigationRouter;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly ConfirmedCommandSender _dungeonConfirmedCommandSender;
@@ -69,18 +74,30 @@ namespace EpicRPGBot.UI
             InitializeComponent();
             ApplyAutomationSurface();
 
-            _botChatClient = new DiscordChatClient(Web, "bot");
-            _playerChatClient = new DiscordChatClient(PlayerWeb, "player");
-            _guildChatClient = new DiscordChatClient(GuildWeb, "guild");
-            _dungeonChatClient = new DiscordChatClient(DungeonWeb, "dungeon");
-            _duelChatClient = new DiscordChatClient(
+            _settingsService = new AppSettingsService(new LocalSettingsStore());
+            _botWebViewSession = DiscordWebViewSession.Create(
+                Web, BackgroundBrowserParking, "bot", GetChannelUrl, null, out var botChatClient);
+            _playerWebViewSession = DiscordWebViewSession.Create(
+                PlayerWeb, BackgroundBrowserParking, "player", GetChannelUrl, null, out var playerChatClient);
+            _guildWebViewSession = DiscordWebViewSession.Create(
+                GuildWeb, BackgroundBrowserParking, "guild", GetGuildInitialUrl, null, out var guildChatClient);
+            _dungeonWebViewSession = DiscordWebViewSession.Create(
+                DungeonWeb, BackgroundBrowserParking, "dungeon", GetDungeonInitialUrl, null, out var dungeonChatClient);
+            _duelWebViewSession = DiscordWebViewSession.Create(
                 DuelWeb,
+                BackgroundBrowserParking,
                 "duel",
-                message => _log.Info("[duel] " + message));
+                () => DuelChannelCatalog.OutgoingDuelChannelUrl,
+                message => _log.Info("[duel] " + message),
+                out var duelChatClient);
+            _botChatClient = botChatClient;
+            _playerChatClient = playerChatClient;
+            _guildChatClient = guildChatClient;
+            _dungeonChatClient = dungeonChatClient;
+            _duelChatClient = duelChatClient;
             _consoleMessageNavigationRouter = CreateConsoleMessageNavigationRouter();
             _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
             _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
-            _settingsService = new AppSettingsService(new LocalSettingsStore());
             _cooldownTracker = new CooldownTracker(CooldownVisual);
             _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
             _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
@@ -116,7 +133,6 @@ namespace EpicRPGBot.UI
             _log.Engine("UI loaded");
             await RunPuzzleSelfTestIfRequestedAsync();
             await InitializeBrowsersAsync();
-            await NavigateStartupTabsAsync();
             HookGuildRaidSettings();
             HookAppSettings();
             await StartGuildRaidWatcherAsync();
@@ -157,10 +173,17 @@ namespace EpicRPGBot.UI
             UnhookGuildRaidSettings();
             UnhookAppSettings();
             _guildRaidCoordinator.Dispose();
+            _ = _guildWatcherWebViewLease?.ReleaseAsync();
+            _guildWatcherWebViewLease = null;
             _engine?.Stop();
             _cooldownTracker.Stop();
             ReleaseStatsUi();
             _alertService.Dispose();
+            _botWebViewSession.Dispose();
+            _playerWebViewSession.Dispose();
+            _guildWebViewSession.Dispose();
+            _dungeonWebViewSession.Dispose();
+            _duelWebViewSession.Dispose();
         }
     }
 }

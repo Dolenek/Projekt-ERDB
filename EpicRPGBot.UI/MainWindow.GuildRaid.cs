@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
@@ -7,6 +8,10 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
+        private readonly SemaphoreSlim _guildWatcherSettingsGate = new SemaphoreSlim(1, 1);
+        private DiscordWebViewLease _guildWatcherWebViewLease;
+        private bool _guildRaidCoordinatorStarted;
+
         private void HookGuildRaidSettings()
         {
             _guildRaidCoordinator.OnInfo += OnGuildRaidInfo;
@@ -25,7 +30,7 @@ namespace EpicRPGBot.UI
         {
             try
             {
-                await _guildRaidCoordinator.StartAsync();
+                await ReconcileGuildRaidWatcherAsync(GetCurrentSettings());
             }
             catch (Exception ex)
             {
@@ -37,11 +42,54 @@ namespace EpicRPGBot.UI
         {
             try
             {
-                await _guildRaidCoordinator.ApplySettingsAsync(settings);
+                await ReconcileGuildRaidWatcherAsync(settings);
             }
             catch (Exception ex)
             {
                 _log.Warning("[guild] Failed to apply settings: " + ex.Message);
+            }
+        }
+
+        private async Task ReconcileGuildRaidWatcherAsync(AppSettingsSnapshot settings)
+        {
+            await _guildWatcherSettingsGate.WaitAsync();
+            try
+            {
+                var shouldRun = GuildRaidWatcherPolicy.ShouldRun(settings);
+                if (shouldRun && _guildWatcherWebViewLease == null)
+                {
+                    _guildWatcherWebViewLease = await _guildWebViewSession.AcquireAsync(
+                        DiscordWebViewActivityReason.GuildWatcher);
+                }
+
+                if (_guildRaidCoordinatorStarted)
+                {
+                    await _guildRaidCoordinator.ApplySettingsAsync(settings);
+                }
+                else
+                {
+                    await _guildRaidCoordinator.StartAsync();
+                    _guildRaidCoordinatorStarted = true;
+                }
+
+                if (!shouldRun)
+                {
+                    await ReleaseGuildWatcherWebViewAsync();
+                }
+            }
+            finally
+            {
+                _guildWatcherSettingsGate.Release();
+            }
+        }
+
+        private async Task ReleaseGuildWatcherWebViewAsync()
+        {
+            var lease = _guildWatcherWebViewLease;
+            _guildWatcherWebViewLease = null;
+            if (lease != null)
+            {
+                await lease.ReleaseAsync();
             }
         }
 

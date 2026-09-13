@@ -7,23 +7,18 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
+        private const string DungeonOperationName = "Complete Dungeon";
+
         private async void CompleteDungeonBtn_Click(object sender, RoutedEventArgs e)
         {
             if (_isDungeonRunning)
             {
-                _dungeonCancellation?.Cancel();
-                _log.Info("[dungeon] Cancellation requested.");
+                RequestDungeonCancellation();
                 return;
             }
 
-            if (ShouldBlockForExclusiveBotOperation("Complete Dungeon"))
+            if (ShouldBlockForExclusiveBotOperation(DungeonOperationName))
             {
-                return;
-            }
-
-            if (!_dungeonChatClient.IsReady)
-            {
-                _log.Info("Dungeon tab not ready");
                 return;
             }
 
@@ -33,19 +28,38 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            if (!TryBeginExclusiveBotOperation("Complete Dungeon"))
+            if (!TryBeginExclusiveBotOperation(DungeonOperationName))
             {
                 return;
             }
 
+            BeginDungeonRun();
+            await RunDungeonWithWebViewAsync();
+        }
+
+        private void RequestDungeonCancellation()
+        {
+            _dungeonCancellation?.Cancel();
+            _log.Info("[dungeon] Cancellation requested.");
+        }
+
+        private void BeginDungeonRun()
+        {
             _dungeonCancellation?.Dispose();
             _dungeonCancellation = new CancellationTokenSource();
             SetDungeonRunning(true);
             SelectDungeonTab();
             _log.Info("[dungeon] Started.");
+        }
 
+        private async Task RunDungeonWithWebViewAsync()
+        {
+            Services.DiscordWebViewLease webViewLease = null;
             try
             {
+                webViewLease = await _dungeonWebViewSession.AcquireAsync(
+                    Services.DiscordWebViewActivityReason.Workflow,
+                    _dungeonCancellation.Token);
                 var result = await RunDungeonJobAsync(_log.Info, _dungeonCancellation.Token);
                 _log.Info("[dungeon] " + result.Summary);
             }
@@ -62,7 +76,11 @@ namespace EpicRPGBot.UI
                 _dungeonCancellation.Dispose();
                 _dungeonCancellation = null;
                 SetDungeonRunning(false);
-                EndExclusiveBotOperation("Complete Dungeon");
+                EndExclusiveBotOperation(DungeonOperationName);
+                if (webViewLease != null)
+                {
+                    await webViewLease.ReleaseAsync();
+                }
             }
         }
 

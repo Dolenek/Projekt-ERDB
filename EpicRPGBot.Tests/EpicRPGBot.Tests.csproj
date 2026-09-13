@@ -77,6 +77,9 @@
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordCommandSendPolicy.cs" Link="Services\DiscordCommandSendPolicy.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordMessagePermalink.cs" Link="Services\DiscordMessagePermalink.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordTabRoleCatalog.cs" Link="Services\DiscordTabRoleCatalog.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordWebViewActivityReason.cs" Link="Services\DiscordWebViewActivityReason.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordWebViewDemandTracker.cs" Link="Services\DiscordWebViewDemandTracker.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordWebViewLifecycle.cs" Link="Services\DiscordWebViewLifecycle.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConsoleMessageNavigationRouter.cs" Link="Services\ConsoleMessageNavigationRouter.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordChannelMentionParser.cs" Link="Services\DiscordChannelMentionParser.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordScriptParsing.cs" Link="Services\DiscordScriptParsing.cs" />
@@ -91,6 +94,7 @@
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidMatchModes.cs" Link="Services\GuildRaidMatchModes.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidWatcherPolicy.cs" Link="Services\GuildRaidWatcherPolicy.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordChatClient.cs" Link="Services\IDiscordChatClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordMessageNavigator.cs" Link="Services\IDiscordMessageNavigator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDuelDiscordClient.cs" Link="Services\IDuelDiscordClient.cs" />

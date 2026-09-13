@@ -33,7 +33,11 @@ namespace EpicRPGBot.UI.Services
                 return false;
             }
 
-            route.SelectTab?.Invoke();
+            if (route.SelectTabAsync != null)
+            {
+                await route.SelectTabAsync(cancellationToken);
+            }
+
             return await route.Navigator.NavigateToMessageAsync(reference, cancellationToken);
         }
     }
@@ -42,16 +46,16 @@ namespace EpicRPGBot.UI.Services
     {
         public NavigationRoute(
             DiscordTabRole tabRole,
-            Action selectTab,
+            Func<CancellationToken, Task> selectTabAsync,
             IDiscordMessageNavigator navigator)
         {
             TabRole = tabRole;
-            SelectTab = selectTab;
+            SelectTabAsync = selectTabAsync;
             Navigator = navigator;
         }
 
         public DiscordTabRole TabRole { get; }
-        public Action SelectTab { get; }
+        public Func<CancellationToken, Task> SelectTabAsync { get; }
         public IDiscordMessageNavigator Navigator { get; }
     }
 }

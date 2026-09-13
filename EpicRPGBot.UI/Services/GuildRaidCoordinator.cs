@@ -42,41 +42,47 @@ namespace EpicRPGBot.UI.Services
             }
 
             _started = true;
-            await ApplySettingsAsync(_getCurrentSettings());
-            _poller.Start();
+            try
+            {
+                await ApplySettingsAsync(_getCurrentSettings());
+            }
+            catch
+            {
+                _started = false;
+                throw;
+            }
         }
 
         public void Stop()
         {
             _poller.Stop();
             _started = false;
+            ResetInactiveState();
         }
 
         public async Task ApplySettingsAsync(AppSettingsSnapshot settings)
         {
-            _currentSettings = settings ?? AppSettingsSnapshot.Default;
+            await _sendGate.WaitAsync();
+            try
+            {
+                await ApplySettingsCoreAsync(settings ?? AppSettingsSnapshot.Default);
+            }
+            finally
+            {
+                _sendGate.Release();
+            }
+        }
+
+        private async Task ApplySettingsCoreAsync(AppSettingsSnapshot settings)
+        {
+            _currentSettings = settings;
             if (!_started)
             {
                 return;
             }
 
-            if (!_currentSettings.IsGuildRaidConfigured())
+            if (!TryResolveActiveChannel(out var channelUrl))
             {
-                _activeChannelUrl = string.Empty;
-                _processor.Reset();
-                _outcomeWatch.Reset();
-                await _poller.CaptureCurrentMessageAsBaselineAsync();
-                ReportState("idle-incomplete", "Guild raid watcher idle: channel URL and trigger text are required.");
-                return;
-            }
-
-            if (!_currentSettings.TryResolveGuildRaidChannelUrl(out var channelUrl))
-            {
-                _activeChannelUrl = string.Empty;
-                _processor.Reset();
-                _outcomeWatch.Reset();
-                await _poller.CaptureCurrentMessageAsBaselineAsync();
-                ReportState("idle-invalid-url", "Guild raid watcher idle: enter a Discord channel URL.");
                 return;
             }
 
@@ -90,7 +96,47 @@ namespace EpicRPGBot.UI.Services
                 _poller.SkipNextDetectedMessage();
             }
 
+            _poller.Start();
             ReportState("watching", "Guild raid watcher ready.");
+        }
+
+        private bool TryResolveActiveChannel(out string channelUrl)
+        {
+            channelUrl = string.Empty;
+            if (!_currentSettings.GuildRaidWatcherActive)
+            {
+                SetIdle("disabled", "Guild raid watcher disabled.");
+                return false;
+            }
+
+            if (!_currentSettings.IsGuildRaidConfigured())
+            {
+                SetIdle("idle-incomplete", "Guild raid watcher idle: channel URL and trigger text are required.");
+                return false;
+            }
+
+            if (!_currentSettings.TryResolveGuildRaidChannelUrl(out channelUrl))
+            {
+                SetIdle("idle-invalid-url", "Guild raid watcher idle: enter a Discord channel URL.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private void SetIdle(string state, string message)
+        {
+            _poller.Stop();
+            ResetInactiveState();
+            ReportState(state, message);
+        }
+
+        private void ResetInactiveState()
+        {
+            _activeChannelUrl = string.Empty;
+            _processor.Reset();
+            _outcomeWatch.Reset();
+            _poller.ResetCursor();
         }
 
         public void Dispose()
@@ -116,6 +162,7 @@ namespace EpicRPGBot.UI.Services
             try
             {
                 if (!_started ||
+                    !_currentSettings.GuildRaidWatcherActive ||
                     !_currentSettings.IsGuildRaidConfigured() ||
                     !_currentSettings.TryResolveGuildRaidChannelUrl(out var channelUrl) ||
                     string.IsNullOrWhiteSpace(_activeChannelUrl) ||

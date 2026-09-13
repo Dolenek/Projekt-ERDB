@@ -77,7 +77,7 @@ Stable control IDs exposed by the UI:
 - `CardHandSettingsWindow`, `CardHandAutoPlayInput`, `CardHandLoadDeckButton`, `CardHandDeckStatus`, `CardHandSettingsCloseButton`
 - `CardHandSettingsMinimizeButton`, `CardHandSettingsMaximizeRestoreButton`, `CardHandSettingsWindowCloseButton`
 - `CardHandWeight{Reward}` for each of the nine reward types
-- `GuildRaidSettingsWindow`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
+- `GuildRaidSettingsWindow`, `GuildRaidSettingsActiveInput`, `GuildRaidSettingsChannelUrlInput`, `GuildRaidSettingsTriggerInput`, `GuildRaidSettingsMatchModeInput`, `GuildRaidSettingsAuthorFilterInput`, `GuildRaidSettingsCloseButton`
 - `GuildRaidSettingsMinimizeButton`, `GuildRaidSettingsMaximizeRestoreButton`, `GuildRaidSettingsWindowCloseButton`
 - `WorkCommandsWindow`, `WorkCommandsCloseButton`, `WorkCommandsMinimizeButton`, `WorkCommandsMaximizeRestoreButton`, `WorkCommandsWindowCloseButton`
 - `CraftingWindow`, `CraftEpicAmountInput`, `CraftSuperAmountInput`, `CraftMegaAmountInput`, `CraftHyperAmountInput`, `CraftUltraAmountInput`
@@ -91,7 +91,7 @@ Current assumptions:
 - The first version is for an interactive Windows desktop session only.
 - Discord authentication is still manual; the MCP server automates the already-logged-in embedded session.
 - Live Discord actions are allowed; there is no dedicated safe-mode channel restriction in the current implementation.
-- When two Discord tabs are open, MCP DevTools selection resolves the bot page via an injected tab-role marker instead of assuming the first Discord target is correct.
+- Bot and Player remain available as DevTools targets. Guild, Dungeon, and Duel targets exist only while selected or held by a workflow/watcher; target selection resolves each page via its injected tab-role marker.
 
 Shared-profile constraint:
 - Close the regular UI instance before launching the MCP-managed UI. Both currently use the same WebView2 user-data folder. Different debugging options on simultaneous instances can cause initialization failure `0x8007139F`. Restart the MCP-managed instance after releasing the profile.

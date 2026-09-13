@@ -36,6 +36,45 @@ public sealed class MainWindowUiSurfaceTests
     }
 
     [Fact]
+    public void BrowserTabsUseLazyDemandManagedHosts()
+    {
+        var document = LoadUiXaml("MainWindow.xaml");
+        var browserTabs = GetNamedElement(document, "BrowserTabs");
+        var hostNames = new[] { "PlayerWeb", "Web", "GuildWeb", "DungeonWeb", "DuelWeb" };
+
+        Assert.Equal("BrowserTabs_SelectionChanged", browserTabs.Attribute("SelectionChanged")?.Value);
+        Assert.Equal("Grid", GetNamedElement(document, "BackgroundBrowserParking").Name.LocalName);
+        Assert.All(hostNames, name =>
+            Assert.Equal("ContentControl", GetNamedElement(document, name).Name.LocalName));
+        Assert.DoesNotContain(document.Descendants(), element => element.Name.LocalName == "WebView2");
+
+        var sessionSource = LoadUiText(Path.Combine("Services", "DiscordWebViewSession.cs"));
+        var hostSource = LoadUiText(Path.Combine("Services", "DiscordWebViewSession.Lifecycle.cs"));
+        var lifecycleSource = LoadUiText(Path.Combine("Services", "DiscordWebViewLifecycle.cs"));
+        var browserSource = LoadUiText("MainWindow.Browser.cs");
+        Assert.Contains("webViewFactory.Create", sessionSource, StringComparison.Ordinal);
+        Assert.Contains("webView.Dispose()", hostSource, StringComparison.Ordinal);
+        Assert.Contains("RememberCurrentUrl(webView)", lifecycleSource, StringComparison.Ordinal);
+        Assert.Contains("KeepPlayerBrowserSessionActiveAsync", browserSource, StringComparison.Ordinal);
+        Assert.Contains("DiscordWebViewActivityReason.Permanent", browserSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BackgroundWorkflowsAndGuildWatcherHoldExplicitWebViewLeases()
+    {
+        var dungeonSource = LoadUiText("MainWindow.Dungeon.cs");
+        var duelSource = LoadUiText("MainWindow.Duel.cs");
+        var guildSource = LoadUiText("MainWindow.GuildRaid.cs");
+
+        Assert.Contains("_dungeonWebViewSession.AcquireAsync", dungeonSource);
+        Assert.Contains("await webViewLease.ReleaseAsync()", dungeonSource);
+        Assert.Contains("_duelWebViewSession.AcquireAsync", duelSource);
+        Assert.Contains("await webViewLease.ReleaseAsync()", duelSource);
+        Assert.Contains("_guildWebViewSession.AcquireAsync", guildSource);
+        Assert.Contains("await lease.ReleaseAsync()", guildSource);
+    }
+
+    [Fact]
     public void CooldownPanelUsesCompactReadyBadgeStyle()
     {
         var document = LoadUiXaml(Path.Combine("Controls", "CooldownPanelControl.xaml"));
@@ -107,7 +146,7 @@ public sealed class MainWindowUiSurfaceTests
         Assert.Contains("_isConsoleMessageNavigationRunning", handlerCode);
         Assert.DoesNotContain("ConsoleList.SelectedItem", handlerCode);
         Assert.Contains("CreatePlayerNavigationRoute(DiscordTabRole.Bot, playerNavigator)", handlerCode);
-        Assert.Contains("new NavigationRoute(sourceTabRole, SelectPlayerTab, playerNavigator)", handlerCode);
+        Assert.Contains("new NavigationRoute(sourceTabRole, SelectPlayerTabAsync, playerNavigator)", handlerCode);
         Assert.DoesNotContain("SelectBotTab, _botChatClient", handlerCode);
     }
 
@@ -117,7 +156,7 @@ public sealed class MainWindowUiSurfaceTests
         var requiredNames = new Dictionary<string, string[]>
         {
             ["WorkCommandsWindow.xaml"] = ["AutoBestBtn", "AutoBestProgress", "AutoBestStatusText", "CloseBtn", "MinimizeBtn", "MaximizeRestoreBtn", "CloseWindowBtn"],
-            ["GuildRaidSettingsWindow.xaml"] = ["GuildRaidChannelUrlBox", "GuildRaidTriggerTextBox", "GuildRaidMatchModeBox", "GuildRaidAuthorFilterBox", "CloseBtn"],
+            ["GuildRaidSettingsWindow.xaml"] = ["GuildRaidActiveCheckBox", "GuildRaidChannelUrlBox", "GuildRaidTriggerTextBox", "GuildRaidMatchModeBox", "GuildRaidAuthorFilterBox", "CloseBtn"],
             ["CardHandSettingsWindow.xaml"] = ["AutoPlayCheckBox", "LoadDeckButton", "DeckStatusText", "TimeCapsuleWeightBox", "CloseButton"]
         };
 
@@ -138,6 +177,13 @@ public sealed class MainWindowUiSurfaceTests
                 element.Attribute("HorizontalScrollBarVisibility")?.Value == "Disabled");
             Assert.All(dialog.Value, name => Assert.Contains(name, names));
         }
+
+        var guildSettingsCode = LoadUiText(Path.Combine(
+            "Settings",
+            "GuildRaidSettingsWindow.xaml.cs"));
+        Assert.Contains(
+            "SetAutomationIdentity(GuildRaidActiveCheckBox, \"GuildRaidSettingsActiveInput\")",
+            guildSettingsCode);
     }
 
     private static XDocument LoadUiXaml(string relativePath)

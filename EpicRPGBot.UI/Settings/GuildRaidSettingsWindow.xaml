@@ -70,6 +70,10 @@
                 <StackPanel>
                     <TextBlock Text="Watcher configuration" FontSize="16" FontWeight="SemiBold"
                                Margin="0,0,0,14"/>
+                    <CheckBox x:Name="GuildRaidActiveCheckBox" Content="Active" Margin="0,0,0,5"/>
+                    <TextBlock Text="Keep the Guild tab loaded and watch for matching messages."
+                               Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"
+                               Margin="24,0,0,14"/>
                     <TextBlock Text="Channel URL" Style="{StaticResource SettingsFieldLabelStyle}"/>
                     <TextBox x:Name="GuildRaidChannelUrlBox" Margin="0,0,0,12"/>
 

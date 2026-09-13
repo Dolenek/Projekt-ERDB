@@ -7,7 +7,6 @@
         xmlns:controls="clr-namespace:EpicRPGBot.UI.Controls"
         xmlns:models="clr-namespace:EpicRPGBot.UI.Models"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="EpicRPG Bot UI"
         Icon="/EpicRPGBot.UI;component/Assets/icon.png"
@@ -247,26 +246,34 @@
                     </Grid>
                 </Border>
 
-                <Grid Grid.Column="1" Background="{StaticResource AppBackgroundBrush}">
+                <Grid Grid.Column="1"
+                      Background="{StaticResource AppBackgroundBrush}"
+                      ClipToBounds="True">
+                    <Grid x:Name="BackgroundBrowserParking"
+                          Width="1600" Height="900"
+                          Margin="-2000,0,0,0"
+                          HorizontalAlignment="Left" VerticalAlignment="Top"
+                          IsHitTestVisible="False"/>
                     <TabControl x:Name="BrowserTabs"
                                 Background="{StaticResource AppBackgroundBrush}"
                                 BorderBrush="{StaticResource BorderBrush}"
                                 BorderThickness="0"
-                                SelectedIndex="0">
+                                SelectedIndex="0"
+                                SelectionChanged="BrowserTabs_SelectionChanged">
                         <TabItem x:Name="PlayerBrowserTab" Header="Player" Style="{StaticResource BrowserTabItemStyle}">
-                            <wv2:WebView2 x:Name="PlayerWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <ContentControl x:Name="PlayerWeb" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                         </TabItem>
                         <TabItem x:Name="BotBrowserTab" Header="Bot" Style="{StaticResource BrowserTabItemStyle}">
-                            <wv2:WebView2 x:Name="Web" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <ContentControl x:Name="Web" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                         </TabItem>
                         <TabItem x:Name="GuildBrowserTab" Header="Guild" Style="{StaticResource BrowserTabItemStyle}">
-                            <wv2:WebView2 x:Name="GuildWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <ContentControl x:Name="GuildWeb" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                         </TabItem>
                         <TabItem x:Name="DungeonBrowserTab" Header="Dungeon" Style="{StaticResource BrowserTabItemStyle}">
-                            <wv2:WebView2 x:Name="DungeonWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <ContentControl x:Name="DungeonWeb" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                         </TabItem>
                         <TabItem x:Name="DuelBrowserTab" Header="Duel" Style="{StaticResource BrowserTabItemStyle}">
-                            <wv2:WebView2 x:Name="DuelWeb" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <ContentControl x:Name="DuelWeb" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                         </TabItem>
                     </TabControl>
                     <Button x:Name="GoChannelBtn"
