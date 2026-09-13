@@ -15,7 +15,11 @@ namespace EpicRPGBot.UI
         private bool _guardSolveStartedForIncident;
 
         private bool IsGuardSolveActive => !string.IsNullOrWhiteSpace(_activeGuardMessageId);
-        private bool IsGuardIncidentActive => _guardIncidentTracker.IsActive || _guardSolveStartedForIncident || IsGuardSolveActive;
+        private bool IsGuardIncidentActive =>
+            _guardIncidentTracker.IsActive ||
+            _guardSolveStartedForIncident ||
+            IsGuardSolveActive ||
+            _guardedCommandRecovery.HasPendingIncident;
 
         private DiscordMessageSnapshot ResolveGuardTargetSnapshot(bool latestHasGuard, bool previousHasGuard)
         {

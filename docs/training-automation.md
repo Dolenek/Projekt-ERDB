@@ -6,7 +6,7 @@ Runtime behavior:
 - Training joins the same scheduler lane as hunt/adventure/work/farm/lootbox.
 - The engine sends `rpg tr` when the tracked training cooldown reaches ready.
 - Training replies are treated as fast prompt events after the confirmed `rpg tr` reply is received.
-- If EPIC GUARD interrupts `rpg tr`, a training prompt attached to the guard-clear message is handled directly. When the clear has no training result, the engine retries `rpg tr` before resuming other scheduled commands.
+- If EPIC GUARD interrupts `rpg tr`, the command is not sent again. The engine handles a training prompt attached to the guard-clear message or delivered as the next grouped EPIC RPG message.
 - The tracked `training` cooldown row is resynced from parsed `rpg cd` snapshots and time-cookie reductions.
 
 Supported prompt families:

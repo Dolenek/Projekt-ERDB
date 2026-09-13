@@ -43,6 +43,17 @@ namespace EpicRPGBot.UI.Services
             }
         }
 
+        public bool HasPendingIncident
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _currentIncident != null && !_currentIncident.IsCompleted;
+                }
+            }
+        }
+
         public string CompleteIncident(DiscordMessageSnapshot? continuationReply = null)
         {
             lock (_sync)
@@ -92,42 +103,26 @@ namespace EpicRPGBot.UI.Services
             Action<string>? reportRecovery,
             Action? recoveryFinished)
         {
-            var waitedForGuard = false;
+            GuardedCommandRecoveryRegistration? registration = null;
+            var result = await sendAttempt(detectedRecovery => registration = detectedRecovery);
+            if (registration == null)
+            {
+                return result;
+            }
+
             try
             {
-                while (true)
-                {
-                    GuardedCommandRecoveryRegistration? registration = null;
-                    var result = await sendAttempt(detectedRecovery => registration = detectedRecovery);
-                    if (registration == null)
-                    {
-                        return result;
-                    }
-
-                    waitedForGuard = true;
-                    var completion = await registration.Completion;
-                    ReleaseIncident(registration);
-                    var completedResult = ResolveCompletion(
-                        command,
-                        result,
-                        completion,
-                        reportRecovery);
-                    if (completedResult != null)
-                    {
-                        return completedResult;
-                    }
-                }
+                var completion = await registration.Completion;
+                ReleaseIncident(registration);
+                return ResolveCompletion(command, result, completion, reportRecovery);
             }
             finally
             {
-                if (waitedForGuard)
-                {
-                    recoveryFinished?.Invoke();
-                }
+                recoveryFinished?.Invoke();
             }
         }
 
-        private static ConfirmedCommandSendResult? ResolveCompletion(
+        private static ConfirmedCommandSendResult ResolveCompletion(
             string command,
             ConfirmedCommandSendResult guardResult,
             GuardedCommandRecoveryCompletion completion,
@@ -141,18 +136,12 @@ namespace EpicRPGBot.UI.Services
                     guardResult.AttemptCount);
             }
 
-            if (completion.ContinuationReply != null)
-            {
-                reportRecovery?.Invoke(
-                    $"Guard clear completed interrupted '{command}' without a retry.");
-                return new ConfirmedCommandSendResult(
-                    guardResult.OutgoingMessage,
-                    completion.ContinuationReply,
-                    guardResult.AttemptCount);
-            }
-
-            reportRecovery?.Invoke($"Retrying interrupted '{command}' after EPIC GUARD clear.");
-            return null;
+            reportRecovery?.Invoke(
+                $"Guard clear completed interrupted '{command}' without resending it.");
+            return new ConfirmedCommandSendResult(
+                guardResult.OutgoingMessage,
+                completion.ContinuationReply ?? guardResult.ReplyMessage,
+                guardResult.AttemptCount);
         }
 
         private void ReleaseIncident(GuardedCommandRecoveryRegistration registration)

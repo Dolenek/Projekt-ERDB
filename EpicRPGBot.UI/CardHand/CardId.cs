@@ -67,7 +67,7 @@ namespace EpicRPGBot.UI.CardHand
 
         private static bool IsJokerLabel(string value)
         {
-            return value == "JOKER" || value == "JKR" || value == "🃏";
+            return value == "JOKER" || value == "JKR" || value == "EN" || value == "🃏";
         }
 
         private static bool TryParseSuit(char value, out CardSuit suit)

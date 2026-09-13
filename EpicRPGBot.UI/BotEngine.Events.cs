@@ -28,10 +28,14 @@ namespace EpicRPGBot.UI
                 _lastMessageSnapshot = snapshot;
             }
 
-            OnMessageSeen?.Invoke(snapshot);
-            if (ShouldApplySnapshotToScheduler(snapshot))
+            var deferGuardContinuation = ShouldDeferGuardContinuation(snapshot);
+            if (!deferGuardContinuation)
             {
-                _scheduler.HandleResponse(snapshot, _running);
+                OnMessageSeen?.Invoke(snapshot);
+                if (ShouldApplySnapshotToScheduler(snapshot))
+                {
+                    _scheduler.HandleResponse(snapshot, _running);
+                }
             }
             EventCheck(snapshot);
         }
@@ -40,7 +44,7 @@ namespace EpicRPGBot.UI
         {
             var msg = snapshot?.Text ?? string.Empty;
             HandleGuardMessage(snapshot);
-            if (IsGuardIncidentActive)
+            if (IsGuardIncidentActive || ShouldDeferGuardContinuation(snapshot))
             {
                 _previousMessageText = msg;
                 return;

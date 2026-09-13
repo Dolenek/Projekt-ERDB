@@ -36,7 +36,7 @@ Runtime scheduling:
 - After a parsed `rpg cd` snapshot or time-cookie reduction, all automated tracked scheduling, including card hand, is resynced from the tracked cooldown state.
 - Card hand arms a 24-hour fallback after an accepted game. A server `wait at least` reply and later cooldown snapshots override it.
 - The `Time cookie` workflow reuses that same tracked scheduling so normal automated commands can finish before and after each `rpg use time cookie`.
-- Incoming Discord messages are deduplicated by message id so cooldown snapshots and time-cookie reductions are only applied once.
+- Incoming Discord message revisions are deduplicated by message id and content, so unchanged snapshots apply once while an edited or separately grouped guard result can still update cooldowns.
 
 Alias mapping preserved in the current app:
 - `quest` and `epic quest` map to the same label.

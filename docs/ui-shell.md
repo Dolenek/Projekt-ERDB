@@ -60,7 +60,7 @@ User-visible behaviors:
 - When the UI sees an EPIC RPG profile message containing `Area: ... (Max: X)`, it updates the saved configured area to `X`.
 - `Initialize` also refreshes the cached profile player name from `rpg p`.
 - Puzzle detection keeps the current tab and window focus by default while sound and system notifications continue. The settings window can opt into selecting the relevant guard tab and activating the app on first detection.
-- The last-message/cooldown pipeline deduplicates Discord messages by message id so snapshots and time-cookie reductions are not applied twice.
+- The last-message/cooldown pipeline deduplicates unchanged Discord message revisions while still accepting an edited guard result or its separately grouped follow-up message.
 
 Sidebar data:
 - `Messages` shows the rolling last 5 detected channel messages with timestamps.

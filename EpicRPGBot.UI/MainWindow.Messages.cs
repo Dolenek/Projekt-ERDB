@@ -18,7 +18,7 @@ namespace EpicRPGBot.UI
         {
             if (snapshot == null ||
                 string.IsNullOrWhiteSpace(snapshot.Id) ||
-                !TryRememberProcessedMessage(snapshot.Id))
+                !TryRememberProcessedMessage(snapshot))
             {
                 return;
             }
@@ -55,20 +55,31 @@ namespace EpicRPGBot.UI
             TryUpdateConfiguredAreaFromProfile(snapshot.Text, messageReference);
         }
 
-        private bool TryRememberProcessedMessage(string messageId)
+        private bool TryRememberProcessedMessage(DiscordMessageSnapshot snapshot)
         {
-            if (!_processedMessageIds.Add(messageId))
+            var revision = BuildMessageRevision(snapshot);
+            if (!_processedMessageRevisions.Add(revision))
             {
                 return false;
             }
 
-            _processedMessageOrder.Enqueue(messageId);
-            while (_processedMessageOrder.Count > ProcessedMessageLimit)
+            _processedMessageRevisionOrder.Enqueue(revision);
+            while (_processedMessageRevisionOrder.Count > ProcessedMessageLimit)
             {
-                _processedMessageIds.Remove(_processedMessageOrder.Dequeue());
+                _processedMessageRevisions.Remove(_processedMessageRevisionOrder.Dequeue());
             }
 
             return true;
+        }
+
+        private static string BuildMessageRevision(DiscordMessageSnapshot snapshot)
+        {
+            return string.Concat(
+                snapshot?.Id ?? string.Empty,
+                "\n",
+                snapshot?.Text ?? string.Empty,
+                "\n",
+                snapshot?.RenderedText ?? string.Empty);
         }
 
         private bool TryStopEngineForPreviousCommandBusy(DiscordMessageSnapshot snapshot)

@@ -7,31 +7,31 @@ namespace EpicRPGBot.Tests.Services
     public sealed class GuardedCommandRecoveryCoordinatorTests
     {
         [Fact]
-        public async Task ExecuteAsync_GuardClear_RetriesAndReturnsFinalReply()
+        public async Task ExecuteAsync_FarmGuardClear_DoesNotResendFarmCommand()
         {
             var coordinator = new GuardedCommandRecoveryCoordinator();
             var attempts = 0;
             var recoveryFinished = 0;
+            var clearReply = new DiscordMessageSnapshot(
+                "clear-1",
+                "EPIC GUARD: Everything seems fine firendr, keep playing\n" +
+                "firendr plants seed in the ground...\n" +
+                "55 carrot have grown from the seed");
 
             var result = await coordinator.ExecuteAsync(
-                "rpg tr",
+                "rpg farm",
                 registerGuard =>
                 {
                     attempts++;
-                    if (attempts == 1)
-                    {
-                        registerGuard(coordinator.ObserveIncident("guard-1", "rpg tr"));
-                        coordinator.CompleteIncident();
-                        return Task.FromResult(Result("out-1", "guard-1", "EPIC GUARD: stop there,"));
-                    }
-
-                    return Task.FromResult(Result("out-2", "reply-2", "is training in"));
+                    registerGuard(coordinator.ObserveIncident("guard-1", "rpg farm"));
+                    coordinator.CompleteIncident(clearReply);
+                    return Task.FromResult(Result("out-1", "guard-1", "EPIC GUARD: stop there,"));
                 },
                 null,
                 () => recoveryFinished++);
 
-            Assert.Equal(2, attempts);
-            Assert.Equal("reply-2", result.ReplyMessage?.Id);
+            Assert.Equal(1, attempts);
+            Assert.Same(clearReply, result.ReplyMessage);
             Assert.Equal(1, recoveryFinished);
         }
 
@@ -80,7 +80,7 @@ namespace EpicRPGBot.Tests.Services
         }
 
         [Fact]
-        public async Task ExecuteAsync_SecondGuard_RetriesUntilNormalReply()
+        public async Task ExecuteAsync_ClearWithoutContinuation_DoesNotResend()
         {
             var coordinator = new GuardedCommandRecoveryCoordinator();
             var attempts = 0;
@@ -90,21 +90,15 @@ namespace EpicRPGBot.Tests.Services
                 registerGuard =>
                 {
                     attempts++;
-                    if (attempts <= 2)
-                    {
-                        var guardId = "guard-" + attempts;
-                        registerGuard(coordinator.ObserveIncident(guardId, "rpg tr"));
-                        coordinator.CompleteIncident();
-                        return Task.FromResult(Result("out-" + attempts, guardId, "EPIC GUARD: stop there,"));
-                    }
-
-                    return Task.FromResult(Result("out-3", "reply-3", "is training in"));
+                    registerGuard(coordinator.ObserveIncident("guard-1", "rpg tr"));
+                    coordinator.CompleteIncident();
+                    return Task.FromResult(Result("out-1", "guard-1", "EPIC GUARD: stop there,"));
                 },
                 null,
                 null);
 
-            Assert.Equal(3, attempts);
-            Assert.Equal("reply-3", result.ReplyMessage?.Id);
+            Assert.Equal(1, attempts);
+            Assert.Equal("guard-1", result.ReplyMessage?.Id);
         }
 
         [Fact]
@@ -121,63 +115,33 @@ namespace EpicRPGBot.Tests.Services
         }
 
         [Fact]
-        public async Task ExecuteAsync_InlineClearReply_ReturnsItWithoutRetry()
+        public async Task ExecuteAsync_TimeCookieGuard_DoesNotResendAndReturnsReduction()
         {
             var coordinator = new GuardedCommandRecoveryCoordinator();
             var attempts = 0;
             var clearReply = new DiscordMessageSnapshot(
                 "clear-1",
                 "EPIC GUARD: Everything seems fine firendr, keep playing\n" +
-                "firendr is training in the river! You have 15 seconds!");
-
-            var result = await coordinator.ExecuteAsync(
-                "rpg tr",
-                registerGuard =>
-                {
-                    attempts++;
-                    registerGuard(coordinator.ObserveIncident("guard-1", "rpg tr"));
-                    coordinator.CompleteIncident(clearReply);
-                    return Task.FromResult(Result("out-1", "guard-1", "EPIC GUARD: stop there,"));
-                },
-                null,
-                null);
-
-            Assert.Equal(1, attempts);
-            Assert.Same(clearReply, result.ReplyMessage);
-        }
-
-        [Fact]
-        public async Task ExecuteAsync_TimeCookieGuard_RetriesAndReturnsReduction()
-        {
-            var coordinator = new GuardedCommandRecoveryCoordinator();
-            var attempts = 0;
+                "You ate a time cookie and jumped 12 minute(s) ahead.");
 
             var result = await coordinator.ExecuteAsync(
                 "rpg use time cookie",
                 registerGuard =>
                 {
                     attempts++;
-                    if (attempts == 1)
-                    {
-                        registerGuard(coordinator.ObserveIncident(
-                            "guard-1",
-                            "rpg use time cookie"));
-                        coordinator.CompleteIncident();
-                        return Task.FromResult(Result(
-                            "out-1",
-                            "guard-1",
-                            "EPIC GUARD: stop there,"));
-                    }
-
+                    registerGuard(coordinator.ObserveIncident(
+                        "guard-1",
+                        "rpg use time cookie"));
+                    coordinator.CompleteIncident(clearReply);
                     return Task.FromResult(Result(
-                        "out-2",
-                        "reply-2",
-                        "You ate a time cookie and jumped 12 minute(s) ahead."));
+                        "out-1",
+                        "guard-1",
+                        "EPIC GUARD: stop there,"));
                 },
                 null,
                 null);
 
-            Assert.Equal(2, attempts);
+            Assert.Equal(1, attempts);
             Assert.Contains("12 minute(s) ahead", result.ReplyMessage.Text);
         }
 

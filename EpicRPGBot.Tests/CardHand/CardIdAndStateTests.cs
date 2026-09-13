@@ -27,6 +27,17 @@ public sealed class CardIdAndStateTests
         Assert.Equal(code, card.ToString());
     }
 
+    [Theory]
+    [InlineData("EN")]
+    [InlineData("JKR")]
+    [InlineData("🃏")]
+    public void JokerAliases_ParseAsTheSingleJoker(string label)
+    {
+        Assert.True(CardId.TryParse(label, out var card));
+        Assert.Equal(CardId.Joker, card);
+        Assert.Equal("JOKER", card.ToString());
+    }
+
     [Fact]
     public void Pass_AddsOneCardWithoutDiscarding()
     {

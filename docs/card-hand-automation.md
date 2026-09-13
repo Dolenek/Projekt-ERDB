@@ -5,7 +5,7 @@ Card hand is a tracked, opt-out automation. While `Start Bot` is active and `Aut
 ## Game model
 
 - The draw pool contains the 52 standard cards and one Joker.
-- Button labels use suit first, such as `H2`, `DK`, and `SA`; `pass` is an action and `hands` is ignored.
+- Button labels use suit first, such as `H2`, `DK`, and `SA`; EPIC RPG's `EN` button identifies the Joker, `pass` is an action, and `hands` is ignored.
 - A pass keeps the visible hand and draws one unseen card.
 - Selecting a card discards it permanently and draws two distinct unseen cards.
 - Joker is suitless and non-wild. It only has special meaning in Four Aces plus Joker.

@@ -25,6 +25,22 @@ public sealed class CardHandPromptParserTests
     }
 
     [Fact]
+    public void Parse_RecognizesEpicEnButtonAsJoker()
+    {
+        var snapshot = Message(
+            Button("EN", 0),
+            Button("CQ", 1),
+            Button("pass", 2),
+            Button("hands", 3));
+
+        var result = new CardHandPromptParser().Parse(snapshot);
+
+        Assert.True(result.IsValid, result.Error);
+        Assert.Contains(CardId.Joker, result.Cards);
+        Assert.Contains(result.Cards, card => card.ToString() == "CQ");
+    }
+
+    [Fact]
     public void Parse_RejectsDuplicateCardButtons()
     {
         var result = new CardHandPromptParser().Parse(Message(

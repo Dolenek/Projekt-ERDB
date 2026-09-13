@@ -46,8 +46,8 @@ namespace EpicRPGBot.UI
         private readonly WishingTokenWorkflow _wishingTokenWorkflow;
         private readonly CardDeckImportWorkflow _cardDeckImportWorkflow;
         private readonly AutoBestWorkCommandWorkflow _autoBestWorkCommandWorkflow;
-        private readonly HashSet<string> _processedMessageIds = new HashSet<string>(StringComparer.Ordinal);
-        private readonly Queue<string> _processedMessageOrder = new Queue<string>();
+        private readonly HashSet<string> _processedMessageRevisions = new HashSet<string>(StringComparer.Ordinal);
+        private readonly Queue<string> _processedMessageRevisionOrder = new Queue<string>();
 
         private BotEngine _engine;
         private bool _isAreaTradeRunning;
