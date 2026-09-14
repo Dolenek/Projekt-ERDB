@@ -6,6 +6,19 @@ namespace EpicRPGBot.Tests.Services;
 public sealed class DiscordWebViewDemandTrackerTests
 {
     [Fact]
+    public void RemovingSelectionKeepsEngineDemandActive()
+    {
+        var tracker = new DiscordWebViewDemandTracker();
+        tracker.Set(DiscordWebViewActivityReason.Selected, true);
+        tracker.Set(DiscordWebViewActivityReason.Engine, true);
+
+        tracker.Set(DiscordWebViewActivityReason.Selected, false);
+
+        Assert.True(tracker.HasDemand);
+        Assert.Equal(1, tracker.GetCount(DiscordWebViewActivityReason.Engine));
+    }
+
+    [Fact]
     public void RemovingSelectionKeepsPermanentDemandActive()
     {
         var tracker = new DiscordWebViewDemandTracker();

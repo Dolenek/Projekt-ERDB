@@ -12,6 +12,12 @@ namespace EpicRPGBot.UI
 
         private async void WishingTokenBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
+            {
             if (_isWishingTokenRunning)
             {
                 RequestWishingTokenStop();
@@ -31,6 +37,13 @@ namespace EpicRPGBot.UI
             }
 
             await RunWishingTokenLoopAsync();
+            }
+            finally
+            {
+                await ReleaseStoppedEngineDemandAsync();
+                await browserLease.ReleaseAsync();
+            }
+            }
         }
 
         private async Task RunWishingTokenLoopAsync()

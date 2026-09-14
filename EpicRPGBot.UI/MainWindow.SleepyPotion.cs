@@ -11,6 +11,12 @@ namespace EpicRPGBot.UI
 
         private async void SleepyPotionBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
+            {
             if (_isSleepyPotionRunning)
             {
                 RequestSleepyPotionStop();
@@ -30,6 +36,13 @@ namespace EpicRPGBot.UI
             }
 
             await RunSleepyPotionAsync();
+            }
+            finally
+            {
+                await ReleaseStoppedEngineDemandAsync();
+                await browserLease.ReleaseAsync();
+            }
+            }
         }
 
         private async Task RunSleepyPotionAsync()

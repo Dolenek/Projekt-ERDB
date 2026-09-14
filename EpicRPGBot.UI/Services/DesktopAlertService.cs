@@ -25,7 +25,7 @@ namespace EpicRPGBot.UI.Services
         }
 
         public void ShowGuardAlert(Window window, GuardAlertNotification notification,
-            bool bringToForeground)
+            bool bringToForeground, string accountName = null)
         {
             if (notification == null)
             {
@@ -39,7 +39,7 @@ namespace EpicRPGBot.UI.Services
 
             if (notification.ShouldShowBalloon)
             {
-                ShowBalloon(notification);
+                ShowBalloon(notification, accountName);
             }
 
             if (bringToForeground && notification.ShouldBringToFront)
@@ -87,11 +87,12 @@ namespace EpicRPGBot.UI.Services
 
         }
 
-        private void ShowBalloon(GuardAlertNotification notification)
+        private void ShowBalloon(GuardAlertNotification notification, string accountName)
         {
-            var title = notification.Kind == GuardAlertKind.Reminder
+            var titlePrefix = string.IsNullOrWhiteSpace(accountName) ? string.Empty : accountName + ": ";
+            var title = titlePrefix + (notification.Kind == GuardAlertKind.Reminder
                 ? "EPIC GUARD still active"
-                : "EPIC GUARD detected";
+                : "EPIC GUARD detected");
             var message = notification.Kind == GuardAlertKind.Reminder
                 ? "Puzzle check is still active. Review the bot window when available."
                 : "Puzzle check detected. Review the bot window now.";

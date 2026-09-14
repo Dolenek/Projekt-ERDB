@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using EpicRPGBot.UI.AreaTrading;
+using EpicRPGBot.UI.Accounts;
 using EpicRPGBot.UI.CardHand;
 using EpicRPGBot.UI.Crafting;
 using EpicRPGBot.UI.Dismantling;
@@ -20,104 +21,21 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow : Window
     {
-        private readonly InMemoryLog _log = new InMemoryLog();
-        private readonly LastMessagesBuffer _last = new LastMessagesBuffer(5);
-        private readonly IDiscordChatClient _botChatClient;
-        private readonly IDiscordChatClient _playerChatClient;
-        private readonly IDiscordChatClient _guildChatClient;
-        private readonly IDiscordChatClient _dungeonChatClient;
-        private readonly IDuelDiscordClient _duelChatClient;
-        private readonly DiscordWebViewSession _botWebViewSession;
-        private readonly DiscordWebViewSession _playerWebViewSession;
-        private readonly DiscordWebViewSession _guildWebViewSession;
-        private readonly DiscordWebViewSession _dungeonWebViewSession;
-        private readonly DiscordWebViewSession _duelWebViewSession;
-        private readonly ConsoleMessageNavigationRouter _consoleMessageNavigationRouter;
-        private readonly ConfirmedCommandSender _confirmedCommandSender;
-        private readonly ConfirmedCommandSender _dungeonConfirmedCommandSender;
-        private readonly AppSettingsService _settingsService;
-        private readonly CooldownTracker _cooldownTracker;
-        private readonly CooldownInitializationWorkflow _cooldownWorkflow;
         private readonly PuzzleSelfTestRunner _puzzleSelfTestRunner;
         private readonly DesktopAlertService _alertService;
-        private readonly ChatMessagePoller _messagePoller;
-        private readonly GuildRaidCoordinator _guildRaidCoordinator;
-        private readonly LogCraftingWorkflow _logCraftingWorkflow;
-        private readonly DismantlingWorkflow _dismantlingWorkflow;
-        private readonly AreaTradeWorkflow _areaTradeWorkflow;
-        private readonly CompleteDungeonRunCoordinator _completeDungeonRunCoordinator;
-        private readonly DungeonWorkflow _dungeonWorkflow;
-        private readonly DuelWorkflow _duelWorkflow;
-        private readonly WishingTokenWorkflow _wishingTokenWorkflow;
-        private readonly CardDeckImportWorkflow _cardDeckImportWorkflow;
-        private readonly AutoBestWorkCommandWorkflow _autoBestWorkCommandWorkflow;
-        private readonly HashSet<string> _processedMessageRevisions = new HashSet<string>(StringComparer.Ordinal);
-        private readonly Queue<string> _processedMessageRevisionOrder = new Queue<string>();
-
-        private BotEngine _engine;
-        private bool _isAreaTradeRunning;
-        private bool _isDungeonRunning;
-        private bool _isDuelRunning;
-        private bool _isSleepyPotionRunning;
-        private bool _isTimeCookieRunning;
-        private bool _isWishingTokenRunning;
-        private TimeCookieTarget? _activeTimeCookieTarget;
-        private CancellationTokenSource _dungeonCancellation;
-        private CancellationTokenSource _duelCancellation;
-        private CancellationTokenSource _sleepyPotionCancellation;
-        private CancellationTokenSource _timeCookieCancellation;
-        private CancellationTokenSource _wishingTokenCancellation;
         private Grid _lastMessagesPanel;
 
-        public MainWindow()
+        public MainWindow() : this(new AccountRegistry(), new AccountRuntimeFactory())
+        {
+        }
+
+        internal MainWindow(AccountRegistry accountRegistry, IAccountRuntimeFactory accountRuntimeFactory)
         {
             InitializeComponent();
             ApplyAutomationSurface();
-
-            _settingsService = new AppSettingsService(new LocalSettingsStore());
-            _botWebViewSession = DiscordWebViewSession.Create(
-                Web, BackgroundBrowserParking, "bot", GetChannelUrl, null, out var botChatClient);
-            _playerWebViewSession = DiscordWebViewSession.Create(
-                PlayerWeb, BackgroundBrowserParking, "player", GetChannelUrl, null, out var playerChatClient);
-            _guildWebViewSession = DiscordWebViewSession.Create(
-                GuildWeb, BackgroundBrowserParking, "guild", GetGuildInitialUrl, null, out var guildChatClient);
-            _dungeonWebViewSession = DiscordWebViewSession.Create(
-                DungeonWeb, BackgroundBrowserParking, "dungeon", GetDungeonInitialUrl, null, out var dungeonChatClient);
-            _duelWebViewSession = DiscordWebViewSession.Create(
-                DuelWeb,
-                BackgroundBrowserParking,
-                "duel",
-                () => DuelChannelCatalog.OutgoingDuelChannelUrl,
-                message => _log.Info("[duel] " + message),
-                out var duelChatClient);
-            _botChatClient = botChatClient;
-            _playerChatClient = playerChatClient;
-            _guildChatClient = guildChatClient;
-            _dungeonChatClient = dungeonChatClient;
-            _duelChatClient = duelChatClient;
-            _consoleMessageNavigationRouter = CreateConsoleMessageNavigationRouter();
-            _confirmedCommandSender = new ConfirmedCommandSender(_botChatClient);
-            _dungeonConfirmedCommandSender = new ConfirmedCommandSender(_dungeonChatClient);
-            _cooldownTracker = new CooldownTracker(CooldownVisual);
-            _cooldownWorkflow = new CooldownInitializationWorkflow(_botChatClient, _cooldownTracker, _settingsService);
-            _logCraftingWorkflow = new LogCraftingWorkflow(_confirmedCommandSender);
-            _dismantlingWorkflow = new DismantlingWorkflow(_confirmedCommandSender);
-            _areaTradeWorkflow = new AreaTradeWorkflow(_confirmedCommandSender, _dismantlingWorkflow, _settingsService, GetCurrentSettings);
-            _completeDungeonRunCoordinator = new CompleteDungeonRunCoordinator();
-            _dungeonWorkflow = new DungeonWorkflow(_dungeonChatClient, _dungeonConfirmedCommandSender, _settingsService, GetCurrentSettings);
-            _duelWorkflow = new DuelWorkflow(
-                _duelChatClient,
-                _botChatClient,
-                _confirmedCommandSender,
-                _settingsService);
-            _wishingTokenWorkflow = new WishingTokenWorkflow(_botChatClient, _confirmedCommandSender);
-            _cardDeckImportWorkflow = new CardDeckImportWorkflow(_botChatClient);
-            _autoBestWorkCommandWorkflow = new AutoBestWorkCommandWorkflow(_botChatClient);
             _puzzleSelfTestRunner = new PuzzleSelfTestRunner();
             _alertService = new DesktopAlertService();
-            _messagePoller = new ChatMessagePoller(_botChatClient);
-            _guildRaidCoordinator = new GuildRaidCoordinator(_guildChatClient, GetCurrentSettings);
-            _messagePoller.MessageDetected += OnPolledMessage;
+            InitializeAccountRuntimes(accountRegistry, accountRuntimeFactory);
 
             Loaded += MainWindow_Loaded;
             Closed += MainWindow_Closed;
@@ -128,15 +46,10 @@ namespace EpicRPGBot.UI
             WindowWorkAreaChrome.ConstrainToWorkArea(this);
             Env.Load();
             BindUiState();
-            _cooldownTracker.Start();
 
             _log.Engine("UI loaded");
             await RunPuzzleSelfTestIfRequestedAsync();
-            await InitializeBrowsersAsync();
-            HookGuildRaidSettings();
-            HookAppSettings();
-            await StartGuildRaidWatcherAsync();
-            _messagePoller.Start();
+            await StartAccountRuntimesAsync();
         }
 
         private void BindUiState()
@@ -164,26 +77,9 @@ namespace EpicRPGBot.UI
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
-            _dungeonCancellation?.Cancel();
-            _duelCancellation?.Cancel();
-            _sleepyPotionCancellation?.Cancel();
-            _timeCookieCancellation?.Cancel();
-            _wishingTokenCancellation?.Cancel();
-            _messagePoller.Stop();
-            UnhookGuildRaidSettings();
-            UnhookAppSettings();
-            _guildRaidCoordinator.Dispose();
-            _ = _guildWatcherWebViewLease?.ReleaseAsync();
-            _guildWatcherWebViewLease = null;
-            _engine?.Stop();
-            _cooldownTracker.Stop();
             ReleaseStatsUi();
             _alertService.Dispose();
-            _botWebViewSession.Dispose();
-            _playerWebViewSession.Dispose();
-            _guildWebViewSession.Dispose();
-            _dungeonWebViewSession.Dispose();
-            _duelWebViewSession.Dispose();
+            DisposeAccountRuntimes();
         }
     }
 }

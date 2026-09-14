@@ -16,12 +16,12 @@ namespace EpicRPGBot.UI
         private TextBlock _runningRewardsText;
         private TextBlock _runningExperienceText;
         private TextBlock _runningProgressText;
-        private int _huntCount;
-        private int _adventureCount;
-        private int _trainingCount;
-        private int _workCount;
-        private int _farmCount;
-        private int _lootboxCount;
+        private int _huntCount { get => CurrentAccount.HuntCount; set => CurrentAccount.HuntCount = value; }
+        private int _adventureCount { get => CurrentAccount.AdventureCount; set => CurrentAccount.AdventureCount = value; }
+        private int _trainingCount { get => CurrentAccount.TrainingCount; set => CurrentAccount.TrainingCount = value; }
+        private int _workCount { get => CurrentAccount.WorkCount; set => CurrentAccount.WorkCount = value; }
+        private int _farmCount { get => CurrentAccount.FarmCount; set => CurrentAccount.FarmCount = value; }
+        private int _lootboxCount { get => CurrentAccount.LootboxCount; set => CurrentAccount.LootboxCount = value; }
 
         private void BindStatsUi()
         {
@@ -36,14 +36,12 @@ namespace EpicRPGBot.UI
             _runningExperienceText = FindName("RunningExperienceText") as TextBlock;
             _runningProgressText = FindName("RunningProgressText") as TextBlock;
 
-            _cooldownTracker.StatsChanged += OnCooldownStatsChanged;
             UpdateSentCountTexts();
             ApplyCooldownStats(_cooldownTracker.GetStatsSnapshot());
         }
 
         private void ReleaseStatsUi()
         {
-            _cooldownTracker.StatsChanged -= OnCooldownStatsChanged;
         }
 
         private void TrackSentCommandStats(string command)
@@ -82,7 +80,7 @@ namespace EpicRPGBot.UI
 
         private void ApplyCooldownStats(CooldownStatsSnapshot snapshot)
         {
-            if (snapshot == null)
+            if (snapshot == null || !ReferenceEquals(CurrentAccount, _activeAccountRuntime))
             {
                 return;
             }
@@ -95,6 +93,7 @@ namespace EpicRPGBot.UI
 
         private void UpdateSentCountTexts()
         {
+            if (!ReferenceEquals(CurrentAccount, _activeAccountRuntime)) return;
             SetStatText(_huntCountText, $"Hunt sent: {_huntCount}");
             SetStatText(_adventureCountText, $"Adventure sent: {_adventureCount}");
             SetStatText(_trainingCountText, $"Training sent: {_trainingCount}");

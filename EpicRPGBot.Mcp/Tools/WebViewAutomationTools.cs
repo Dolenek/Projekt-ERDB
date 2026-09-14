@@ -19,45 +19,50 @@ public sealed class WebViewAutomationTools
 
     [McpServerTool, Description("Evaluate JavaScript inside the Discord WebView2 page and return the JSON result.")]
     public Task<WebViewEvalResult> webview_eval(
+        [Description("Stable account id shown in the account registry.")] string accountId,
         [Description("A JavaScript expression to evaluate.")] string script)
     {
-        return RunEvalAsync(script);
+        return RunEvalAsync(accountId, script);
     }
 
     [McpServerTool, Description("Capture a screenshot of the Discord WebView2 page through DevTools.")]
-    public Task<ImageArtifactResult> webview_capture()
+    public Task<ImageArtifactResult> webview_capture(
+        [Description("Stable account id shown in the account registry.")] string accountId)
     {
-        return RunCaptureAsync();
+        return RunCaptureAsync(accountId);
     }
 
-    [McpServerTool, Description("Read the current Discord WebView debug state, including URL, title, ready state, tab role, and a short body preview.")]
-    public Task<WebViewDebugStateResult> read_webview_debug_state()
+    [McpServerTool, Description("Read the targeted Discord WebView state, including URL, title, account id, tab role, ready state, and body preview.")]
+    public Task<WebViewDebugStateResult> read_webview_debug_state(
+        [Description("Stable account id shown in the account registry.")] string accountId)
     {
-        return RunDebugStateAsync();
+        return RunDebugStateAsync(accountId);
     }
 
     [McpServerTool, Description("Read recent Discord WebView messages as parsed {id, author, text} snapshots.")]
     public Task<WebViewMessagesResult> read_recent_webview_messages(
+        [Description("Stable account id shown in the account registry.")] string accountId,
         [Description("Maximum number of recent messages to return.")] int limit = 10)
     {
-        return RunReadMessagesAsync(limit);
+        return RunReadMessagesAsync(accountId, limit);
     }
 
     [McpServerTool, Description("Wait for a Discord WebView message matching the provided author/text filters.")]
     public Task<WebViewWaitResult> wait_for_webview_message(
+        [Description("Stable account id shown in the account registry.")] string accountId,
         [Description("Optional substring expected in the author name.")] string authorContains = "",
         [Description("Optional substring expected in the message text.")] string textContains = "",
         [Description("Optional message id after which the match must appear.")] string afterId = "",
         [Description("Maximum wait time in milliseconds.")] int timeoutMs = 10000)
     {
-        return RunWaitForMessageAsync(authorContains, textContains, afterId, timeoutMs);
+        return RunWaitForMessageAsync(accountId, authorContains, textContains, afterId, timeoutMs);
     }
 
-    private async Task<WebViewEvalResult> RunEvalAsync(string script)
+    private async Task<WebViewEvalResult> RunEvalAsync(string accountId, string script)
     {
         try
         {
-            return (await _devTools.EvaluateAsync(script)) with { Status = _session.GetStatus() };
+            return (await _devTools.EvaluateAsync(accountId, script)) with { Status = _session.GetStatus() };
         }
         catch (Exception ex)
         {
@@ -65,11 +70,11 @@ public sealed class WebViewAutomationTools
         }
     }
 
-    private async Task<ImageArtifactResult> RunCaptureAsync()
+    private async Task<ImageArtifactResult> RunCaptureAsync(string accountId)
     {
         try
         {
-            return (await _devTools.CaptureAsync()) with { Status = _session.GetStatus() };
+            return (await _devTools.CaptureAsync(accountId)) with { Status = _session.GetStatus() };
         }
         catch (Exception ex)
         {
@@ -77,23 +82,24 @@ public sealed class WebViewAutomationTools
         }
     }
 
-    private async Task<WebViewDebugStateResult> RunDebugStateAsync()
+    private async Task<WebViewDebugStateResult> RunDebugStateAsync(string accountId)
     {
         try
         {
-            return (await _devTools.ReadDebugStateAsync()) with { Status = _session.GetStatus() };
+            return (await _devTools.ReadDebugStateAsync(accountId)) with { Status = _session.GetStatus() };
         }
         catch (Exception ex)
         {
-            return new WebViewDebugStateResult(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, ex.Message, _session.GetStatus());
+            return new WebViewDebugStateResult(string.Empty, string.Empty, string.Empty,
+                string.Empty, string.Empty, string.Empty, false, ex.Message, _session.GetStatus());
         }
     }
 
-    private async Task<WebViewMessagesResult> RunReadMessagesAsync(int limit)
+    private async Task<WebViewMessagesResult> RunReadMessagesAsync(string accountId, int limit)
     {
         try
         {
-            return (await _devTools.ReadRecentMessagesAsync(limit)) with { Status = _session.GetStatus() };
+            return (await _devTools.ReadRecentMessagesAsync(accountId, limit)) with { Status = _session.GetStatus() };
         }
         catch (Exception ex)
         {
@@ -101,11 +107,11 @@ public sealed class WebViewAutomationTools
         }
     }
 
-    private async Task<WebViewWaitResult> RunWaitForMessageAsync(string authorContains, string textContains, string afterId, int timeoutMs)
+    private async Task<WebViewWaitResult> RunWaitForMessageAsync(string accountId, string authorContains, string textContains, string afterId, int timeoutMs)
     {
         try
         {
-            return (await _devTools.WaitForMessageAsync(authorContains, textContains, afterId, timeoutMs)) with { Status = _session.GetStatus() };
+            return (await _devTools.WaitForMessageAsync(accountId, authorContains, textContains, afterId, timeoutMs)) with { Status = _session.GetStatus() };
         }
         catch (Exception ex)
         {

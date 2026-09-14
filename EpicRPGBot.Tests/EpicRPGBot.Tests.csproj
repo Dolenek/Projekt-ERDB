@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountDefinition.cs" Link="Accounts\AccountDefinition.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistry.cs" Link="Accounts\AccountRegistry.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistryDocument.cs" Link="Accounts\AccountRegistryDocument.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistrySnapshot.cs" Link="Accounts\AccountRegistrySnapshot.cs" />
     <Compile Include="..\EpicRPGBot.UI\Pets\*.cs" Exclude="..\EpicRPGBot.UI\Pets\PetsWindow*.cs" Link="Pets\%(Filename)%(Extension)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.0" />

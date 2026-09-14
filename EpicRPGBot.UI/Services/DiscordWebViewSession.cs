@@ -52,6 +52,20 @@ namespace EpicRPGBot.UI.Services
             Action<string> telemetry,
             out DiscordChatClient chatClient)
         {
+            return Create(host, backgroundParking, tabRole, initialUrlProvider, telemetry,
+                string.Empty, "Default", out chatClient);
+        }
+
+        public static DiscordWebViewSession Create(
+            ContentControl host,
+            Panel backgroundParking,
+            string tabRole,
+            Func<string> initialUrlProvider,
+            Action<string> telemetry,
+            string accountId,
+            string profileName,
+            out DiscordChatClient chatClient)
+        {
             return Create(
                 host,
                 backgroundParking,
@@ -59,6 +73,8 @@ namespace EpicRPGBot.UI.Services
                 initialUrlProvider,
                 telemetry,
                 new DiscordWebViewFactory(),
+                accountId,
+                profileName,
                 out chatClient);
         }
 
@@ -71,8 +87,24 @@ namespace EpicRPGBot.UI.Services
             IDiscordWebViewFactory webViewFactory,
             out DiscordChatClient chatClient)
         {
+            return Create(host, backgroundParking, tabRole, initialUrlProvider, telemetry,
+                webViewFactory, string.Empty, "Default", out chatClient);
+        }
+
+        internal static DiscordWebViewSession Create(
+            ContentControl host,
+            Panel backgroundParking,
+            string tabRole,
+            Func<string> initialUrlProvider,
+            Action<string> telemetry,
+            IDiscordWebViewFactory webViewFactory,
+            string accountId,
+            string profileName,
+            out DiscordChatClient chatClient)
+        {
             var webViewReference = new DiscordWebViewReference();
-            chatClient = new DiscordChatClient(webViewReference, tabRole, telemetry);
+            chatClient = new DiscordChatClient(
+                webViewReference, tabRole, telemetry, accountId, profileName);
             return new DiscordWebViewSession(
                 host,
                 backgroundParking,

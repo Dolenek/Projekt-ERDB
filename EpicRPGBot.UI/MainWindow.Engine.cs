@@ -10,154 +10,165 @@ namespace EpicRPGBot.UI
     {
         private async void InitBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForExclusiveBotOperation("Initialize"))
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
             {
-                return;
-            }
+                var browserLease = await AcquireBotWorkflowAsync();
+                try
+                {
+                    if (ShouldBlockForExclusiveBotOperation("Initialize")) return;
+                    if (!_botChatClient.IsReady)
+                    {
+                        _log.Info("WebView2 not ready");
+                        return;
+                    }
 
-            if (!_botChatClient.IsReady)
-            {
-                _log.Info("WebView2 not ready");
-                return;
+                    var settings = GetCurrentSettings();
+                    await _cooldownWorkflow.RunAsync(
+                        _log.Info,
+                        settings.GetAdventureMsOrDefault(61000),
+                        settings.GetTrainingMsOrDefault(61000),
+                        settings.GetWorkMsOrDefault(99000),
+                        settings.GetFarmMsOrDefault(196000),
+                        settings.GetLootboxMsOrDefault(21600000));
+                }
+                finally
+                {
+                    await browserLease.ReleaseAsync();
+                }
             }
-
-            var settings = GetCurrentSettings();
-            await _cooldownWorkflow.RunAsync(
-                _log.Info,
-                settings.GetAdventureMsOrDefault(61000),
-                settings.GetTrainingMsOrDefault(61000),
-                settings.GetWorkMsOrDefault(99000),
-                settings.GetFarmMsOrDefault(196000),
-                settings.GetLootboxMsOrDefault(21600000));
         }
 
         private async void StartBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForExclusiveBotOperation("Start Bot"))
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
             {
-                return;
+                if (ShouldBlockForExclusiveBotOperation("Start Bot")) return;
+                _log.Info("Start button clicked");
+                if (_engine != null && _engine.IsRunning)
+                {
+                    _log.Info("Engine already running, Start ignored.");
+                    return;
+                }
+
+                try
+                {
+                    await StartEngineAndRequestCooldownSnapshotAsync(
+                        "Engine started (waiting for cooldown snapshot before scheduling commands)");
+                }
+                catch (Exception ex)
+                {
+                    await SetEngineBrowserDemandAsync(false);
+                    _log.Warning("Engine could not start: " + ex.Message);
+                    SetDiscordStatus("Error", "DangerBrush");
+                }
             }
-
-            _log.Info("Start button clicked");
-
-            if (_engine != null && _engine.IsRunning)
-            {
-                _log.Info("Engine already running, Start ignored.");
-                return;
-            }
-
-            await StartEngineAndRequestCooldownSnapshotAsync("Engine started (waiting for cooldown snapshot before scheduling commands)");
         }
 
-        private void WireEngineEvents(BotEngine engine)
+        private void WireEngineEvents(BotEngine engine, Accounts.AccountRuntime runtime)
         {
-            WireBunnyEvents(engine);
-
-            engine.OnEngineStarted += () =>
-            {
-                UiDispatcher.OnUI(RefreshBotControlButtonColors);
-            };
-
-            engine.OnEngineStopped += () =>
-            {
-                UiDispatcher.OnUI(RefreshBotControlButtonColors);
-            };
-
-            engine.OnCommandSent += (command, snapshot) =>
-            {
-                UiDispatcher.OnUI(() =>
-                {
-                    _log.Command(
-                        $"Message ({command}) sent",
-                        DiscordMessageReference.FromSnapshot(snapshot));
-                    TrackSentCommandStats(command);
-                });
-            };
-
-            engine.OnCommandConfirmed += (command, replySnapshot) =>
-            {
-                UiDispatcher.OnUI(() =>
-                {
-                    ApplyConfirmedCommandCooldown(command);
-                });
-            };
-
-            engine.OnGuardNotification += notification =>
-            {
-                UiDispatcher.OnUI(() =>
-                {
-                    LogGuardNotification(notification);
-                    ShowGuardNotification(notification);
-                });
-            };
-
-            engine.OnTrainingAlert += (message, reference) =>
-            {
-                UiDispatcher.OnUI(() =>
-                {
-                    _log.Warning("[training] " + message, reference);
-                    _alertService.ShowTrainingAlert(this, message);
-                });
-            };
-
-            engine.OnCardHandInfo += (message, reference) =>
-            {
-                UiDispatcher.OnUI(() => _log.Info("[card hand] " + message, reference));
-            };
-
-            engine.OnCardHandAlert += (message, reference) =>
-            {
-                UiDispatcher.OnUI(() =>
-                {
-                    _log.Warning("[card hand] " + message, reference);
-                    _alertService.ShowCardHandAlert(this, message);
-                });
-            };
-
+            WireBunnyEvents(engine, runtime);
+            WireEngineLifecycleEvents(engine, runtime);
+            WireEngineCommandEvents(engine, runtime);
+            WireEngineAlertEvents(engine, runtime);
             engine.OnMessageSeen += snapshot =>
-            {
-                UiDispatcher.OnUI(() => HandleObservedMessage(snapshot));
-            };
+                DispatchAccount(runtime, () => HandleObservedMessage(snapshot));
+            engine.OnSolverInfo += (message, reference) =>
+                DispatchAccount(runtime, () => _log.Info("[solver] " + message, reference));
+        }
 
-            engine.OnSolverInfo += (info, reference) =>
+        private void WireEngineLifecycleEvents(BotEngine engine, Accounts.AccountRuntime runtime)
+        {
+            engine.OnEngineStarted += () => DispatchAccount(runtime, () =>
             {
-                UiDispatcher.OnUI(() => _log.Info("[solver] " + info, reference));
-            };
+                RefreshBotControlButtonColors();
+                ReconcileMessagePolling();
+            });
+            engine.OnEngineStopped += () => DispatchAccount(runtime, () =>
+            {
+                RefreshBotControlButtonColors();
+                ReconcileMessagePolling();
+            });
+        }
+
+        private void WireEngineCommandEvents(BotEngine engine, Accounts.AccountRuntime runtime)
+        {
+            engine.OnCommandSent += (command, snapshot) => DispatchAccount(runtime, () =>
+            {
+                _log.Command($"Message ({command}) sent", DiscordMessageReference.FromSnapshot(snapshot));
+                TrackSentCommandStats(command);
+            });
+            engine.OnCommandConfirmed += (command, reply) =>
+                DispatchAccount(runtime, () => ApplyConfirmedCommandCooldown(command));
+        }
+
+        private void WireEngineAlertEvents(BotEngine engine, Accounts.AccountRuntime runtime)
+        {
+            engine.OnGuardNotification += notification => DispatchAccount(runtime, () =>
+            {
+                LogGuardNotification(notification);
+                ShowGuardNotification(notification);
+            });
+            engine.OnTrainingAlert += (message, reference) => DispatchAccount(runtime, () =>
+            {
+                _log.Warning("[training] " + message, reference);
+                _alertService.ShowTrainingAlert(this, $"{runtime.Definition.DisplayName}: {message}");
+            });
+            engine.OnCardHandInfo += (message, reference) =>
+                DispatchAccount(runtime, () => _log.Info("[card hand] " + message, reference));
+            engine.OnCardHandAlert += (message, reference) => DispatchAccount(runtime, () =>
+            {
+                _log.Warning("[card hand] " + message, reference);
+                _alertService.ShowCardHandAlert(this, $"{runtime.Definition.DisplayName}: {message}");
+            });
+        }
+
+        private void DispatchAccount(Accounts.AccountRuntime runtime, Action action)
+        {
+            UiDispatcher.OnUI(() => RunForAccount(runtime, action));
         }
 
         private async void StopBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForExclusiveBotOperation("Stop Bot"))
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
             {
-                return;
+                if (ShouldBlockForExclusiveBotOperation("Stop Bot")) return;
+                if (_engine != null) await _engine.StopAsync();
+                await SetEngineBrowserDemandAsync(false);
+                _log.Engine("Engine stopped");
             }
-
-            if (_engine != null)
-            {
-                await _engine.StopAsync();
-            }
-
-            _log.Engine("Engine stopped");
         }
 
         private async void RpgCdBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (ShouldBlockForExclusiveBotOperation("rpg cd"))
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
             {
-                return;
-            }
+                var browserLease = await AcquireBotWorkflowAsync();
+                try
+                {
+                    if (ShouldBlockForExclusiveBotOperation("rpg cd")) return;
+                    if (_engine != null && _engine.IsRunning)
+                    {
+                        var queued = _engine.QueueCooldownSnapshotRequest();
+                        _log.Info(queued
+                            ? "Queued 'rpg cd' for the next legal send slot."
+                            : "'rpg cd' request already queued.");
+                        return;
+                    }
 
-            if (_engine != null && _engine.IsRunning)
-            {
-                var queued = _engine.QueueCooldownSnapshotRequest();
-                _log.Info(queued ? "Queued 'rpg cd' for the next legal send slot." : "'rpg cd' request already queued.");
-                return;
+                    var result = await _confirmedCommandSender.SendAsync("rpg cd");
+                    _log.Info(
+                        result.IsConfirmed ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.",
+                        DiscordMessageReference.FromSnapshot(result.OutgoingMessage));
+                }
+                finally
+                {
+                    await browserLease.ReleaseAsync();
+                }
             }
-
-            var result = await _confirmedCommandSender.SendAsync("rpg cd");
-            _log.Info(
-                result.IsConfirmed ? "Sent 'rpg cd' immediately." : "Failed to send 'rpg cd'.",
-                DiscordMessageReference.FromSnapshot(result.OutgoingMessage));
         }
 
         private void ApplyConfirmedCommandCooldown(string command)
@@ -204,13 +215,13 @@ namespace EpicRPGBot.UI
             return sent;
         }
 
-        private Task StartEngineAsync(string engineMessage)
+        private async Task StartEngineAsync(string engineMessage)
         {
+            await SetEngineBrowserDemandAsync(true);
             _engine = CreateEngine();
-            WireEngineEvents(_engine);
+            WireEngineEvents(_engine, CurrentAccount);
             _engine.Start();
             _log.Engine(engineMessage);
-            return Task.CompletedTask;
         }
 
         private void LogGuardNotification(Models.GuardAlertNotification notification)
@@ -236,19 +247,22 @@ namespace EpicRPGBot.UI
                 return;
             }
 
+            var account = CurrentAccount;
             var bringToForeground = ShouldBringGuardAlertToForeground(notification);
             if (bringToForeground)
             {
-                SelectBotTab();
+                _ = ActivateAccountAndSelectTabAsync(account, DiscordTabRole.Bot);
             }
 
-            _alertService.ShowGuardAlert(this, notification, bringToForeground);
+            _alertService.ShowGuardAlert(
+                this, notification, bringToForeground, account.Definition.DisplayName);
         }
 
         private BotEngine CreateEngine()
         {
+            var runtime = CurrentAccount;
             return new BotEngine(
-                _botChatClient,
+                runtime.BotChatClient,
                 GetConfiguredWorkCommand(),
                 IsFarmAllowedForConfiguredArea(),
                 GetConfiguredHuntMs(),
@@ -257,7 +271,7 @@ namespace EpicRPGBot.UI
                 GetConfiguredWorkMs(),
                 GetConfiguredFarmMs(),
                 GetConfiguredLootboxMs(),
-                () => GetCurrentSettings().CardHand);
+                () => runtime.SettingsService.Current.CardHand);
         }
 
     }

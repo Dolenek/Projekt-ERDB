@@ -40,13 +40,9 @@ namespace EpicRPGBot.UI.Services
 
         public CooldownTracker(FrameworkElement root)
         {
-            if (root == null) throw new ArgumentNullException(nameof(root));
-
             foreach (var definition in Definitions)
             {
-                var label = root.FindName(definition.LabelName) as TextBlock;
-                var row = root.FindName(definition.RowName) as Border;
-                _entries[definition.CanonicalKey] = new CooldownEntry(label, row);
+                _entries[definition.CanonicalKey] = new CooldownEntry();
 
                 foreach (var alias in definition.Aliases)
                 {
@@ -58,6 +54,28 @@ namespace EpicRPGBot.UI.Services
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (sender, args) => Tick();
             _lastStats = BuildStatsSnapshot();
+            if (root != null) BindVisual(root);
+        }
+
+        public void BindVisual(FrameworkElement root)
+        {
+            if (root == null) throw new ArgumentNullException(nameof(root));
+            foreach (var definition in Definitions)
+            {
+                var entry = _entries[definition.CanonicalKey];
+                entry.Label = root.FindName(definition.LabelName) as TextBlock;
+                entry.Row = root.FindName(definition.RowName) as Border;
+                UpdateEntryVisual(entry);
+            }
+        }
+
+        public void UnbindVisual()
+        {
+            foreach (var entry in _entries.Values.Distinct())
+            {
+                entry.Label = null;
+                entry.Row = null;
+            }
         }
         public void Start()
         {
@@ -147,7 +165,7 @@ namespace EpicRPGBot.UI.Services
         {
             foreach (var entry in _entries.Values.Distinct())
             {
-                if (entry.Label == null || !entry.Remaining.HasValue)
+                if (!entry.Remaining.HasValue)
                 {
                     continue;
                 }
@@ -316,14 +334,8 @@ namespace EpicRPGBot.UI.Services
 
         private sealed class CooldownEntry
         {
-            public CooldownEntry(TextBlock label, Border row)
-            {
-                Label = label;
-                Row = row;
-            }
-
-            public TextBlock Label { get; }
-            public Border Row { get; }
+            public TextBlock Label { get; set; }
+            public Border Row { get; set; }
             public TimeSpan? Remaining { get; set; }
         }
     }

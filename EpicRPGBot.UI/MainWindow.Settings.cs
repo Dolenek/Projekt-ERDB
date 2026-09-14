@@ -41,13 +41,18 @@ namespace EpicRPGBot.UI
 
         private void HookAppSettings()
         {
-            _settingsService.SettingsChanged += OnAppSettingsChanged;
+            var runtime = CurrentAccount;
+            runtime.AppSettingsHandler = settings =>
+                RunForAccount(runtime, () => OnAppSettingsChanged(settings));
+            _settingsService.SettingsChanged += runtime.AppSettingsHandler;
             _cooldownTracker.RefreshWorkAliases(_settingsService.Current.WorkCommands);
         }
 
         private void UnhookAppSettings()
         {
-            _settingsService.SettingsChanged -= OnAppSettingsChanged;
+            var runtime = CurrentAccount;
+            if (runtime.AppSettingsHandler != null)
+                _settingsService.SettingsChanged -= runtime.AppSettingsHandler;
         }
 
         private void OnAppSettingsChanged(AppSettingsSnapshot settings)
@@ -93,10 +98,11 @@ namespace EpicRPGBot.UI
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
             var settingsWindow = new SettingsWindow(
-                _settingsService,
-                LoadCardDeckFromSettingsAsync,
-                LoadAutoBestWorkCommandsAsync)
+                account.SettingsService,
+                () => LoadCardDeckForAccountAsync(account),
+                cancellationToken => LoadAutoBestWorkCommandsForAccountAsync(account, cancellationToken))
             {
                 Owner = this
             };
@@ -104,34 +110,56 @@ namespace EpicRPGBot.UI
             settingsWindow.ShowDialog();
         }
 
+        private async Task<CardDeckImportResult> LoadCardDeckForAccountAsync(
+            Accounts.AccountRuntime account)
+        {
+            using (UseAccount(account))
+            {
+                return await LoadCardDeckFromSettingsAsync();
+            }
+        }
+
+        private async Task<AutoBestWorkCommandResult> LoadAutoBestWorkCommandsForAccountAsync(
+            Accounts.AccountRuntime account,
+            CancellationToken cancellationToken)
+        {
+            using (UseAccount(account))
+            {
+                return await LoadAutoBestWorkCommandsAsync(cancellationToken);
+            }
+        }
+
         private async Task<AutoBestWorkCommandResult> LoadAutoBestWorkCommandsAsync(
             CancellationToken cancellationToken)
         {
-            if (!_botChatClient.IsReady)
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
             {
-                return AutoBestWorkCommandResult.Failure("Discord is not ready.");
-            }
+                if (!_botChatClient.IsReady)
+                {
+                    return AutoBestWorkCommandResult.Failure("Discord is not ready.");
+                }
 
-            var ascended = _settingsService.Current.Ascended;
-            var result = _engine != null && _engine.IsRunning
-                ? await _engine.LoadAutoBestWorkCommandsAsync(
-                    _autoBestWorkCommandWorkflow,
-                    ascended,
-                    cancellationToken)
-                : await _autoBestWorkCommandWorkflow.RunAsync(
-                    ascended,
-                    LogAutoBestOutgoingCommand,
-                    cancellationToken);
-            if (result.Success)
-            {
-                _log.Info("[work commands] " + result.Message);
+                var ascended = _settingsService.Current.Ascended;
+                var result = _engine != null && _engine.IsRunning
+                    ? await _engine.LoadAutoBestWorkCommandsAsync(
+                        _autoBestWorkCommandWorkflow,
+                        ascended,
+                        cancellationToken)
+                    : await _autoBestWorkCommandWorkflow.RunAsync(
+                        ascended,
+                        LogAutoBestOutgoingCommand,
+                        cancellationToken);
+                if (result.Success)
+                    _log.Info("[work commands] " + result.Message);
+                else
+                    _log.Warning("[work commands] " + result.Message);
+                return result;
             }
-            else
+            finally
             {
-                _log.Warning("[work commands] " + result.Message);
+                await browserLease.ReleaseAsync();
             }
-
-            return result;
         }
 
         private void LogAutoBestOutgoingCommand(
@@ -145,29 +173,38 @@ namespace EpicRPGBot.UI
 
         private async Task<CardDeckImportResult> LoadCardDeckFromSettingsAsync()
         {
-            if (!_botChatClient.IsReady)
-                return new CardDeckImportResult(false, null, "Discord is not ready.");
-
-            var result = _engine != null && _engine.IsRunning
-                ? await _engine.ImportCardDeckAsync(_cardDeckImportWorkflow)
-                : await _cardDeckImportWorkflow.RunAsync(
-                    snapshot => _log.Command(
-                        "Message (rpg card deck) sent",
-                        Models.DiscordMessageReference.FromSnapshot(snapshot)),
-                    CancellationToken.None);
-            if (result.Success)
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
             {
-                var cardHand = _settingsService.Current.CardHand.WithDeck(result.OwnedCards, DateTime.UtcNow);
-                _settingsService.Save(_settingsService.Current.WithCardHand(cardHand));
-                _log.Info("[card hand] " + result.Message);
-            }
-            else
-            {
-                _log.Warning("[card hand] " + result.Message);
-                _alertService.ShowCardHandAlert(this, result.Message);
-            }
+                if (!_botChatClient.IsReady)
+                    return new CardDeckImportResult(false, null, "Discord is not ready.");
 
-            return result;
+                var result = _engine != null && _engine.IsRunning
+                    ? await _engine.ImportCardDeckAsync(_cardDeckImportWorkflow)
+                    : await _cardDeckImportWorkflow.RunAsync(
+                        snapshot => _log.Command(
+                            "Message (rpg card deck) sent",
+                            Models.DiscordMessageReference.FromSnapshot(snapshot)),
+                        CancellationToken.None);
+                if (result.Success)
+                {
+                    var cardHand = _settingsService.Current.CardHand.WithDeck(result.OwnedCards, DateTime.UtcNow);
+                    _settingsService.Save(_settingsService.Current.WithCardHand(cardHand));
+                    _log.Info("[card hand] " + result.Message);
+                }
+                else
+                {
+                    _log.Warning("[card hand] " + result.Message);
+                    _alertService.ShowCardHandAlert(
+                        this, $"{CurrentAccount.Definition.DisplayName}: {result.Message}");
+                }
+
+                return result;
+            }
+            finally
+            {
+                await browserLease.ReleaseAsync();
+            }
         }
     }
 }

@@ -13,6 +13,8 @@ namespace EpicRPGBot.UI
 
         private void RefreshBotControlButtonColors()
         {
+            CurrentAccount.NotifyStateChanged();
+            if (!ReferenceEquals(CurrentAccount, _activeAccountRuntime)) return;
             var isEngineRunning = _engine != null && _engine.IsRunning;
             StartBtn.Background = isEngineRunning ? StartActiveBrush : InactiveBotControlBrush;
             StopBtn.Background = isEngineRunning ? InactiveBotControlBrush : StopActiveBrush;

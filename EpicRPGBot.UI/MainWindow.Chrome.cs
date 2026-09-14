@@ -9,8 +9,8 @@ namespace EpicRPGBot.UI
         private const double ExpandedActivityWidth = 300;
         private const double ExpandedControlCenterWidth = 360;
         private const double CollapsedPanelWidth = 36;
-        private bool _isActivityExpanded = true;
-        private bool _isControlCenterExpanded = true;
+        private bool _isActivityExpanded { get => CurrentAccount.IsActivityExpanded; set => CurrentAccount.IsActivityExpanded = value; }
+        private bool _isControlCenterExpanded { get => CurrentAccount.IsControlCenterExpanded; set => CurrentAccount.IsControlCenterExpanded = value; }
 
         private void MainWindow_SourceInitialized(object sender, EventArgs e)
         {
@@ -68,6 +68,26 @@ namespace EpicRPGBot.UI
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             ControlCenterCollapsedContent.Visibility = _isControlCenterExpanded
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ApplyAccountPanelWidths(Accounts.AccountRuntime runtime)
+        {
+            ActivityColumn.Width = new GridLength(
+                runtime.IsActivityExpanded ? ExpandedActivityWidth : CollapsedPanelWidth);
+            ActivityExpandedContent.Visibility = runtime.IsActivityExpanded
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            ActivityCollapsedContent.Visibility = runtime.IsActivityExpanded
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+            ControlCenterColumn.Width = new GridLength(
+                runtime.IsControlCenterExpanded ? ExpandedControlCenterWidth : CollapsedPanelWidth);
+            ControlCenterExpandedContent.Visibility = runtime.IsControlCenterExpanded
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            ControlCenterCollapsedContent.Visibility = runtime.IsControlCenterExpanded
                 ? Visibility.Collapsed
                 : Visibility.Visible;
         }

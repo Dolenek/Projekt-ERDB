@@ -132,6 +132,10 @@ namespace EpicRPGBot.UI.Services
 
         private void ShowHostMessage(string message, Brush foreground)
         {
+            if (!_lifecycle.IsSelected && _host.Content != null)
+            {
+                return;
+            }
             _host.Content = new TextBlock
             {
                 Text = message,

@@ -5,6 +5,7 @@ namespace EpicRPGBot.UI.Services
         Permanent = 0,
         Selected = 1,
         Workflow = 2,
-        GuildWatcher = 3
+        GuildWatcher = 3,
+        Engine = 4
     }
 }

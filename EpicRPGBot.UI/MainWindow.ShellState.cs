@@ -4,18 +4,20 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private string _discordStatus = "Initializing";
-        private string _discordStatusBrushKey = "WarningBrush";
+        private string _discordStatus { get => CurrentAccount.DiscordStatus; set => CurrentAccount.DiscordStatus = value; }
+        private string _discordStatusBrushKey { get => CurrentAccount.DiscordStatusBrushKey; set => CurrentAccount.DiscordStatusBrushKey = value; }
 
         private void SetDiscordStatus(string status, string brushKey)
         {
             _discordStatus = status;
             _discordStatusBrushKey = brushKey;
+            CurrentAccount.NotifyStateChanged();
             RefreshShellStatus();
         }
 
         private void RefreshShellStatus()
         {
+            if (!ReferenceEquals(CurrentAccount, _activeAccountRuntime)) return;
             var discordBrush = FindStatusBrush(_discordStatusBrushKey);
             if (ConnectionStatusText != null)
             {

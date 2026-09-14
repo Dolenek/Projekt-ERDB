@@ -18,6 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Accounts\*.cs" />
     <Reference Include="System.Net.Http" />
     <PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260627" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
@@ -118,6 +119,9 @@
     <Compile Include="Duel\*.cs" />
     <Compile Include="Env.cs" />
     <Compile Include="MainWindow.Automation.cs" />
+    <Compile Include="MainWindow.AccountAccess.cs" />
+    <Compile Include="MainWindow.Accounts.cs" />
+    <Compile Include="MainWindow.AccountStrip.cs" />
     <Compile Include="MainWindow.AutomatedCooldownBatch.cs" />
     <Compile Include="MainWindow.BotControls.cs" />
     <Compile Include="MainWindow.Bunny.cs" />

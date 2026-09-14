@@ -3,27 +3,45 @@ using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
+using EpicRPGBot.UI.Accounts;
 
 namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private readonly SemaphoreSlim _guildWatcherSettingsGate = new SemaphoreSlim(1, 1);
-        private DiscordWebViewLease _guildWatcherWebViewLease;
-        private bool _guildRaidCoordinatorStarted;
+        private SemaphoreSlim _guildWatcherSettingsGate => CurrentAccount.GuildWatcherSettingsGate;
+        private DiscordWebViewLease _guildWatcherWebViewLease { get => CurrentAccount.GuildWatcherWebViewLease; set => CurrentAccount.GuildWatcherWebViewLease = value; }
+        private bool _guildRaidCoordinatorStarted { get => CurrentAccount.GuildRaidCoordinatorStarted; set => CurrentAccount.GuildRaidCoordinatorStarted = value; }
 
         private void HookGuildRaidSettings()
         {
-            _guildRaidCoordinator.OnInfo += OnGuildRaidInfo;
-            _guildRaidCoordinator.OnGuardNotification += OnGuildRaidGuardNotification;
-            _settingsService.SettingsChanged += OnSettingsChanged;
+            var runtime = CurrentAccount;
+            runtime.GuildInfoHandler = message => RunForAccount(runtime, () => OnGuildRaidInfo(message));
+            runtime.GuildGuardHandler = notification =>
+                RunForAccount(runtime, () => OnGuildRaidGuardNotification(notification));
+            runtime.GuildSettingsHandler = settings => ApplyGuildSettings(runtime, settings);
+            _guildRaidCoordinator.OnInfo += runtime.GuildInfoHandler;
+            _guildRaidCoordinator.OnGuardNotification += runtime.GuildGuardHandler;
+            _settingsService.SettingsChanged += runtime.GuildSettingsHandler;
         }
 
         private void UnhookGuildRaidSettings()
         {
-            _guildRaidCoordinator.OnInfo -= OnGuildRaidInfo;
-            _guildRaidCoordinator.OnGuardNotification -= OnGuildRaidGuardNotification;
-            _settingsService.SettingsChanged -= OnSettingsChanged;
+            var runtime = CurrentAccount;
+            if (runtime.GuildInfoHandler != null)
+                _guildRaidCoordinator.OnInfo -= runtime.GuildInfoHandler;
+            if (runtime.GuildGuardHandler != null)
+                _guildRaidCoordinator.OnGuardNotification -= runtime.GuildGuardHandler;
+            if (runtime.GuildSettingsHandler != null)
+                _settingsService.SettingsChanged -= runtime.GuildSettingsHandler;
+        }
+
+        private async void ApplyGuildSettings(AccountRuntime runtime, AppSettingsSnapshot settings)
+        {
+            using (UseAccount(runtime))
+            {
+                await OnSettingsChangedAsync(settings);
+            }
         }
 
         private async Task StartGuildRaidWatcherAsync()
@@ -38,7 +56,7 @@ namespace EpicRPGBot.UI
             }
         }
 
-        private async void OnSettingsChanged(AppSettingsSnapshot settings)
+        private async Task OnSettingsChangedAsync(AppSettingsSnapshot settings)
         {
             try
             {
@@ -110,8 +128,11 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            UiDispatcher.OnUI(() =>
+            var runtime = CurrentAccount;
+            UiDispatcher.OnUI(async () =>
             {
+                using (UseAccount(runtime))
+                {
                 if (notification.Kind == GuardAlertKind.FirstDetected)
                 {
                     _log.Warning("[guild][guard] " + notification.Message);
@@ -124,10 +145,13 @@ namespace EpicRPGBot.UI
                 var bringToForeground = ShouldBringGuardAlertToForeground(notification);
                 if (bringToForeground)
                 {
+                    await ActivateAccountAsync(runtime);
                     SelectGuildTab();
                 }
 
-                _alertService.ShowGuardAlert(this, notification, bringToForeground);
+                _alertService.ShowGuardAlert(
+                    this, notification, bringToForeground, runtime.Definition.DisplayName);
+                }
             });
         }
     }

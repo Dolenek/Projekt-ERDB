@@ -8,6 +8,12 @@ namespace EpicRPGBot.UI
     {
         private async void PetsBtn_Click(object sender, RoutedEventArgs args)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
+            {
             if (ShouldBlockForExclusiveBotOperation("Pets") || !_botChatClient.IsReady) return;
             if (_engine != null && !_engine.CanOpenPets)
             {
@@ -36,6 +42,13 @@ namespace EpicRPGBot.UI
             {
                 EndExclusiveBotOperation("pets");
                 if (resume && safe) await StartEngineAndRequestCooldownSnapshotAsync("Engine resumed after pets");
+            }
+            }
+            finally
+            {
+                await ReleaseStoppedEngineDemandAsync();
+                await browserLease.ReleaseAsync();
+            }
             }
         }
     }

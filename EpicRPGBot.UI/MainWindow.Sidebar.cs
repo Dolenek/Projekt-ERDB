@@ -68,12 +68,44 @@ namespace EpicRPGBot.UI
                     : Visibility.Collapsed;
             }
 
+            if (_activeAccountRuntime != null)
+            {
+                _activeAccountRuntime.ActivitySearchText = ActivitySearchBox.Text ?? string.Empty;
+            }
+
             RefreshActivityViews();
         }
 
         private void ActivityKindFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_activeAccountRuntime != null)
+            {
+                _activeAccountRuntime.SelectedLogKind = GetSelectedLogKind();
+            }
             RefreshActivityViews();
+        }
+
+        private void SelectLogKind(LogKind? logKind)
+        {
+            if (ActivityKindFilter == null) return;
+            foreach (var item in ActivityKindFilter.Items)
+            {
+                if (item is ComboBoxItem comboItem &&
+                    ((!logKind.HasValue && comboItem.Tag == null) ||
+                     (comboItem.Tag is LogKind itemKind && itemKind == logKind.Value)))
+                {
+                    ActivityKindFilter.SelectedItem = comboItem;
+                    return;
+                }
+            }
+        }
+
+        private void ShowAccountActivityPanel(int selectedPanel)
+        {
+            ShowSidebarPanel(
+                lastMessagesVisible: selectedPanel == 0,
+                statsVisible: selectedPanel == 1,
+                consoleVisible: selectedPanel == 2);
         }
 
         private LogKind? GetSelectedLogKind()

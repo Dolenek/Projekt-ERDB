@@ -15,6 +15,7 @@ Codex connection from Windows PowerShell:
 - Connection reference: [Codex MCP configuration](https://developers.openai.com/codex/mcp).
 
 Runtime model:
+
 - The MCP server is a separate `net8.0-windows` process.
 - It builds and launches `EpicRPGBot.UI` itself instead of attaching to an arbitrary running app.
 - The UI is started with `--automation`, `--automation-debug-port`, and `--automation-session`.
@@ -22,6 +23,7 @@ Runtime model:
 - The server is designed to control the app instance it launched itself; it does not attach to an arbitrary already-running window.
 
 Native app tools:
+
 - `launch_app` builds and starts the WPF app in automation mode.
 - `get_app_status` returns the current MCP-managed app status without launching or focusing it.
 - `close_app` closes the app started by the MCP server.
@@ -32,6 +34,17 @@ Native app tools:
 - `read_console` selects the Console tab, then reads the log list.
 - `read_last_messages` selects the Last messages tab, then reads the list.
 - `wait_for_control_text` waits until a WPF control text contains a target substring.
+
+Memory verification:
+
+- Start the intended 1, 3, or 5 accounts and leave them running until browser activity settles.
+- Run `tools/Measure-MultiAccountMemory.ps1 -RootProcessId <pid> -AccountCount <1|3|5>`.
+- The result reports average and peak working set for the UI process tree and its WebView2 subset. Use `-OutputPath` to retain all samples as CSV.
+- Repeat the same sample after rapid account switching to detect retained renderer processes or a rising steady-state working set.
+
+WebView tools require the stable account id shown in the title-bar account
+tooltip. This keeps Bot targets unambiguous when several accounts are active.
+Use `list_accounts` to retrieve the same ids without inspecting the window.
 
 WebView tools:
 - `webview_eval` evaluates JavaScript in the bot Discord WebView through the WebView2 DevTools endpoint.

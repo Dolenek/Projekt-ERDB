@@ -8,9 +8,9 @@ namespace EpicRPGBot.UI.Services
     {
         private readonly string _filePath;
 
-        public LocalSettingsStore(string fileName = "app-settings.ini")
+        public LocalSettingsStore(string fileName = "app-settings.ini", bool isAbsolutePath = false)
         {
-            _filePath = Path.Combine(GetSettingsRoot(), fileName);
+            _filePath = isAbsolutePath ? Path.GetFullPath(fileName) : Path.Combine(GetSettingsRoot(), fileName);
         }
 
         public string GetString(string key, string defaultValue = null)
@@ -78,7 +78,11 @@ namespace EpicRPGBot.UI.Services
         {
             try
             {
-                Directory.CreateDirectory(GetSettingsRoot());
+                var directory = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
 
                 var lines = new List<string>();
                 foreach (var pair in values)

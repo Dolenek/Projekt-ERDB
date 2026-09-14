@@ -14,21 +14,27 @@ namespace EpicRPGBot.UI
 
         private async void TimeCookieDungeonBtn_Click(object sender, RoutedEventArgs e)
         {
-            await HandleTimeCookieTargetClickAsync(TimeCookieTarget.Dungeon);
+            var account = _activeAccountRuntime;
+            using (UseAccount(account)) await HandleTimeCookieTargetClickAsync(TimeCookieTarget.Dungeon);
         }
 
         private async void TimeCookieDuelBtn_Click(object sender, RoutedEventArgs e)
         {
-            await HandleTimeCookieTargetClickAsync(TimeCookieTarget.Duel);
+            var account = _activeAccountRuntime;
+            using (UseAccount(account)) await HandleTimeCookieTargetClickAsync(TimeCookieTarget.Duel);
         }
 
         private async void TimeCookieCardHandBtn_Click(object sender, RoutedEventArgs e)
         {
-            await HandleTimeCookieTargetClickAsync(TimeCookieTarget.CardHand);
+            var account = _activeAccountRuntime;
+            using (UseAccount(account)) await HandleTimeCookieTargetClickAsync(TimeCookieTarget.CardHand);
         }
 
         private async Task HandleTimeCookieTargetClickAsync(TimeCookieTarget target)
         {
+            var browserLease = await AcquireBotWorkflowAsync();
+            try
+            {
             if (_isTimeCookieRunning)
             {
                 if (_activeTimeCookieTarget == target)
@@ -52,6 +58,12 @@ namespace EpicRPGBot.UI
             }
 
             await RunTimeCookieLoopAsync(target);
+            }
+            finally
+            {
+                await ReleaseStoppedEngineDemandAsync();
+                await browserLease.ReleaseAsync();
+            }
         }
 
         private async Task RunTimeCookieLoopAsync(TimeCookieTarget target)

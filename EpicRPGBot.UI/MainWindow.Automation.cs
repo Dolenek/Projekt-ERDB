@@ -45,6 +45,8 @@ namespace EpicRPGBot.UI
             SetAutomationIdentity(InitHint, "InitHint");
             SetAutomationIdentity(ConnectionStatusText, "DiscordStatusText");
             SetAutomationIdentity(EngineStatusText, "EngineStatusText");
+            SetAutomationIdentity(AccountStrip, "AccountStrip");
+            SetAutomationIdentity(AddAccountBtn, "AddAccountButton");
             SetAutomationIdentity(StartBtn, "StartButton");
             SetAutomationIdentity(StopBtn, "StopButton");
             SetAutomationIdentity(InitBtn, "InitializeButton");

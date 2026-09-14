@@ -3,15 +3,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using EpicRPGBot.UI.Accounts;
+using EpicRPGBot.UI.Models;
 using EpicRPGBot.UI.Services;
 
 namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private bool _browserSessionsInitialized;
-        private int _browserSelectionVersion;
-        private DiscordWebViewSession _selectedBrowserSession;
+        private bool _browserSessionsInitialized { get => CurrentAccount.BrowserSessionsInitialized; set => CurrentAccount.BrowserSessionsInitialized = value; }
+        private int _browserSelectionVersion { get => CurrentAccount.BrowserSelectionVersion; set => CurrentAccount.BrowserSelectionVersion = value; }
+        private DiscordWebViewSession _selectedBrowserSession { get => CurrentAccount.SelectedBrowserSession; set => CurrentAccount.SelectedBrowserSession = value; }
 
         private async Task InitializeBrowsersAsync()
         {
@@ -19,11 +21,12 @@ namespace EpicRPGBot.UI
             try
             {
                 SetInitHint("Initializing Discord...");
-                await _botWebViewSession.SetDemandAsync(
-                    DiscordWebViewActivityReason.Permanent,
-                    true);
-                InitHint.Visibility = Visibility.Collapsed;
-                SetDiscordStatus("Ready", "SuccessBrush");
+                _browserSessionsInitialized = true;
+                if (await ReconcileSelectedBrowserSessionAsync())
+                {
+                    InitHint.Visibility = Visibility.Collapsed;
+                    SetDiscordStatus("Ready", "SuccessBrush");
+                }
             }
             catch (Exception ex)
             {
@@ -33,22 +36,6 @@ namespace EpicRPGBot.UI
             finally
             {
                 _browserSessionsInitialized = true;
-                await ReconcileSelectedBrowserSessionAsync();
-                await KeepPlayerBrowserSessionActiveAsync();
-            }
-        }
-
-        private async Task KeepPlayerBrowserSessionActiveAsync()
-        {
-            try
-            {
-                await _playerWebViewSession.SetDemandAsync(
-                    DiscordWebViewActivityReason.Permanent,
-                    true);
-            }
-            catch (Exception ex)
-            {
-                _log.Warning("[browser] Player tab permanent activation failed: " + ex.Message);
             }
         }
 
@@ -56,15 +43,20 @@ namespace EpicRPGBot.UI
             object sender,
             SelectionChangedEventArgs e)
         {
-            if (!_browserSessionsInitialized || !ReferenceEquals(e.Source, BrowserTabs))
+            if (_activeAccountRuntime == null || !_browserSessionsInitialized || !ReferenceEquals(e.Source, BrowserTabs))
             {
                 return;
             }
 
-            await ReconcileSelectedBrowserSessionAsync();
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
+                CurrentAccount.SelectedBrowserRole = GetBrowserRole(BrowserTabs.SelectedItem as TabItem);
+                await ReconcileSelectedBrowserSessionAsync();
+            }
         }
 
-        private async Task ReconcileSelectedBrowserSessionAsync()
+        private async Task<bool> ReconcileSelectedBrowserSessionAsync()
         {
             var selectionVersion = ++_browserSelectionVersion;
             var nextSession = GetBrowserSession(BrowserTabs.SelectedItem as TabItem);
@@ -78,18 +70,30 @@ namespace EpicRPGBot.UI
 
             if (nextSession == null)
             {
-                return;
+                return false;
             }
 
-            await SetSelectedDemandSafeAsync(nextSession, true);
+            if (!await SetSelectedDemandSafeAsync(nextSession, true)) return false;
+            ReconcileMessagePolling();
+            if (!ReferenceEquals(CurrentAccount, _activeAccountRuntime))
+            {
+                await SetSelectedDemandSafeAsync(nextSession, false);
+                return false;
+            }
             if (selectionVersion != _browserSelectionVersion &&
                 !ReferenceEquals(nextSession, GetBrowserSession(BrowserTabs.SelectedItem as TabItem)))
             {
                 await SetSelectedDemandSafeAsync(nextSession, false);
+                return false;
             }
+
+            SetDiscordStatus("Ready", "SuccessBrush");
+            if (ReferenceEquals(CurrentAccount, _activeAccountRuntime))
+                InitHint.Visibility = Visibility.Collapsed;
+            return true;
         }
 
-        private async Task SetSelectedDemandSafeAsync(
+        private async Task<bool> SetSelectedDemandSafeAsync(
             DiscordWebViewSession session,
             bool isSelected)
         {
@@ -98,10 +102,18 @@ namespace EpicRPGBot.UI
                 await session.SetDemandAsync(
                     DiscordWebViewActivityReason.Selected,
                     isSelected);
+                return true;
             }
             catch (Exception ex)
             {
                 _log.Warning("[browser] Discord tab activation failed: " + ex.Message);
+                if (isSelected)
+                {
+                    SetDiscordStatus("Error", "DangerBrush");
+                    if (ReferenceEquals(CurrentAccount, _activeAccountRuntime))
+                        SetInitHint("WebView2 init failed: " + ex.Message);
+                }
+                return false;
             }
         }
 
@@ -113,6 +125,27 @@ namespace EpicRPGBot.UI
             if (ReferenceEquals(tab, DungeonBrowserTab)) return _dungeonWebViewSession;
             if (ReferenceEquals(tab, DuelBrowserTab)) return _duelWebViewSession;
             return null;
+        }
+
+        private DiscordTabRole GetBrowserRole(TabItem tab)
+        {
+            if (ReferenceEquals(tab, BotBrowserTab)) return DiscordTabRole.Bot;
+            if (ReferenceEquals(tab, GuildBrowserTab)) return DiscordTabRole.Guild;
+            if (ReferenceEquals(tab, DungeonBrowserTab)) return DiscordTabRole.Dungeon;
+            if (ReferenceEquals(tab, DuelBrowserTab)) return DiscordTabRole.Duel;
+            return DiscordTabRole.Player;
+        }
+
+        private TabItem GetBrowserTab(DiscordTabRole role)
+        {
+            switch (role)
+            {
+                case DiscordTabRole.Bot: return BotBrowserTab;
+                case DiscordTabRole.Guild: return GuildBrowserTab;
+                case DiscordTabRole.Dungeon: return DungeonBrowserTab;
+                case DiscordTabRole.Duel: return DuelBrowserTab;
+                default: return PlayerBrowserTab;
+            }
         }
 
         private string GetGuildInitialUrl()
@@ -152,7 +185,8 @@ namespace EpicRPGBot.UI
 
         private async void GoChannelBtn_Click(object sender, RoutedEventArgs e)
         {
-            await NavigateBotTabAsync();
+            var account = _activeAccountRuntime;
+            using (UseAccount(account)) await NavigateBotTabAsync();
         }
 
         private void SelectBotTab() => SelectBrowserTab(BotBrowserTab);
@@ -163,21 +197,70 @@ namespace EpicRPGBot.UI
 
         private void SelectGuildTab() => SelectBrowserTab(GuildBrowserTab);
 
-        private async Task SelectPlayerTabAsync(CancellationToken cancellationToken)
+        private async Task SelectPlayerTabAsync(AccountRuntime runtime, CancellationToken cancellationToken)
         {
-            SelectPlayerTab();
-            await _playerWebViewSession.SetDemandAsync(
-                DiscordWebViewActivityReason.Selected,
-                true,
-                cancellationToken);
+            await ActivateAccountAsync(runtime);
+            using (UseAccount(runtime))
+            {
+                SelectPlayerTab();
+                await _playerWebViewSession.SetDemandAsync(
+                    DiscordWebViewActivityReason.Selected, true, cancellationToken);
+            }
+        }
+
+        private async Task ActivateAccountAndSelectTabAsync(
+            AccountRuntime runtime,
+            DiscordTabRole role)
+        {
+            await ActivateAccountAsync(runtime);
+            using (UseAccount(runtime))
+            {
+                SelectBrowserTab(GetBrowserTab(role));
+            }
         }
 
         private void SelectBrowserTab(TabItem tab)
         {
-            if (BrowserTabs != null && tab != null)
+            if (tab == null) return;
+            CurrentAccount.SelectedBrowserRole = GetBrowserRole(tab);
+            if (ReferenceEquals(CurrentAccount, _activeAccountRuntime) && BrowserTabs != null)
             {
                 BrowserTabs.SelectedItem = tab;
             }
+        }
+
+        private async Task SetEngineBrowserDemandAsync(bool isRequired)
+        {
+            try
+            {
+                await _botWebViewSession.SetDemandAsync(
+                    DiscordWebViewActivityReason.Engine, isRequired);
+                ReconcileMessagePolling();
+            }
+            catch (Exception ex)
+            {
+                _log.Warning("[browser] Bot activation failed: " + ex.Message);
+                throw;
+            }
+        }
+
+        private Task<DiscordWebViewLease> AcquireBotWorkflowAsync()
+        {
+            return _botWebViewSession.AcquireAsync(DiscordWebViewActivityReason.Workflow);
+        }
+
+        private async Task ReleaseStoppedEngineDemandAsync()
+        {
+            if (_engine?.IsRunning != true)
+                await SetEngineBrowserDemandAsync(false);
+        }
+
+        private void ReconcileMessagePolling()
+        {
+            var shouldPoll = _engine?.IsRunning == true ||
+                ReferenceEquals(_selectedBrowserSession, _botWebViewSession);
+            if (shouldPoll && _botChatClient.IsReady) _messagePoller.Start();
+            else _messagePoller.Stop();
         }
 
         private void SetInitHint(string text)

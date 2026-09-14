@@ -10,10 +10,20 @@ namespace EpicRPGBot.UI
     {
         private async void TradeAreaBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
+            var browserLease = await AcquireBotWorkflowAsync();
+            var operationStarted = false;
+            try
+            {
             if (ShouldBlockForExclusiveBotOperation("Trade area"))
             {
                 return;
             }
+
+            if (!TryBeginExclusiveBotOperation("Trade area")) return;
+            operationStarted = true;
 
             if (_isAreaTradeRunning)
             {
@@ -42,6 +52,14 @@ namespace EpicRPGBot.UI
             finally
             {
                 SetAreaTradeRunning(false);
+            }
+            }
+            finally
+            {
+                if (operationStarted) EndExclusiveBotOperation("Trade area");
+                await ReleaseStoppedEngineDemandAsync();
+                await browserLease.ReleaseAsync();
+            }
             }
         }
 
@@ -75,7 +93,9 @@ namespace EpicRPGBot.UI
         private void SetAreaTradeRunning(bool isRunning)
         {
             _isAreaTradeRunning = isRunning;
-            TradeAreaBtn.IsEnabled = !isRunning;
+            CurrentAccount.NotifyStateChanged();
+            if (ReferenceEquals(CurrentAccount, _activeAccountRuntime))
+                TradeAreaBtn.IsEnabled = !isRunning;
         }
     }
 }

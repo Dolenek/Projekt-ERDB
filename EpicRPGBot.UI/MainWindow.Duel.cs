@@ -8,10 +8,11 @@ namespace EpicRPGBot.UI
     public partial class MainWindow
     {
         private const string DuelOperationName = "Duel";
-        private bool _duelInitialEngineWasRunning;
-
         private async void DuelBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
             if (_isDuelRunning)
             {
                 RequestDuelCancellation();
@@ -30,6 +31,7 @@ namespace EpicRPGBot.UI
 
             BeginDuelRun();
             await RunDuelWithWebViewAsync();
+            }
         }
 
         private void RequestDuelCancellation()
@@ -41,8 +43,10 @@ namespace EpicRPGBot.UI
         private async Task RunDuelWithWebViewAsync()
         {
             Services.DiscordWebViewLease webViewLease = null;
+            Services.DiscordWebViewLease botWebViewLease = null;
             try
             {
+                botWebViewLease = await AcquireBotWorkflowAsync();
                 webViewLease = await _duelWebViewSession.AcquireAsync(
                     Services.DiscordWebViewActivityReason.Workflow,
                     _duelCancellation.Token);
@@ -62,6 +66,11 @@ namespace EpicRPGBot.UI
                 if (webViewLease != null)
                 {
                     await webViewLease.ReleaseAsync();
+                }
+                if (botWebViewLease != null)
+                {
+                    await ReleaseStoppedEngineDemandAsync();
+                    await botWebViewLease.ReleaseAsync();
                 }
             }
         }

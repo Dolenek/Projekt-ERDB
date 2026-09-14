@@ -4,7 +4,7 @@ namespace EpicRPGBot.UI
 {
     public partial class MainWindow
     {
-        private string _activeExclusiveBotOperation = string.Empty;
+        private string _activeExclusiveBotOperation { get => CurrentAccount.ActiveExclusiveBotOperation; set => CurrentAccount.ActiveExclusiveBotOperation = value; }
 
         private bool TryBeginExclusiveBotOperation(string operationName)
         {

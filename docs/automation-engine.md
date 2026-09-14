@@ -52,7 +52,7 @@ Reaction behavior currently implemented:
 - `CHANGE WORK ...` switches the work command and acknowledges the change.
 - `CHANGE FARM ...` switches the farm command and acknowledges the change.
 - `BOT FARMING` starts farm-only sending if farm is not already running.
-- Event phrases such as zombie horde, megarace boost, epic tree, megalodon, raining coins, NPC trade, lootbox summoning, and legendary boss keep their existing one-line responses.
+- The zombie horde hunt prompt is answered with `fight`; other event phrases such as megarace boost, epic tree, megalodon, raining coins, NPC trade, lootbox summoning, and legendary boss use their configured one-line responses.
 - Bunny catch prompts are handled before the generic phrase-based event responses.
 - Quiz challenge prompts are tracked as an active alert state: the first detection shows a full alert, reminders are rate-limited to once every 10 seconds, and the alert clears when the `Everything seems fine ... keep playing` message is seen.
 - While the challenge window is open, the engine pauses regular outgoing sends on the shared send lane, not just scheduled tracked commands.

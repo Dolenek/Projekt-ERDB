@@ -75,10 +75,26 @@
                         <TextBlock x:Name="ConnectionStatusText" Text="Initializing" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse x:Name="EngineStatusDot" Style="{StaticResource StatusDotStyle}" Fill="{StaticResource MutedTextBrush}"/>
-                        <TextBlock x:Name="EngineStatusText" Text="Stopped" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <Grid Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,12,0"
+                          shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollViewer Grid.Column="0"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="AccountStrip" Orientation="Horizontal"/>
+                        </ScrollViewer>
+                        <Button x:Name="AddAccountBtn" Grid.Column="1" Content="+"
+                                ToolTip="Add account" MinWidth="38"
+                                Style="{StaticResource TitleBarButtonStyle}"
+                                Click="AddAccountBtn_Click"/>
+                        <StackPanel Visibility="Collapsed">
+                            <Ellipse x:Name="EngineStatusDot" Style="{StaticResource StatusDotStyle}" Fill="{StaticResource MutedTextBrush}"/>
+                            <TextBlock x:Name="EngineStatusText" Text="Stopped"/>
+                        </StackPanel>
+                    </Grid>
 
                     <StackPanel Grid.Column="4"
                                 Orientation="Horizontal"

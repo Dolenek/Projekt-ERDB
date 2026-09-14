@@ -26,6 +26,7 @@ public sealed class MainWindowUiSurfaceTests
         var requiredNames = new[]
         {
             "ActivitySearchBox", "ActivityKindFilter", "ConnectionStatusText", "EngineStatusText",
+            "AccountStrip", "AddAccountBtn",
             "StartBtn", "StopBtn", "InitBtn", "RpgCdBtn", "TradeAreaBtn", "WishingTokenBtn",
             "CraftingBtn", "DismantleBtn", "CompleteDungeonBtn", "DuelBtn", "GoChannelBtn",
             "BrowserTabs", "PlayerWeb", "Web", "GuildWeb", "DungeonWeb", "DuelWeb",
@@ -55,8 +56,8 @@ public sealed class MainWindowUiSurfaceTests
         Assert.Contains("webViewFactory.Create", sessionSource, StringComparison.Ordinal);
         Assert.Contains("webView.Dispose()", hostSource, StringComparison.Ordinal);
         Assert.Contains("RememberCurrentUrl(webView)", lifecycleSource, StringComparison.Ordinal);
-        Assert.Contains("KeepPlayerBrowserSessionActiveAsync", browserSource, StringComparison.Ordinal);
-        Assert.Contains("DiscordWebViewActivityReason.Permanent", browserSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("KeepPlayerBrowserSessionActiveAsync", browserSource, StringComparison.Ordinal);
+        Assert.Contains("DiscordWebViewActivityReason.Engine", browserSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -145,8 +146,8 @@ public sealed class MainWindowUiSurfaceTests
         Assert.Contains("FindClickedConsoleItem(e.OriginalSource as DependencyObject)", handlerCode);
         Assert.Contains("_isConsoleMessageNavigationRunning", handlerCode);
         Assert.DoesNotContain("ConsoleList.SelectedItem", handlerCode);
-        Assert.Contains("CreatePlayerNavigationRoute(DiscordTabRole.Bot, playerNavigator)", handlerCode);
-        Assert.Contains("new NavigationRoute(sourceTabRole, SelectPlayerTabAsync, playerNavigator)", handlerCode);
+        Assert.Contains("CreatePlayerNavigationRoute(runtime, DiscordTabRole.Bot, playerNavigator)", handlerCode);
+        Assert.Contains("cancellationToken => SelectPlayerTabAsync(runtime, cancellationToken)", handlerCode);
         Assert.DoesNotContain("SelectBotTab, _botChatClient", handlerCode);
     }
 

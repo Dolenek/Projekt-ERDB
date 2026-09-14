@@ -71,10 +71,21 @@ public sealed record WebViewDebugStateResult(
     string TargetTitle,
     string ReadyState,
     string TabRole,
+    string AccountId,
     string BodyPreview,
     bool Success = true,
     string Error = "",
     AppStatusResult? Status = null);
+
+public sealed record AccountSummaryResult(
+    string AccountId,
+    string DisplayName,
+    bool Selected);
+
+public sealed record AccountListResult(
+    IReadOnlyList<AccountSummaryResult> Accounts,
+    bool Success = true,
+    string Error = "");
 
 public sealed record WebViewMessageSnapshot(
     string Id,

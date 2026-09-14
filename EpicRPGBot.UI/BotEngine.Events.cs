@@ -110,7 +110,7 @@ namespace EpicRPGBot.UI
             }
             else if (msg.IndexOf("You were about to hunt a defenseless monster, but then you notice a zombie horde coming your way", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _ = SendRawWithGlobalCooldownAsync("RUN");
+                _ = SendRawWithGlobalCooldownAsync("fight");
             }
             else if (msg.IndexOf("megarace boost", StringComparison.OrdinalIgnoreCase) >= 0)
             {

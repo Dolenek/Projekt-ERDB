@@ -3,7 +3,7 @@
 The active application is `EpicRPGBot.UI`, a WPF `.NET Framework 4.8` desktop app with a custom dark window shell and three resizable-content columns.
 
 Layout:
-- The custom title bar exposes the packaged app icon, Discord and bot status, `Start`, `Stop`, `Reload`, `Settings`, and standard minimize/maximize/close controls. The window remains draggable and resizable through WPF `WindowChrome`; maximization is constrained to the current monitor work area so it never extends underneath the Windows taskbar.
+- The custom title bar exposes the packaged app icon, Discord status, a horizontally scrollable account switcher, `Start`, `Stop`, `Reload`, `Settings`, and standard minimize/maximize/close controls. The window remains draggable and resizable through WPF `WindowChrome`; maximization is constrained to the current monitor work area so it never extends underneath the Windows taskbar.
 - Left `Activity` sidebar: `Messages`, `Stats`, and `Console` views with case-insensitive search; Console also supports a structured log-kind filter.
 - Center pane: `Player`, `Bot`, `Guild`, `Dungeon`, and `Duel` tabs, each hosting its own Discord WebView2 surface. `Go to channel` remains beside the browser tabs.
 - Right `Control Center`: compact grouped quick actions, inventory tools, run workflows, time-cookie controls, and the complete visual cooldown list without a nested scrollbar.
@@ -16,9 +16,9 @@ Startup flow:
 4. Bind the last-message list and in-memory console log.
 5. Use the saved channel URL, fallback flag, area, and hunt/adventure/work/farm/lootbox baselines as the runtime defaults for navigation and automation.
 6. Create lightweight hosts for all five Discord tabs without creating their WebView2 surfaces.
-7. Initialize the Bot and Player WebView2 sessions with the shared persistent profile under `%LocalAppData%/EpicRPGBot.UI/WebView2`; both remain active for the lifetime of the app.
-8. Navigate Bot and Player to the saved bot channel URL, using `https://discord.com/channels/@me` as the configured-channel fallback.
-9. Start polling the permanently active Bot tab for the last visible message every 2 seconds.
+7. Load the account registry, migrating the existing settings and default browser profile into the first account when needed.
+8. Initialize only the selected account and selected Discord tab under `%LocalAppData%/EpicRPGBot.UI/WebView2`.
+9. Poll an account's Bot tab while its engine runs or that tab is visible.
 10. Start the Guild watcher only when its saved `Active` setting and channel configuration are valid; Dungeon and Duel remain unloaded until selected or requested by their workflow.
 
 User-visible behaviors:
@@ -34,7 +34,7 @@ User-visible behaviors:
 - `Start duel` loads the profile through the channel currently held by the Bot tab and runs matchmaking in the dedicated Duel tab without forcing it into the foreground; while active, the button changes to `Stop duel`.
 - `Start` starts the automation engine, then sends `rpg cd` through the bot tab and waits for the cooldown snapshot before scheduling commands.
 - `Stop` stops engine timers; optional tabs without a remaining activity reason are disposed independently, while Bot and Player remain active.
-- The title bar shows `Stopped`, `Running`, or the active exclusive workflow. Discord status progresses through `Initializing`, `Ready`, or `Error`.
+- The account switcher shows `Stopped • Name` or `Running • Name`; an active exclusive workflow is appended to that account. Discord status reflects the selected account.
 - `Start` uses the green primary treatment, `Stop` uses a restrained red treatment, and active exclusive workflow buttons use the cyan treatment.
 - `Initialize` starts with one opening `rpg cd` snapshot, skips tracked commands that are already on cooldown in that snapshot, and only saves refreshed baselines for commands that were ready to initialize.
 - `rpg cd` queues one cooldown refresh at the next legal bot send slot while the engine is running, or sends immediately through the bot tab when the engine is stopped.

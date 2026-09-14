@@ -11,6 +11,8 @@ namespace EpicRPGBot.UI.Services
     {
         private readonly IDiscordWebViewReference _webViewReference;
         private readonly DiscordTabRole _tabRole;
+        private readonly string _accountId;
+        private readonly string _profileName;
         private readonly Action<string> _telemetry;
         private WebView2 _configuredWebView;
         private bool _navigationHandlerAttached;
@@ -25,14 +27,16 @@ namespace EpicRPGBot.UI.Services
         }
 
         public DiscordChatClient(WebView2 web, string tabRole, Action<string> telemetry = null)
-            : this(new FixedDiscordWebViewReference(web), tabRole, telemetry)
+            : this(new FixedDiscordWebViewReference(web), tabRole, telemetry, string.Empty, "Default")
         {
         }
 
         internal DiscordChatClient(
             IDiscordWebViewReference webViewReference,
             string tabRole,
-            Action<string> telemetry = null)
+            Action<string> telemetry = null,
+            string accountId = "",
+            string profileName = "Default")
         {
             _webViewReference = webViewReference ?? throw new ArgumentNullException(nameof(webViewReference));
             _tabRole = DiscordTabRoleCatalog.Parse(tabRole);
@@ -41,6 +45,8 @@ namespace EpicRPGBot.UI.Services
                 _tabRole = DiscordTabRole.Bot;
             }
             _telemetry = telemetry;
+            _accountId = accountId ?? string.Empty;
+            _profileName = string.IsNullOrWhiteSpace(profileName) ? "Default" : profileName;
         }
 
         public bool IsReady => _webViewReference.Current?.CoreWebView2 != null;
@@ -54,7 +60,9 @@ namespace EpicRPGBot.UI.Services
                 var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EpicRPGBot.UI", "WebView2");
                 Directory.CreateDirectory(dataDir);
                 var env = await WebViewEnvironmentFactory.CreateAsync(dataDir);
-                await webView.EnsureCoreWebView2Async(env);
+                var controllerOptions = env.CreateCoreWebView2ControllerOptions();
+                controllerOptions.ProfileName = _profileName;
+                await webView.EnsureCoreWebView2Async(env, controllerOptions);
             }
 
             ConfigureSettings();
@@ -173,11 +181,14 @@ namespace EpicRPGBot.UI.Services
         private string BuildRoleMarkerScript()
         {
             var role = EscapeJavaScriptString(DiscordTabRoleCatalog.ToMarker(_tabRole));
+            var accountId = EscapeJavaScriptString(_accountId);
             return $@"
 (() => {{
   window.__epicRpGBotTabRole = '{role}';
+  window.__epicRpGBotAccountId = '{accountId}';
   try {{
     document.documentElement.setAttribute('data-epicrpg-tab-role', '{role}');
+    document.documentElement.setAttribute('data-epicrpg-account-id', '{accountId}');
   }} catch (e) {{}}
 }})();
 ";

@@ -21,9 +21,9 @@ public sealed partial class DevToolsProtocolClient
         _artifacts = artifacts;
     }
 
-    public async Task<WebViewEvalResult> EvaluateAsync(string script)
+    public async Task<WebViewEvalResult> EvaluateAsync(string accountId, string script)
     {
-        var target = await GetTargetAsync();
+        var target = await GetTargetAsync(accountId);
         using var response = await SendCommandAsync(
             target.WebSocketDebuggerUrl!,
             "Runtime.evaluate",
@@ -43,9 +43,9 @@ public sealed partial class DevToolsProtocolClient
         return new WebViewEvalResult(target.Url ?? string.Empty, target.Title ?? string.Empty, jsonValue);
     }
 
-    public async Task<ImageArtifactResult> CaptureAsync()
+    public async Task<ImageArtifactResult> CaptureAsync(string accountId)
     {
-        var target = await GetTargetAsync();
+        var target = await GetTargetAsync(accountId);
         using var response = await SendCommandAsync(
             target.WebSocketDebuggerUrl!,
             "Page.captureScreenshot",
@@ -63,8 +63,10 @@ public sealed partial class DevToolsProtocolClient
         return new ImageArtifactResult(path, 0, 0, target.Url ?? string.Empty);
     }
 
-    private async Task<DebugTarget> GetTargetAsync()
+    private async Task<DebugTarget> GetTargetAsync(string accountId)
     {
+        if (string.IsNullOrWhiteSpace(accountId))
+            throw new ArgumentException("accountId is required when multiple accounts are supported.", nameof(accountId));
         var status = _session.GetStatus();
         if (!status.IsRunning || status.DebugPort <= 0)
         {
@@ -88,18 +90,29 @@ public sealed partial class DevToolsProtocolClient
             }
 
             var tabRole = await TryGetTabRoleAsync(candidate);
-            if (string.Equals(tabRole, "bot", StringComparison.OrdinalIgnoreCase))
+            var candidateAccountId = await TryGetAccountIdAsync(candidate);
+            if (string.Equals(tabRole, "bot", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(candidateAccountId, accountId, StringComparison.OrdinalIgnoreCase))
             {
                 return candidate;
             }
         }
+        throw new InvalidOperationException($"Could not find an active Bot WebView for account '{accountId}'.");
+    }
 
-        var target = candidates.FirstOrDefault();
-
-        return target ?? throw new InvalidOperationException("Could not find a WebView2 DevTools target.");
+    private static Task<string> TryGetAccountIdAsync(DebugTarget target)
+    {
+        return TryGetMarkerAsync(target,
+            "window.__epicRpGBotAccountId || document.documentElement.getAttribute('data-epicrpg-account-id') || ''");
     }
 
     private static async Task<string> TryGetTabRoleAsync(DebugTarget target)
+    {
+        return await TryGetMarkerAsync(target,
+            "window.__epicRpGBotTabRole || document.documentElement.getAttribute('data-epicrpg-tab-role') || ''");
+    }
+
+    private static async Task<string> TryGetMarkerAsync(DebugTarget target, string expression)
     {
         try
         {
@@ -108,7 +121,7 @@ public sealed partial class DevToolsProtocolClient
                 "Runtime.evaluate",
                 new Dictionary<string, object?>
                 {
-                    ["expression"] = "window.__epicRpGBotTabRole || document.documentElement.getAttribute('data-epicrpg-tab-role') || ''",
+                    ["expression"] = expression,
                     ["returnByValue"] = true,
                     ["awaitPromise"] = true
                 });

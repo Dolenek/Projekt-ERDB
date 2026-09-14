@@ -11,6 +11,9 @@ namespace EpicRPGBot.UI
 
         private async void CompleteDungeonBtn_Click(object sender, RoutedEventArgs e)
         {
+            var account = _activeAccountRuntime;
+            using (UseAccount(account))
+            {
             if (_isDungeonRunning)
             {
                 RequestDungeonCancellation();
@@ -22,12 +25,6 @@ namespace EpicRPGBot.UI
                 return;
             }
 
-            if (!_botChatClient.IsReady)
-            {
-                _log.Info("Bot tab not ready");
-                return;
-            }
-
             if (!TryBeginExclusiveBotOperation(DungeonOperationName))
             {
                 return;
@@ -35,6 +32,7 @@ namespace EpicRPGBot.UI
 
             BeginDungeonRun();
             await RunDungeonWithWebViewAsync();
+            }
         }
 
         private void RequestDungeonCancellation()
@@ -55,8 +53,10 @@ namespace EpicRPGBot.UI
         private async Task RunDungeonWithWebViewAsync()
         {
             Services.DiscordWebViewLease webViewLease = null;
+            Services.DiscordWebViewLease botWebViewLease = null;
             try
             {
+                botWebViewLease = await AcquireBotWorkflowAsync();
                 webViewLease = await _dungeonWebViewSession.AcquireAsync(
                     Services.DiscordWebViewActivityReason.Workflow,
                     _dungeonCancellation.Token);
@@ -80,6 +80,11 @@ namespace EpicRPGBot.UI
                 if (webViewLease != null)
                 {
                     await webViewLease.ReleaseAsync();
+                }
+                if (botWebViewLease != null)
+                {
+                    await ReleaseStoppedEngineDemandAsync();
+                    await botWebViewLease.ReleaseAsync();
                 }
             }
         }

@@ -5,9 +5,9 @@ namespace EpicRPGBot.Mcp.Services;
 
 public sealed partial class DevToolsProtocolClient
 {
-    public async Task<WebViewDebugStateResult> ReadDebugStateAsync()
+    public async Task<WebViewDebugStateResult> ReadDebugStateAsync(string accountId)
     {
-        var result = await EvaluateAsync(BuildDebugStateScript());
+        var result = await EvaluateAsync(accountId, BuildDebugStateScript());
         var payload = JsonSerializer.Deserialize<DebugStatePayload>(result.JsonValue, JsonOptions) ?? new DebugStatePayload();
 
         return new WebViewDebugStateResult(
@@ -15,13 +15,14 @@ public sealed partial class DevToolsProtocolClient
             result.TargetTitle,
             payload.ReadyState ?? string.Empty,
             payload.TabRole ?? string.Empty,
+            payload.AccountId ?? string.Empty,
             payload.BodyPreview ?? string.Empty);
     }
 
-    public async Task<WebViewMessagesResult> ReadRecentMessagesAsync(int limit)
+    public async Task<WebViewMessagesResult> ReadRecentMessagesAsync(string accountId, int limit)
     {
         var actualLimit = Math.Max(1, limit);
-        var result = await EvaluateAsync(BuildReadMessagesScript(actualLimit));
+        var result = await EvaluateAsync(accountId, BuildReadMessagesScript(actualLimit));
         var messages = JsonSerializer.Deserialize<List<WebViewMessageSnapshot>>(result.JsonValue, JsonOptions)
             ?? new List<WebViewMessageSnapshot>();
 
@@ -29,6 +30,7 @@ public sealed partial class DevToolsProtocolClient
     }
 
     public async Task<WebViewWaitResult> WaitForMessageAsync(
+        string accountId,
         string authorContains,
         string textContains,
         string afterId,
@@ -47,7 +49,7 @@ public sealed partial class DevToolsProtocolClient
 
         while (DateTime.UtcNow <= deadline)
         {
-            latest = await ReadRecentMessagesAsync(30);
+            latest = await ReadRecentMessagesAsync(accountId, 30);
             var match = FindMatchingMessage(latest.Messages, authorContains, textContains, afterId);
             if (match != null)
             {
@@ -128,6 +130,7 @@ public sealed partial class DevToolsProtocolClient
   return {
     readyState: document.readyState || '',
     tabRole: window.__epicRpGBotTabRole || document.documentElement.getAttribute('data-epicrpg-tab-role') || '',
+    accountId: window.__epicRpGBotAccountId || document.documentElement.getAttribute('data-epicrpg-account-id') || '',
     bodyPreview: bodyText.slice(0, 500)
   };
 })()";
@@ -165,6 +168,8 @@ public sealed partial class DevToolsProtocolClient
         public string? ReadyState { get; set; }
 
         public string? TabRole { get; set; }
+
+        public string? AccountId { get; set; }
 
         public string? BodyPreview { get; set; }
     }

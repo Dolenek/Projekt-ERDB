@@ -9,11 +9,6 @@ namespace EpicRPGBot.UI
     {
         private const int ProcessedMessageLimit = 64;
 
-        private void OnPolledMessage(DiscordMessageSnapshot snapshot)
-        {
-            UiDispatcher.OnUI(() => HandleObservedMessage(snapshot));
-        }
-
         private void HandleObservedMessage(DiscordMessageSnapshot snapshot)
         {
             if (snapshot == null ||
@@ -92,6 +87,7 @@ namespace EpicRPGBot.UI
             }
 
             _engine.Stop();
+            _ = SetEngineBrowserDemandAsync(false);
             _log.Engine(
                 "Engine stopped: EPIC RPG said to end the previous command first.",
                 DiscordMessageReference.FromSnapshot(snapshot));
