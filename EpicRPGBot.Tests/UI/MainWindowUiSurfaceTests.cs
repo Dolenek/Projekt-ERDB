@@ -110,7 +110,8 @@ public sealed class MainWindowUiSurfaceTests
         {
             "ChannelUrlBox", "DungeonListingChannelUrlBox", "UseAtMeFallback", "AreaBox",
             "HuntCdBox", "AdventureCdBox", "TrainingCdBox", "WorkCdBox", "FarmCdBox",
-            "LootboxCdBox", "AscendedCheckBox", "AutoDeleteDungeonChannelCheckBox",
+            "LootboxCdBox", "HardcoreHuntAdventureCheckBox", "HealAfterHuntAdventureCheckBox",
+            "AscendedCheckBox", "AutoDeleteDungeonChannelCheckBox",
             "BringGuardAlertsToForegroundCheckBox",
             "WorkCommandsBtn", "GuildRaidBtn", "CardHandBtn", "CloseBtn"
         };

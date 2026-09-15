@@ -26,51 +26,6 @@ namespace EpicRPGBot.UI
                 onOutgoingSnapshotRegistered);
         }
 
-        private async Task SendTrackedCommandAsync(TrackedCommandKind kind, string command)
-        {
-            if (!_running)
-            {
-                return;
-            }
-
-            if (IsGuardIncidentActive)
-            {
-                ReportSolverInfo($"Skipped scheduled command '{command}' while EPIC GUARD incident is active.");
-                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
-                return;
-            }
-
-            try
-            {
-                var sent = await SendConfirmedCommandWithGlobalCooldownAsync(
-                    command,
-                    snapshot =>
-                    {
-                        _scheduler.RegisterPending(kind);
-                        OnCommandSent?.Invoke(command, snapshot);
-                    });
-
-                if (sent)
-                {
-                    return;
-                }
-
-                _scheduler.ClearPending(kind);
-                if (_running)
-                {
-                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
-                }
-            }
-            catch
-            {
-                _scheduler.ClearPending(kind);
-                if (_running)
-                {
-                    _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
-                }
-            }
-        }
-
         private async Task SendQueuedCooldownSnapshotAsync()
         {
             try

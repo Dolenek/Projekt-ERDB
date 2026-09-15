@@ -152,6 +152,12 @@
                             </StackPanel>
                         </UniformGrid>
                         <Separator Background="{StaticResource BorderBrush}" Margin="0,2,0,12"/>
+                        <CheckBox x:Name="HardcoreHuntAdventureCheckBox"
+                                  Content="Use hardcore hunt and adventure commands (rpg hunt h / rpg adv h)"
+                                  Margin="0,0,0,11"/>
+                        <CheckBox x:Name="HealAfterHuntAdventureCheckBox"
+                                  Content="Send rpg heal after every hunt and adventure"
+                                  Margin="0,0,0,11"/>
                         <CheckBox x:Name="AscendedCheckBox"
                                   Content="Ascended — allow farm below area 4" Margin="0,0,0,11"/>
                         <CheckBox x:Name="AutoDeleteDungeonChannelCheckBox"

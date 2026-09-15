@@ -147,6 +147,7 @@
     <Compile Include="MainWindow.WishingToken.cs" />
     <Compile Include="MainWindow.xaml.cs" />
     <Compile Include="Models\AppSettingsSnapshot.cs" />
+    <Compile Include="Models\AppSettingsSnapshot.With.cs" />
     <Compile Include="Models\ConfirmedCommandSendResult.cs" />
     <Compile Include="Models\CooldownCategory.cs" />
     <Compile Include="Models\CooldownDefinition.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="Services\ConfiguredWorkCommandCatalog.cs" />
     <Compile Include="Services\CooldownReductionCalculator.cs" />
     <Compile Include="Services\CooldownInitializationWorkflow.cs" />
+    <Compile Include="Services\CooldownInitializationWorkflow.Training.cs" />
     <Compile Include="Services\CooldownStatsCalculator.cs" />
     <Compile Include="Services\CooldownTracker.cs" />
     <Compile Include="Services\CooldownTracker.Snapshots.cs" />
@@ -210,6 +212,7 @@
     <Compile Include="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="Services\GuildRaidWatcherPolicy.cs" />
+    <Compile Include="Services\HuntAdventureCommandCatalog.cs" />
     <Compile Include="Services\GuardIncidentTracker.cs" />
     <Compile Include="Services\GuardedCommandContinuationClassifier.cs" />
     <Compile Include="Services\GuardedCommandRecoveryCoordinator.cs" />

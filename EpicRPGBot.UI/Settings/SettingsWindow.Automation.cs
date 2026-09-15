@@ -14,6 +14,8 @@ namespace EpicRPGBot.UI.Settings
             SetAutomationIdentity(UseAtMeFallback, "SettingsUseAtMeFallback");
             SetAutomationIdentity(AreaBox, "SettingsAreaInput");
             SetAutomationIdentity(AscendedCheckBox, "SettingsAscendedInput");
+            SetAutomationIdentity(HardcoreHuntAdventureCheckBox, "SettingsHardcoreHuntAdventureInput");
+            SetAutomationIdentity(HealAfterHuntAdventureCheckBox, "SettingsHealAfterHuntAdventureInput");
             SetAutomationIdentity(AutoDeleteDungeonChannelCheckBox, "SettingsAutoDeleteDungeonChannelInput");
             SetAutomationIdentity(BringGuardAlertsToForegroundCheckBox, "SettingsBringGuardAlertsToForegroundInput");
             SetAutomationIdentity(HuntCdBox, "SettingsHuntCooldownInput");

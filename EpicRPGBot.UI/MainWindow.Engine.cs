@@ -261,6 +261,7 @@ namespace EpicRPGBot.UI
         private BotEngine CreateEngine()
         {
             var runtime = CurrentAccount;
+            var settings = runtime.SettingsService.Current;
             return new BotEngine(
                 runtime.BotChatClient,
                 GetConfiguredWorkCommand(),
@@ -271,7 +272,9 @@ namespace EpicRPGBot.UI
                 GetConfiguredWorkMs(),
                 GetConfiguredFarmMs(),
                 GetConfiguredLootboxMs(),
-                () => runtime.SettingsService.Current.CardHand);
+                () => runtime.SettingsService.Current.CardHand,
+                useHardcoreHuntAndAdventure: settings.UseHardcoreHuntAndAdventure,
+                healAfterHuntAndAdventure: settings.HealAfterHuntAndAdventure);
         }
 
     }

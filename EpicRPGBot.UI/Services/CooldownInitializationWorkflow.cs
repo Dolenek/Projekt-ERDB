@@ -1,26 +1,20 @@
 using System;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
-using EpicRPGBot.UI.Training;
 
 namespace EpicRPGBot.UI.Services
 {
-    public sealed class CooldownInitializationWorkflow
+    public sealed partial class CooldownInitializationWorkflow
     {
         private const int ActionDelayMs = 2000;
         private const int AfterCdDelayMs = 1000;
         private const int ExtraLagMs = 1000;
         private const int OverheadMs = ActionDelayMs + AfterCdDelayMs + ExtraLagMs;
         private const int BetweenCommandsMs = 3000;
-        private const int TrainingConfirmationPollDelayMs = 250;
-        private const int TrainingConfirmationTimeoutMs = 20000;
-        private const int TrainingConfirmationScanCount = 20;
-
         private readonly IDiscordChatClient _chatClient;
         private readonly ConfirmedCommandSender _confirmedCommandSender;
         private readonly CooldownTracker _tracker;
         private readonly AppSettingsService _settingsService;
-        private readonly TrainingPromptParser _trainingPromptParser = new TrainingPromptParser();
 
         public CooldownInitializationWorkflow(
             IDiscordChatClient chatClient,
@@ -43,8 +37,6 @@ namespace EpicRPGBot.UI.Services
         {
             logInfo?.Invoke("Inicialize sequence started");
             var currentSettings = _settingsService.Current;
-            var configuredArea = currentSettings.GetAreaOrDefault(10);
-            var workAction = currentSettings.ResolveWorkCommandForArea(configuredArea);
 
             var openingSnapshot = await CaptureOpeningSnapshotAsync(logInfo);
             if (openingSnapshot == null)
@@ -53,15 +45,13 @@ namespace EpicRPGBot.UI.Services
                 return;
             }
 
-            var steps = new[]
-            {
-                new InitializationStep("hunt", "rpg hunt h", 61000),
-                new InitializationStep("adventure", "rpg adv h", adventureDefaultMs),
-                new InitializationStep("training", "rpg tr", trainingDefaultMs),
-                new InitializationStep("farm", "rpg farm", farmDefaultMs),
-                new InitializationStep("work", workAction, workDefaultMs),
-                new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs)
-            };
+            var steps = BuildInitializationSteps(
+                currentSettings,
+                adventureDefaultMs,
+                trainingDefaultMs,
+                workDefaultMs,
+                farmDefaultMs,
+                lootboxDefaultMs);
 
             for (var i = 0; i < steps.Length; i++)
             {
@@ -81,6 +71,27 @@ namespace EpicRPGBot.UI.Services
 
             await RefreshProfileNameAsync(logInfo);
             logInfo?.Invoke("Inicialize sequence finished");
+        }
+
+        private static InitializationStep[] BuildInitializationSteps(
+            AppSettingsSnapshot settings,
+            int adventureDefaultMs,
+            int trainingDefaultMs,
+            int workDefaultMs,
+            int farmDefaultMs,
+            int lootboxDefaultMs)
+        {
+            var useHardcore = settings.UseHardcoreHuntAndAdventure;
+            var area = settings.GetAreaOrDefault(10);
+            return new[]
+            {
+                new InitializationStep("hunt", HuntAdventureCommandCatalog.ResolveHunt(useHardcore), 61000),
+                new InitializationStep("adventure", HuntAdventureCommandCatalog.ResolveAdventure(useHardcore), adventureDefaultMs),
+                new InitializationStep("training", "rpg tr", trainingDefaultMs),
+                new InitializationStep("farm", "rpg farm", farmDefaultMs),
+                new InitializationStep("work", settings.ResolveWorkCommandForArea(area), workDefaultMs),
+                new InitializationStep("lootbox", "rpg buy ed lb", lootboxDefaultMs)
+            };
         }
 
         private async Task<TrackedCooldownSnapshot> CaptureOpeningSnapshotAsync(Action<string> logInfo)
@@ -119,6 +130,10 @@ namespace EpicRPGBot.UI.Services
             }
 
             await Task.Delay(ActionDelayMs);
+            if (await TrySendConfiguredHealAsync(action, logInfo))
+            {
+                await Task.Delay(AfterCdDelayMs);
+            }
 
             var cdResult = await _confirmedCommandSender.SendAsync("rpg cd");
             if (!cdResult.IsConfirmed)
@@ -141,6 +156,24 @@ namespace EpicRPGBot.UI.Services
 
             SaveCooldownSetting(canonical, baseMs);
             logInfo?.Invoke($"Inicialize: {canonical} cooldown set to {baseMs} ms (saved)");
+            return true;
+        }
+
+        private async Task<bool> TrySendConfiguredHealAsync(string completedCommand, Action<string> logInfo)
+        {
+            var healEnabled = _settingsService.Current.HealAfterHuntAndAdventure;
+            if (!HuntAdventureCommandCatalog.ShouldSendHealAfter(completedCommand, healEnabled))
+            {
+                return false;
+            }
+
+            logInfo?.Invoke($"Inicialize: healing after '{completedCommand}'");
+            var result = await _confirmedCommandSender.SendAsync("rpg heal");
+            if (!result.IsConfirmed)
+            {
+                logInfo?.Invoke("Inicialize: failed to send 'rpg heal'");
+            }
+
             return true;
         }
 
@@ -203,124 +236,6 @@ namespace EpicRPGBot.UI.Services
                    message.IndexOf("wait at least", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        private async Task<bool> TryAnswerTrainingPromptAsync(DiscordMessageSnapshot snapshot, Action<string> logInfo)
-        {
-            var resolution = _trainingPromptParser.Parse(snapshot);
-            if (!resolution.IsTrainingPrompt)
-            {
-                logInfo?.Invoke("Inicialize: training reply was not recognized as a training prompt.");
-                return false;
-            }
-
-            if (!resolution.IsResolved)
-            {
-                logInfo?.Invoke("Inicialize: training prompt could not be solved safely.");
-                return false;
-            }
-
-            if (await TryClickButtonAsync(snapshot, resolution))
-            {
-                return await WaitForTrainingConfirmationAsync(snapshot.Id, logInfo);
-            }
-
-            if (string.IsNullOrWhiteSpace(resolution.AnswerText))
-            {
-                logInfo?.Invoke("Inicialize: training answer was empty after parsing.");
-                return false;
-            }
-
-            if (await _chatClient.SendMessageAsync(resolution.AnswerText))
-            {
-                return await WaitForTrainingConfirmationAsync(snapshot.Id, logInfo);
-            }
-
-            logInfo?.Invoke("Inicialize: training answer failed to send.");
-            return false;
-        }
-
-        private async Task<bool> TryClickButtonAsync(DiscordMessageSnapshot snapshot, TrainingPromptResolution resolution)
-        {
-            if (snapshot?.Buttons == null || resolution == null)
-            {
-                return false;
-            }
-
-            foreach (var button in snapshot.Buttons)
-            {
-                if (!LabelsMatch(button.Label, resolution.PreferredButtonLabel) &&
-                    !LabelsMatch(button.Label, resolution.AnswerText))
-                {
-                    continue;
-                }
-
-                return await _chatClient.ClickMessageButtonAsync(snapshot.Id, button.RowIndex, button.ColumnIndex);
-            }
-
-            return false;
-        }
-
-        private static bool LabelsMatch(string left, string right)
-        {
-            return string.Equals(NormalizeLabel(left), NormalizeLabel(right), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private async Task<bool> WaitForTrainingConfirmationAsync(string afterMessageId, Action<string> logInfo)
-        {
-            var cursorId = afterMessageId ?? string.Empty;
-            var waitedMs = 0;
-            while (waitedMs < TrainingConfirmationTimeoutMs)
-            {
-                await Task.Delay(TrainingConfirmationPollDelayMs);
-                waitedMs += TrainingConfirmationPollDelayMs;
-
-                var snapshots = await _chatClient.GetRecentMessagesAsync(TrainingConfirmationScanCount);
-                var startIndex = ResolveStartIndex(snapshots, cursorId);
-                for (var i = startIndex; snapshots != null && i < snapshots.Count; i++)
-                {
-                    var snapshot = snapshots[i];
-                    if (snapshot == null || string.IsNullOrWhiteSpace(snapshot.Id))
-                    {
-                        continue;
-                    }
-
-                    cursorId = snapshot.Id;
-                    if (IsTrainingConfirmationMessage(snapshot.Text))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            logInfo?.Invoke("Inicialize: training answer sent, but no 'Well done' confirmation was observed.");
-            return false;
-        }
-
-        private static int ResolveStartIndex(
-            System.Collections.Generic.IReadOnlyList<DiscordMessageSnapshot> snapshots,
-            string cursorId)
-        {
-            if (snapshots == null || snapshots.Count == 0 || string.IsNullOrWhiteSpace(cursorId))
-            {
-                return 0;
-            }
-
-            for (var i = 0; i < snapshots.Count; i++)
-            {
-                if (string.Equals(snapshots[i]?.Id, cursorId, StringComparison.Ordinal))
-                {
-                    return i + 1;
-                }
-            }
-
-            return 0;
-        }
-
-        private static bool IsTrainingConfirmationMessage(string message)
-        {
-            return !string.IsNullOrWhiteSpace(message) &&
-                message.IndexOf("Well done", StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
         private async Task RefreshProfileNameAsync(Action<string> logInfo)
         {
             var result = await _confirmedCommandSender.SendAsync("rpg p");
@@ -339,30 +254,6 @@ namespace EpicRPGBot.UI.Services
 
             _settingsService.Save(current.WithProfilePlayerName(playerName));
             logInfo?.Invoke($"Inicialize: saved profile name '{playerName}'.");
-        }
-
-        private static string NormalizeLabel(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-
-            var characters = value.Trim().Trim(':').ToCharArray();
-            var output = new char[characters.Length];
-            var count = 0;
-            for (var index = 0; index < characters.Length; index++)
-            {
-                var current = characters[index];
-                if (!char.IsLetterOrDigit(current))
-                {
-                    continue;
-                }
-
-                output[count++] = char.ToLowerInvariant(current);
-            }
-
-            return new string(output, 0, count);
         }
 
         private sealed class InitializationStep

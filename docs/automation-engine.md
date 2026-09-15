@@ -15,7 +15,8 @@ Timer behavior:
 - A successful reply starts the next timer from the confirmation time, not from the local send time.
 - A reply containing `wait at least ...` schedules a retry using the reported remaining time plus a small buffer.
 - The engine processes recent unseen Discord messages in order, so event posts are not skipped when a normal command result lands right after them.
-- Adventure uses `rpg adv h`.
+- Hunt and adventure use `rpg hunt` and `rpg adv` by default. The saved hardcore toggle changes them to `rpg hunt h` and `rpg adv h`, including during `Initialize`.
+- When the saved post-hunt/adventure healing toggle is enabled, every confirmed normal or hardcore hunt/adventure is followed by `rpg heal`. The heal uses reply confirmation and the shared send lane; `Initialize` applies the same rule.
 - Daily uses `rpg daily`.
 - Weekly uses `rpg weekly`.
 - Training uses `rpg tr`.

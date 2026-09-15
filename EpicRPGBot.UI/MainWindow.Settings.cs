@@ -61,6 +61,8 @@ namespace EpicRPGBot.UI
             _engine?.UpdateCardHandSettings(settings?.CardHand);
             if (settings != null)
             {
+                _engine?.UpdateHuntAndAdventureCommands(settings.UseHardcoreHuntAndAdventure);
+                _engine?.UpdateHealAfterHuntAndAdventure(settings.HealAfterHuntAndAdventure);
                 _engine?.UpdateWorkCommand(
                     settings.ResolveWorkCommandForArea(settings.GetAreaOrDefault(10)));
             }

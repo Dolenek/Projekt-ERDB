@@ -7,6 +7,54 @@ namespace EpicRPGBot.Tests.Services;
 public sealed class AppSettingsServiceTests
 {
     [Fact]
+    public void HealAfterHuntAndAdventure_DefaultsToFalseAndPersists()
+    {
+        var fileName = "heal-after-hunt-adventure-" + Guid.NewGuid() + ".ini";
+        var filePath = GetSettingsFilePath(fileName);
+
+        try
+        {
+            Assert.False(AppSettingsSnapshot.Default.HealAfterHuntAndAdventure);
+            var service = new AppSettingsService(new LocalSettingsStore(fileName));
+            Assert.False(service.Current.HealAfterHuntAndAdventure);
+
+            service.Save(service.Current.WithHealAfterHuntAndAdventure(true));
+            var reloaded = new AppSettingsService(new LocalSettingsStore(fileName));
+
+            Assert.True(reloaded.Current.HealAfterHuntAndAdventure);
+            Assert.True(reloaded.Current.WithArea("12").HealAfterHuntAndAdventure);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void HardcoreHuntAndAdventure_DefaultsToFalseAndPersists()
+    {
+        var fileName = "hardcore-commands-" + Guid.NewGuid() + ".ini";
+        var filePath = GetSettingsFilePath(fileName);
+
+        try
+        {
+            Assert.False(AppSettingsSnapshot.Default.UseHardcoreHuntAndAdventure);
+            var service = new AppSettingsService(new LocalSettingsStore(fileName));
+            Assert.False(service.Current.UseHardcoreHuntAndAdventure);
+
+            service.Save(service.Current.WithHardcoreHuntAndAdventure(true));
+            var reloaded = new AppSettingsService(new LocalSettingsStore(fileName));
+
+            Assert.True(reloaded.Current.UseHardcoreHuntAndAdventure);
+            Assert.True(reloaded.Current.WithArea("12").UseHardcoreHuntAndAdventure);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Fact]
     public void GuardForegroundSetting_DefaultsToFalseAndPersists()
     {
         var fileName = "guard-foreground-" + Guid.NewGuid() + ".ini";

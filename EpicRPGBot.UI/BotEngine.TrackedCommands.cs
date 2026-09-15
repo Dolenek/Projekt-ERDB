@@ -6,6 +6,17 @@ namespace EpicRPGBot.UI
 {
     public sealed partial class BotEngine
     {
+        public void UpdateHuntAndAdventureCommands(bool useHardcore)
+        {
+            _hunt = HuntAdventureCommandCatalog.ResolveHunt(useHardcore);
+            _adventure = HuntAdventureCommandCatalog.ResolveAdventure(useHardcore);
+        }
+
+        public void UpdateHealAfterHuntAndAdventure(bool enabled)
+        {
+            _healAfterHuntAndAdventure = enabled;
+        }
+
         private async Task OnTrackedTimerElapsedAsync(TrackedCommandKind kind)
         {
             if (kind == TrackedCommandKind.CardHand)
@@ -32,6 +43,65 @@ namespace EpicRPGBot.UI
                 case TrackedCommandKind.Lootbox: return _lootbox;
                 default: throw new ArgumentOutOfRangeException(nameof(kind));
             }
+        }
+
+        private async Task SendTrackedCommandAsync(TrackedCommandKind kind, string command)
+        {
+            if (!_running)
+            {
+                return;
+            }
+
+            if (IsGuardIncidentActive)
+            {
+                ReportSolverInfo($"Skipped scheduled command '{command}' while EPIC GUARD incident is active.");
+                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), _running);
+                return;
+            }
+
+            try
+            {
+                var sent = await SendConfirmedCommandWithGlobalCooldownAsync(
+                    command,
+                    snapshot =>
+                    {
+                        _scheduler.RegisterPending(kind);
+                        OnCommandSent?.Invoke(command, snapshot);
+                    });
+
+                if (sent)
+                {
+                    await SendConfiguredHealAsync(command);
+                    return;
+                }
+
+                ScheduleTrackedRetry(kind);
+            }
+            catch
+            {
+                ScheduleTrackedRetry(kind);
+            }
+        }
+
+        private void ScheduleTrackedRetry(TrackedCommandKind kind)
+        {
+            _scheduler.ClearPending(kind);
+            if (_running)
+            {
+                _scheduler.Schedule(kind, TimeSpan.FromSeconds(5), true);
+            }
+        }
+
+        private async Task SendConfiguredHealAsync(string completedCommand)
+        {
+            if (!_running || !HuntAdventureCommandCatalog.ShouldSendHealAfter(
+                completedCommand,
+                _healAfterHuntAndAdventure))
+            {
+                return;
+            }
+
+            await SendAndEmitAsync("rpg heal");
         }
     }
 }

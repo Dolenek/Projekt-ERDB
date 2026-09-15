@@ -35,8 +35,8 @@ namespace EpicRPGBot.UI
         private readonly CardHandPromptParser _cardHandPromptParser = new CardHandPromptParser();
         private readonly CardHandMessageSelector _cardHandMessageSelector = new CardHandMessageSelector();
 
-        private string _hunt = "rpg hunt h";
-        private string _adventure = "rpg adv h";
+        private string _hunt = "rpg hunt";
+        private string _adventure = "rpg adv";
         private string _training = "rpg tr";
         private string _work;
         private string _farm = "rpg farm";
@@ -49,6 +49,7 @@ namespace EpicRPGBot.UI
         private string _startupCutoffMessageId = string.Empty;
         private int _queuedCooldownSnapshot;
         private bool _running;
+        private bool _healAfterHuntAndAdventure;
         private bool _awaitingStartupCooldownSnapshot;
         private bool _awaitingStartupMessageCutoff;
         private DateTime _lastCommandSentUtc = DateTime.MinValue;
@@ -79,7 +80,9 @@ namespace EpicRPGBot.UI
             int farmCooldown,
             int lootboxCooldown,
             Func<CardHandSettingsSnapshot> cardHandSettingsProvider = null,
-            ICardHandDecisionEngine cardHandDecisionEngine = null)
+            ICardHandDecisionEngine cardHandDecisionEngine = null,
+            bool useHardcoreHuntAndAdventure = false,
+            bool healAfterHuntAndAdventure = false)
         {
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             _puzzleSolver = new PuzzleSolverService(_chatClient);
@@ -89,6 +92,8 @@ namespace EpicRPGBot.UI
             _cardHandDecisionEngine = cardHandDecisionEngine ?? new SampledExpectimaxDecisionEngine();
             _cardHandAutomationEnabled = _cardHandSettingsProvider().AutoPlayEnabled;
             _work = NormalizeWorkCommand(workCommand);
+            UpdateHuntAndAdventureCommands(useHardcoreHuntAndAdventure);
+            UpdateHealAfterHuntAndAdventure(healAfterHuntAndAdventure);
             _farmCooldown = farmCooldown;
             _farmEnabled = farmEnabled;
             _scheduler = new TrackedCommandScheduler(farmEnabled, _cardHandSettingsProvider().AutoPlayEnabled, huntCooldown, adventureCooldown, trainingCooldown, workCooldown, farmCooldown, lootboxCooldown, OnTrackedTimerElapsedAsync);

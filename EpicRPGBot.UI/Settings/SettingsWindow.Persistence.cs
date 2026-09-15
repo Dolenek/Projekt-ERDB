@@ -18,6 +18,10 @@ namespace EpicRPGBot.UI.Settings
             WorkCdBox.TextChanged += OnSettingsChanged;
             FarmCdBox.TextChanged += OnSettingsChanged;
             LootboxCdBox.TextChanged += OnSettingsChanged;
+            HardcoreHuntAdventureCheckBox.Checked += OnHardcoreCommandModeChanged;
+            HardcoreHuntAdventureCheckBox.Unchecked += OnHardcoreCommandModeChanged;
+            HealAfterHuntAdventureCheckBox.Checked += OnHealAfterHuntAdventureChanged;
+            HealAfterHuntAdventureCheckBox.Unchecked += OnHealAfterHuntAdventureChanged;
             AscendedCheckBox.Checked += OnAscendedChanged;
             AscendedCheckBox.Unchecked += OnAscendedChanged;
             AutoDeleteDungeonChannelCheckBox.Checked += OnAutoDeleteDungeonChannelChanged;
@@ -43,6 +47,8 @@ namespace EpicRPGBot.UI.Settings
             WorkCdBox.Text = settings.WorkMs;
             FarmCdBox.Text = settings.FarmMs;
             LootboxCdBox.Text = settings.LootboxMs;
+            HardcoreHuntAdventureCheckBox.IsChecked = settings.UseHardcoreHuntAndAdventure;
+            HealAfterHuntAdventureCheckBox.IsChecked = settings.HealAfterHuntAndAdventure;
             AutoDeleteDungeonChannelCheckBox.IsChecked = settings.AutoDeleteDungeonChannel;
             BringGuardAlertsToForegroundCheckBox.IsChecked = settings.BringGuardAlertsToForeground;
 
@@ -60,6 +66,16 @@ namespace EpicRPGBot.UI.Settings
         }
 
         private void OnAscendedChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
+        private void OnHardcoreCommandModeChanged(object sender, RoutedEventArgs e)
+        {
+            PersistSettings();
+        }
+
+        private void OnHealAfterHuntAdventureChanged(object sender, RoutedEventArgs e)
         {
             PersistSettings();
         }
@@ -102,7 +118,9 @@ namespace EpicRPGBot.UI.Settings
                 _settingsService.Current.GuildRaidAuthorFilter,
                 _settingsService.Current.CardHand,
                 BringGuardAlertsToForegroundCheckBox.IsChecked == true,
-                _settingsService.Current.GuildRaidWatcherActive));
+                _settingsService.Current.GuildRaidWatcherActive,
+                HardcoreHuntAdventureCheckBox.IsChecked == true,
+                HealAfterHuntAdventureCheckBox.IsChecked == true));
         }
     }
 }

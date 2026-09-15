@@ -8,7 +8,7 @@ Layout:
 - `Work commands`, `Guild raid`, and `Card Hand` use the same responsive shell, fixed footer, auto-save badge, window controls, and work-area clamping.
 - The advanced dialogs show their complete content at the default size; reduced heights use only a dark vertical scrollbar.
 - Left column: `Discord` channel and dungeon-listing URLs, the `Fallback to @me if empty` toggle, and launchers for focused advanced dialogs.
-- Right column: area, `Ascended`, dungeon-channel cleanup, EPIC GUARD foreground behavior, and hunt/adventure/training/work/farm/lootbox cooldown baselines.
+- Right column: area, hardcore hunt/adventure mode, optional healing after hunt/adventure, `Ascended`, dungeon-channel cleanup, EPIC GUARD foreground behavior, and hunt/adventure/training/work/farm/lootbox cooldown baselines.
 - `Close` button only; there is no separate save/apply action
 - `Work commands` opens a second modal with editable work-command text rows for areas `1..15` and a one-shot `Auto-Best` profile loader
 - `Guild raid` opens a second modal with an `Active` toggle, guild-raid channel, trigger text, match mode, and optional author filter. `Active` defaults to off and controls whether the Guild watcher keeps its WebView loaded in the background.
@@ -24,6 +24,9 @@ Persistence model:
 Runtime behavior:
 - `Go to channel` reads the current saved settings snapshot, not a textbox on the main window.
 - `Start` reads area and cooldown baselines from the same shared snapshot.
+- Hardcore hunt/adventure mode is disabled by default. Disabled sends `rpg hunt` and `rpg adv`; enabled sends `rpg hunt h` and `rpg adv h`.
+- Changing hardcore mode updates a running engine immediately, and `Initialize` uses the same saved selection.
+- `Send rpg heal after every hunt and adventure` is disabled by default. When enabled, a confirmed normal or hardcore hunt/adventure is followed by confirmed `rpg heal`; the running engine and `Initialize` both honor the setting.
 - `Start` also resolves the work command from the saved area and the saved per-area work map.
 - Work-command edits and successful Auto-Best runs update the running engine for the configured area immediately.
 - Auto-Best shows an indeterminate progress indicator while its confirmed Discord queries are running, supports cancellation when the dialog closes, and only applies a complete 15-area result.
@@ -36,7 +39,7 @@ Runtime behavior:
 Automation IDs:
 - Main window launcher: `SettingsButton`
 - Dialog root: `SettingsWindow`
-- Dialog fields: `SettingsChannelUrlInput`, `SettingsDungeonListingChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`, `SettingsAscendedInput`, `SettingsAutoDeleteDungeonChannelInput`, `SettingsBringGuardAlertsToForegroundInput`
+- Dialog fields: `SettingsChannelUrlInput`, `SettingsDungeonListingChannelUrlInput`, `SettingsUseAtMeFallback`, `SettingsAreaInput`, `SettingsHardcoreHuntAdventureInput`, `SettingsHealAfterHuntAdventureInput`, `SettingsAscendedInput`, `SettingsAutoDeleteDungeonChannelInput`, `SettingsBringGuardAlertsToForegroundInput`
 - Cooldown fields: `SettingsHuntCooldownInput`, `SettingsAdventureCooldownInput`, `SettingsTrainingCooldownInput`, `SettingsWorkCooldownInput`, `SettingsFarmCooldownInput`, `SettingsLootboxCooldownInput`
 - Dialog actions: `SettingsWorkCommandsButton`, `SettingsGuildRaidButton`, `SettingsCardHandButton`, `SettingsCloseButton`
 - Window chrome: `SettingsMinimizeButton`, `SettingsMaximizeRestoreButton`, `SettingsWindowCloseButton`

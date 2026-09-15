@@ -51,6 +51,8 @@ namespace EpicRPGBot.UI.Services
             _store.SetString("guild_raid_author_filter", snapshot.GuildRaidAuthorFilter);
             _store.SetBool("guild_raid_active", snapshot.GuildRaidWatcherActive);
             _store.SetBool("bring_guard_alerts_to_foreground", snapshot.BringGuardAlertsToForeground);
+            _store.SetBool("use_hardcore_hunt_adventure", snapshot.UseHardcoreHuntAndAdventure);
+            _store.SetBool("heal_after_hunt_adventure", snapshot.HealAfterHuntAndAdventure);
             CardHandSettingsPersistence.Write(_store, snapshot.CardHand);
 
             Current = snapshot;
@@ -81,7 +83,9 @@ namespace EpicRPGBot.UI.Services
                 _store.GetString("guild_raid_author_filter", defaults.GuildRaidAuthorFilter),
                 CardHandSettingsPersistence.Read(_store),
                 _store.GetBool("bring_guard_alerts_to_foreground", defaults.BringGuardAlertsToForeground),
-                _store.GetBool("guild_raid_active", defaults.GuildRaidWatcherActive));
+                _store.GetBool("guild_raid_active", defaults.GuildRaidWatcherActive),
+                _store.GetBool("use_hardcore_hunt_adventure", defaults.UseHardcoreHuntAndAdventure),
+                _store.GetBool("heal_after_hunt_adventure", defaults.HealAfterHuntAndAdventure));
         }
     }
 }

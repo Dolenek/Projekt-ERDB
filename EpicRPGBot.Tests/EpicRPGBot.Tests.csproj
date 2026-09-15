@@ -62,6 +62,7 @@
     <Compile Include="..\EpicRPGBot.UI\Dungeon\DungeonWorkflow.cs" Link="Dungeon\DungeonWorkflow.cs" />
     <Compile Include="..\EpicRPGBot.UI\Duel\*.cs" Link="Duel\%(Filename)%(Extension)" />
     <Compile Include="..\EpicRPGBot.UI\Models\AppSettingsSnapshot.cs" Link="Models\AppSettingsSnapshot.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Models\AppSettingsSnapshot.With.cs" Link="Models\AppSettingsSnapshot.With.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\ConfirmedCommandSendResult.cs" Link="Models\ConfirmedCommandSendResult.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\LogEntry.cs" Link="Models\LogEntry.cs" />
     <Compile Include="..\EpicRPGBot.UI\Models\MessageItem.cs" Link="Models\MessageItem.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerMatcher.cs" Link="Services\GuildRaidTriggerMatcher.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidTriggerProcessor.cs" Link="Services\GuildRaidTriggerProcessor.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\GuildRaidWatcherPolicy.cs" Link="Services\GuildRaidWatcherPolicy.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\HuntAdventureCommandCatalog.cs" Link="Services\HuntAdventureCommandCatalog.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordChatClient.cs" Link="Services\IDiscordChatClient.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDiscordMessageNavigator.cs" Link="Services\IDiscordMessageNavigator.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\IDuelDiscordClient.cs" Link="Services\IDuelDiscordClient.cs" />
