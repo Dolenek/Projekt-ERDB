@@ -101,7 +101,8 @@ namespace EpicRPGBot.UI
         {
             var dialog = new AccountNameDialog("Add account") { Owner = this };
             if (dialog.ShowDialog() != true) return;
-            var definition = _accountRegistry.Add(dialog.AccountName);
+            AccountDefinition definition = null;
+            if (!TryChangeAccountRegistry(() => definition = _accountRegistry.Add(dialog.AccountName))) return;
             var runtime = CreateAccountRuntime(definition);
             _accountRuntimes.Add(runtime);
             runtime.CooldownTracker.Start();
@@ -120,7 +121,7 @@ namespace EpicRPGBot.UI
             if (!((sender as FrameworkElement)?.Tag is AccountRuntime runtime)) return;
             var dialog = new AccountNameDialog("Rename account", runtime.Definition.DisplayName) { Owner = this };
             if (dialog.ShowDialog() != true) return;
-            _accountRegistry.Rename(runtime.Definition.AccountId, dialog.AccountName);
+            if (!TryChangeAccountRegistry(() => _accountRegistry.Rename(runtime.Definition.AccountId, dialog.AccountName))) return;
             runtime.Definition.Rename(dialog.AccountName);
             RefreshAccountStrip();
             await Task.CompletedTask;
@@ -133,13 +134,13 @@ namespace EpicRPGBot.UI
             try
             {
                 if (ReferenceEquals(nextRuntime, _activeAccountRuntime)) return;
+                if (!TryChangeAccountRegistry(() => _accountRegistry.Select(nextRuntime.Definition.AccountId))) return;
                 var previousRuntime = _activeAccountRuntime;
                 SaveAccountUiState(previousRuntime);
                 previousRuntime.CooldownTracker.UnbindVisual();
                 await ReleaseSelectedAccountBrowserAsync(previousRuntime);
 
                 _activeAccountRuntime = nextRuntime;
-                _accountRegistry.Select(nextRuntime.Definition.AccountId);
                 nextRuntime.CooldownTracker.BindVisual(CooldownVisual);
                 RestoreAccountUiState(nextRuntime);
                 RefreshAccountStrip();
@@ -164,6 +165,20 @@ namespace EpicRPGBot.UI
                 await SetSelectedDemandSafeAsync(runtime.SelectedBrowserSession, false);
                 runtime.SelectedBrowserSession = null;
                 ReconcileMessagePolling();
+            }
+        }
+
+        private bool TryChangeAccountRegistry(Action change)
+        {
+            try
+            {
+                change();
+                return true;
+            }
+            catch (Exception exception) when (AccountRegistryErrorPresenter.IsStorageError(exception))
+            {
+                AccountRegistryErrorPresenter.Show(this, exception);
+                return false;
             }
         }
 

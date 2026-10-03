@@ -1,33 +1,38 @@
 #nullable disable
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 namespace EpicRPGBot.UI.Accounts
 {
     public sealed class AccountRegistry
     {
-        private const string LegacySettingsFile = "app-settings.ini";
-        private const string LegacyProfileName = "Default";
-        private readonly string _registryPath;
+        private readonly IAccountRegistryStorage _storage;
+        private readonly AccountRegistryValidator _validator;
         private AccountRegistryDocument _document;
 
-        public AccountRegistry(string settingsRoot = null)
+        public AccountRegistry(string settingsRoot = null) : this(settingsRoot, null) { }
+
+        internal AccountRegistry(string settingsRoot, IAccountRegistryStorage storage)
         {
             SettingsRoot = settingsRoot ?? GetDefaultSettingsRoot();
-            _registryPath = Path.Combine(SettingsRoot, "accounts.json");
+            _storage = storage ?? new AccountRegistryStorage(SettingsRoot);
+            _validator = new AccountRegistryValidator(SettingsRoot);
         }
 
         public string SettingsRoot { get; }
 
         public AccountRegistrySnapshot Load()
         {
-            _document = ReadDocument() ?? CreateMigratedDocument();
-            NormalizeDocument(_document);
-            SaveDocument();
+            var candidate = _storage.Read();
+            var isMigration = candidate == null;
+            candidate = candidate ?? AccountRegistryMigration.CreateDocument();
+            _validator.Validate(candidate);
+            var selectionChanged = NormalizeSelection(candidate);
+            if (isMigration) AccountRegistryMigration.Save(SettingsRoot, candidate, _storage);
+            else if (selectionChanged) _storage.Write(candidate);
+            _document = candidate;
             return CreateSnapshot();
         }
 
@@ -37,25 +42,28 @@ namespace EpicRPGBot.UI.Accounts
             var accountId = Guid.NewGuid();
             var record = new AccountRegistryRecord
             {
-                AccountId = accountId,
-                DisplayName = displayName?.Trim(),
+                AccountId = accountId, DisplayName = displayName,
                 SettingsFileName = Path.Combine("accounts", accountId.ToString("N") + ".ini"),
                 BrowserProfileName = "account-" + accountId.ToString("N")
             };
             var definition = ToDefinition(record);
-            _document.Accounts.Add(record);
-            _document.SelectedAccountId = accountId;
-            SaveDocument();
+            record.DisplayName = definition.DisplayName;
+            var candidate = CopyDocument();
+            candidate.Accounts.Add(record);
+            candidate.SelectedAccountId = accountId;
+            Commit(candidate);
             return definition;
         }
 
         public void Rename(Guid accountId, string displayName)
         {
             EnsureLoaded();
-            var definition = new AccountDefinition(accountId, displayName, "unused", "unused");
-            var record = _document.Accounts.Single(item => item.AccountId == accountId);
+            var candidate = CopyDocument();
+            var record = candidate.Accounts.Single(item => item.AccountId == accountId);
+            var definition = ToDefinition(record);
+            definition.Rename(displayName);
             record.DisplayName = definition.DisplayName;
-            SaveDocument();
+            Commit(candidate);
         }
 
         public void Select(Guid accountId)
@@ -63,118 +71,53 @@ namespace EpicRPGBot.UI.Accounts
             EnsureLoaded();
             if (_document.Accounts.All(item => item.AccountId != accountId))
                 throw new ArgumentException("Unknown account.", nameof(accountId));
-            _document.SelectedAccountId = accountId;
-            SaveDocument();
+            if (_document.SelectedAccountId == accountId) return;
+            var candidate = CopyDocument();
+            candidate.SelectedAccountId = accountId;
+            Commit(candidate);
         }
 
         public string ResolveSettingsPath(AccountDefinition definition)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
-            var root = Path.GetFullPath(SettingsRoot)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
-                Path.DirectorySeparatorChar;
-            var candidate = Path.GetFullPath(Path.Combine(root, definition.SettingsFileName));
-            if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Account settings path leaves the settings directory.");
-            return candidate;
+            return _validator.ResolveSettingsPath(definition.SettingsFileName);
         }
 
-        private AccountRegistryDocument ReadDocument()
+        private void Commit(AccountRegistryDocument candidate)
         {
-            try
-            {
-                return File.Exists(_registryPath)
-                    ? JsonSerializer.Deserialize<AccountRegistryDocument>(File.ReadAllText(_registryPath))
-                    : null;
-            }
-            catch
-            {
-                return null;
-            }
+            _validator.Validate(candidate);
+            _storage.Write(candidate);
+            _document = candidate;
         }
 
-        private AccountRegistryDocument CreateMigratedDocument()
+        private AccountRegistryDocument CopyDocument()
         {
-            var accountId = Guid.NewGuid();
-            var accountSettingsFile = Path.Combine("accounts", accountId.ToString("N") + ".ini");
-            CopyLegacySettings(accountSettingsFile);
             return new AccountRegistryDocument
             {
-                Version = 1,
-                SelectedAccountId = accountId,
-                Accounts = new List<AccountRegistryRecord>
+                Version = _document.Version, SelectedAccountId = _document.SelectedAccountId,
+                Accounts = _document.Accounts.Select(record => new AccountRegistryRecord
                 {
-                    new AccountRegistryRecord
-                    {
-                        AccountId = accountId,
-                        DisplayName = "Default",
-                        SettingsFileName = accountSettingsFile,
-                        BrowserProfileName = LegacyProfileName
-                    }
-                }
+                    AccountId = record.AccountId, DisplayName = record.DisplayName,
+                    SettingsFileName = record.SettingsFileName, BrowserProfileName = record.BrowserProfileName
+                }).ToList()
             };
         }
 
-        private void CopyLegacySettings(string accountSettingsFile)
+        private static bool NormalizeSelection(AccountRegistryDocument document)
         {
-            var sourcePath = Path.Combine(SettingsRoot, LegacySettingsFile);
-            var destinationPath = Path.Combine(SettingsRoot, accountSettingsFile);
-            if (!File.Exists(sourcePath) || File.Exists(destinationPath)) return;
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-            File.Copy(sourcePath, destinationPath, false);
-        }
-
-        private void NormalizeDocument(AccountRegistryDocument document)
-        {
-            document.Version = 1;
-            document.Accounts = document.Accounts ?? new List<AccountRegistryRecord>();
-            document.Accounts = document.Accounts.Where(IsValid).ToList();
-            if (document.Accounts.Count == 0)
-            {
-                var replacement = Guid.NewGuid();
-                var settingsFile = Path.Combine("accounts", replacement.ToString("N") + ".ini");
-                CopyLegacySettings(settingsFile);
-                document.Accounts.Add(new AccountRegistryRecord
-                {
-                    AccountId = replacement,
-                    DisplayName = "Default",
-                    SettingsFileName = settingsFile,
-                    BrowserProfileName = LegacyProfileName
-                });
-            }
-            if (document.Accounts.All(item => item.AccountId != document.SelectedAccountId))
-                document.SelectedAccountId = document.Accounts[0].AccountId;
-        }
-
-        private static bool IsValid(AccountRegistryRecord record)
-        {
-            return record != null && record.AccountId != Guid.Empty &&
-                   !string.IsNullOrWhiteSpace(record.DisplayName) &&
-                   !string.IsNullOrWhiteSpace(record.SettingsFileName) &&
-                   !string.IsNullOrWhiteSpace(record.BrowserProfileName);
+            if (document.Accounts.Any(item => item.AccountId == document.SelectedAccountId)) return false;
+            document.SelectedAccountId = document.Accounts[0].AccountId;
+            return true;
         }
 
         private AccountRegistrySnapshot CreateSnapshot()
         {
-            return new AccountRegistrySnapshot(
-                _document.Accounts.Select(ToDefinition).ToArray(),
-                _document.SelectedAccountId);
-        }
-
-        private void SaveDocument()
-        {
-            Directory.CreateDirectory(SettingsRoot);
-            var json = JsonSerializer.Serialize(_document, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_registryPath, json);
+            return new AccountRegistrySnapshot(_document.Accounts.Select(ToDefinition).ToArray(), _document.SelectedAccountId);
         }
 
         private static AccountDefinition ToDefinition(AccountRegistryRecord record)
         {
-            return new AccountDefinition(
-                record.AccountId,
-                record.DisplayName,
-                record.SettingsFileName,
-                record.BrowserProfileName);
+            return new AccountDefinition(record.AccountId, record.DisplayName, record.SettingsFileName, record.BrowserProfileName);
         }
 
         private void EnsureLoaded()
@@ -187,6 +130,5 @@ namespace EpicRPGBot.UI.Accounts
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "EpicRPGBot.UI", "settings");
         }
-
     }
 }

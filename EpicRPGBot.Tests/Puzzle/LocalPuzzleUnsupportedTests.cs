@@ -7,7 +7,7 @@ namespace EpicRPGBot.Tests.Puzzle;
 
 public sealed class LocalPuzzleUnsupportedTests
 {
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-dataset-expansion-20260908/unsupported.json")]
     public async Task LegacyPipeline_RejectsCollectedKeyQuestionCards()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();

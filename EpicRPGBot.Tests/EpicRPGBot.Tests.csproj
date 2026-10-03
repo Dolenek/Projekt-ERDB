@@ -78,6 +78,12 @@
     <Compile Include="..\EpicRPGBot.UI\Services\AreaWorkCommandSettings.cs" Link="Services\AreaWorkCommandSettings.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ActivityEntryFilter.cs" Link="Services\ActivityEntryFilter.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\AppSettingsService.cs" Link="Services\AppSettingsService.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordMessageIdentity.cs" Link="Services\DiscordMessageIdentity.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordMessageChronology.cs" Link="Services\DiscordMessageChronology.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Services\DiscordCommandReplySelector.cs" Link="Services\DiscordCommandReplySelector.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistryStorage.cs" Link="Accounts\AccountRegistryStorage.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistryValidator.cs" Link="Accounts\AccountRegistryValidator.cs" />
+    <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistryMigration.cs" Link="Accounts\AccountRegistryMigration.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\ConfirmedCommandSender.cs" Link="Services\ConfirmedCommandSender.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordCommandSendPolicy.cs" Link="Services\DiscordCommandSendPolicy.cs" />
     <Compile Include="..\EpicRPGBot.UI\Services\DiscordMessagePermalink.cs" Link="Services\DiscordMessagePermalink.cs" />

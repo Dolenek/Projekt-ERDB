@@ -33,6 +33,7 @@ Canonical pages:
 - [Puzzle terminology](docs/puzzle-terminology.md)
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)
+- [Build and test checks](docs/development.md)
 
 Supporting references:
 - [Root README](README.md)

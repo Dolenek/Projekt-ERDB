@@ -7,7 +7,9 @@ Confirmation rules:
 - Outgoing registration skips Discord's `isSending` and `isFailed` message states.
   An optimistic message has a temporary ID that Discord can replace on delivery;
   only the delivered message ID anchors reply confirmation.
-- Step 2: A newer message from the `EPIC RPG` author must appear after that outgoing command.
+- Step 2: A newer message from the `EPIC RPG` author in the same channel must follow the delivered outgoing message ID.
+- Reply identity accepts Discord app badges and name decorations. With missing author metadata, only a leading EPIC RPG header in text or rendered text is accepted.
+- Other authors, body mentions of EPIC RPG, old messages and repeated command text cannot confirm a send. Recent replies are ordered by message ID, including when the outgoing message has scrolled out of the scan window.
 - The send lane stays blocked until both steps succeed or the retry budget is exhausted.
 
 Scope:
@@ -33,6 +35,6 @@ Runtime effects:
 - For tracked hunt/adventure/work/farm/lootbox sends, the scheduler marks the command as pending as soon as the outgoing `rpg ...` message is visible.
 - If all confirmation attempts fail, the caller keeps its existing failure handling, such as retry scheduling for tracked commands.
 - Confirmed send results now retain the full EPIC RPG reply snapshot text, which higher-level workflows such as crafting, dismantling, and area trading use for reply parsing.
-- The fallback EPIC RPG reply detector recognizes profile, craft, dismantle, and trade-style replies when Discord does not expose the author or exact outgoing message id cleanly enough.
+- Direct reply lookup, recent-message fallback and pet reply checks share the same identity and chronology rules.
 - When a confirmed reply snapshot is found, the engine processes that exact snapshot immediately before relying on the next recent-message poll. This prevents interactive replies such as training prompts from being missed by a follow-up poll race.
 - `Stop Bot` cancels in-flight send confirmation waits and retries instead of waiting for the full timeout budget.

@@ -69,6 +69,7 @@ answers including key, environment overrides, preprocessing and pose refinement,
 invalid images, observation mode, missing images, duplicate attempts and
 cancellation. Windows image tests require the native OpenCV runtime.
 See [MCP operation](testing-automation.md) for inspecting the application.
+Missing optional local fixtures produce explicit skips; see [development checks](development.md).
 
 The focused `--filter FullyQualifiedName~ProductionPuzzleTests` suite uses only
 the versioned production bundle and a synthetic key card. It runs without local

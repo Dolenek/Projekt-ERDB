@@ -184,7 +184,7 @@ namespace EpicRPGBot.Tests.AreaTrading
             private DiscordMessageSnapshot CreateSnapshot(string author, string text)
             {
                 _messageSequence++;
-                return new DiscordMessageSnapshot("m" + _messageSequence, text, author, text);
+                return new DiscordMessageSnapshot("chat-messages-42-" + _messageSequence, text, author, text);
             }
         }
     }

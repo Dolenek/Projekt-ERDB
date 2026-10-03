@@ -76,73 +76,9 @@ namespace EpicRPGBot.UI.Services
 
         public async Task<DiscordMessageSnapshot> GetEpicReplyAfterMessageAsync(string outgoingMessageId)
         {
-            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(outgoingMessageId))
-            {
-                return null;
-            }
-
-            var script = BuildSingleMessageSnapshotScript($@"
-  const items = Array.from(document.querySelectorAll('li[id^=""chat-messages-""]'));
-  const outgoingId = '{(outgoingMessageId ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'")}';
-  const outgoingIndex = items.findIndex(item => (item.id || '') === outgoingId);
-  if (outgoingIndex < 0) {{
-    return JSON.stringify(emptySnapshot());
-  }}
-  const looksLikeTrainingPrompt = (value) => {{
-    const normalized = (value || '').toLowerCase();
-    return normalized.includes('is training in') && normalized.includes('15 seconds');
-  }};
-  const looksLikeEpicReply = (snapshot) => {{
-    const author = snapshot.author || '';
-    const text = snapshot.text || '';
-    const renderedText = snapshot.renderedText || '';
-    const normalizedAuthor = (author || '').toLowerCase();
-    const normalizedText = (text || '').toLowerCase();
-    const normalizedRenderedText = (renderedText || '').toLowerCase();
-    return normalizedAuthor.includes('epic rpg') ||
-      normalizedText.includes('epic rpg') ||
-      normalizedRenderedText.includes('epic rpg') ||
-      looksLikeTrainingPrompt(renderedText) ||
-      looksLikeTrainingPrompt(text) ||
-      normalizedText.includes('area:') ||
-      normalizedText.includes('successfully traded') ||
-      normalizedText.includes('you traded') ||
-      normalizedText.includes(""you don't have enough items to trade this"") ||
-      normalizedText.includes(""don't have enough"") ||
-      normalizedText.includes('middle of a command') ||
-      normalizedText.includes(""you don't have enough items to craft this"") ||
-      normalizedText.includes('successfully crafted') ||
-      normalizedText.includes('wait at least');
-  }};
-  let fallback = null;
-  for (let j = outgoingIndex + 1; j < items.length; j++) {{
-    const snapshot = mapSnapshot(items[j]);
-    if (looksLikeEpicReply(snapshot)) {{
-      return JSON.stringify(snapshot);
-    }}
-    if (!fallback) {{
-      fallback = snapshot;
-    }}
-  }}
-  return JSON.stringify(fallback || emptySnapshot());
-");
-
-            try
-            {
-                var json = await _web.CoreWebView2.ExecuteScriptAsync(script);
-                var payload = DiscordScriptParsing.ParseSnapshot(DiscordScriptParsing.UnquoteJson(json));
-                var id = payload?.Id;
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    return null;
-                }
-
-                return payload;
-            }
-            catch
-            {
-                return null;
-            }
+            if (_web.CoreWebView2 == null || string.IsNullOrWhiteSpace(outgoingMessageId)) return null;
+            var recentMessages = await GetRecentMessagesAsync(30);
+            return DiscordCommandReplySelector.SelectFirst(recentMessages, outgoingMessageId);
         }
 
         private static string BuildRecentMessagesScript(int count)

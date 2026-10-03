@@ -41,7 +41,7 @@ public sealed class AdaptivePuzzleTests
         Assert.Equal((byte)255, card.At<Vec3b>(10, 70).Item1);
     }
 
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-dataset-expansion-20260908/images/1485124172236456016.png")]
     public async Task AdaptivePipeline_RecognizesKeyButDoesNotReuseLegacySeal()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();
@@ -57,7 +57,7 @@ public sealed class AdaptivePuzzleTests
         Assert.False(result.AutomaticSubmissionAllowed);
     }
 
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-training-20260908/images/1196874297508106250.png")]
     public async Task AdaptivePipeline_RecognizesOlderShiftedLayout()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();

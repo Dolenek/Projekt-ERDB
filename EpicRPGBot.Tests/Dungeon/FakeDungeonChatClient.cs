@@ -54,7 +54,7 @@ Area: 7 (Max: 7)";
             bool partnerInitiatesEntryPrompt = false,
             bool usePlainHandleFallback = false,
             bool usePlayerTagFallback = false,
-            bool useSnowflakeIds = false,
+            bool useSnowflakeIds = true,
             IEnumerable<string> dungeonEntryReplies = null)
         {
             _inviteAlreadyVisible = inviteAlreadyVisible;

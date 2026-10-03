@@ -170,6 +170,9 @@
     <Compile Include="Services\PuzzleSolverService.cs" />
     <Compile Include="Services\PuzzleDebugArtifactWriter.cs" />
     <Compile Include="Services\ChatMessagePoller.cs" />
+    <Compile Include="Services\DiscordMessageIdentity.cs" />
+    <Compile Include="Services\DiscordMessageChronology.cs" />
+    <Compile Include="Services\DiscordCommandReplySelector.cs" />
     <Compile Include="Services\ConfirmedCommandSender.cs" />
     <Compile Include="Services\DiscordCommandSendPolicy.cs" />
     <Compile Include="Services\DiscordMessagePermalink.cs" />

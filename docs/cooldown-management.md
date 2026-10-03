@@ -3,7 +3,7 @@
 The UI has two cooldown layers: persisted baselines and the live tracked cooldown state shown in the right panel.
 
 Persisted baselines:
-- File: `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`
+- File: `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini`
 - Keys currently used: `hunt_ms`, `adventure_ms`, `training_ms`, `work_ms`, `farm_ms`, `lootbox_ms`
 - These values are loaded into the shared settings snapshot on app load and shown in the settings window when it opens.
 - They are fallback/base durations for tracked commands, not the authoritative live state once `rpg cd` has been parsed.

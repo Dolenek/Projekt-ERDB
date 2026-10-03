@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EpicRPGBot.UI.Models;
@@ -11,13 +9,7 @@ namespace EpicRPGBot.UI.Pets
     {
         public static bool IsAfter(string replyId, string outgoingId)
         {
-            if (string.IsNullOrWhiteSpace(replyId) || string.IsNullOrWhiteSpace(outgoingId)) return false;
-            var replySeparator = replyId.LastIndexOf('-');
-            var outgoingSeparator = outgoingId.LastIndexOf('-');
-            if (!string.Equals(replyId.Substring(0, replySeparator + 1),
-                outgoingId.Substring(0, outgoingSeparator + 1), StringComparison.Ordinal)) return false;
-            return ulong.TryParse(replyId.Substring(replySeparator + 1), out var reply) &&
-                ulong.TryParse(outgoingId.Substring(outgoingSeparator + 1), out var outgoing) && reply > outgoing;
+            return DiscordMessageChronology.IsAfter(replyId, outgoingId);
         }
 
         public static async Task<DiscordMessageSnapshot> WaitAsync(IDiscordChatClient client,
@@ -29,8 +21,7 @@ namespace EpicRPGBot.UI.Pets
             {
                 token.ThrowIfCancellationRequested();
                 var messages = await client.GetRecentMessagesAsync(30);
-                var reply = messages.Where(m => IsAfter(m.Id, outgoingId) && PetReplyIdentity.IsEpic(m))
-                    .OrderBy(m => ulong.Parse(m.Id.Substring(m.Id.LastIndexOf('-') + 1))).FirstOrDefault();
+                var reply = DiscordCommandReplySelector.SelectFirst(messages, outgoingId);
                 if (reply != null) return reply;
                 await Task.Delay(250, token);
             }

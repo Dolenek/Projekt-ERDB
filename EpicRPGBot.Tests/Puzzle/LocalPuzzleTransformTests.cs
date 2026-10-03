@@ -7,7 +7,7 @@ namespace EpicRPGBot.Tests.Puzzle;
 
 public sealed class LocalPuzzleTransformTests
 {
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-dataset/images/1491830499985850439.png")]
     public async Task SmallCompactCalibrationItem_RefinementRecoversAnswerWithoutValidation()
     {
         var root = RepositoryRoot();

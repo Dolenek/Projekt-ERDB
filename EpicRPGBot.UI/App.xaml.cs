@@ -1,4 +1,6 @@
 using EpicRPGBot.UI.Automation;
+using EpicRPGBot.UI.Accounts;
+using System;
 using System.Windows;
 
 namespace EpicRPGBot.UI
@@ -12,9 +14,17 @@ namespace EpicRPGBot.UI
             AutomationRuntime.Initialize(AutomationOptions.Parse(e.Args));
             ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-            var window = new MainWindow();
-            MainWindow = window;
-            window.Show();
+            try
+            {
+                var window = new MainWindow();
+                MainWindow = window;
+                window.Show();
+            }
+            catch (Exception exception) when (AccountRegistryErrorPresenter.IsStorageError(exception))
+            {
+                AccountRegistryErrorPresenter.Show(null, exception);
+                Shutdown(1);
+            }
         }
     }
 }

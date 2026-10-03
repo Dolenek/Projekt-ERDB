@@ -4,11 +4,11 @@ using Xunit;
 
 namespace EpicRPGBot.Tests.Puzzle;
 
-public sealed class WindowsFactAttribute : FactAttribute
+public class WindowsFactAttribute : FactAttribute
 {
     public WindowsFactAttribute()
     {
-        if (!OperatingSystem.IsWindows()) Skip = "OpenCvSharp Windows native runtime test.";
+        if (!OperatingSystem.IsWindows()) Skip = "This test requires Windows.";
     }
 }
 

@@ -10,16 +10,14 @@ Layout:
 - The Activity and Control Center sidebars start at 300 and 360 pixels and can independently collapse to a 36-pixel reopening rail. Collapse state is not persisted.
 
 Startup flow:
-1. Clamp the initial normal window to the current monitor work area with a DPI-aware margin so it cannot open beyond any screen edge.
-2. Load puzzle-only `.env` values into process environment for solver configuration.
-3. Load saved local settings from `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini` into an in-memory settings snapshot.
-4. Bind the last-message list and in-memory console log.
+1. Load and validate the account registry. When no registry exists, migrate legacy settings while retaining the default browser profile; see [multiple accounts](multiple-accounts.md). An invalid existing registry stops startup with an error.
+2. Load each account's saved settings from `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini` and create lightweight hosts for all five Discord tabs without creating their WebView2 surfaces.
+3. Clamp the initial normal window to the current monitor work area with a DPI-aware margin so it cannot open beyond any screen edge.
+4. Load puzzle-only `.env` values into process environment for solver configuration and bind the selected account's messages, statistics and Console.
 5. Use the saved channel URL, fallback flag, area, and hunt/adventure/work/farm/lootbox baselines as the runtime defaults for navigation and automation.
-6. Create lightweight hosts for all five Discord tabs without creating their WebView2 surfaces.
-7. Load the account registry, migrating the existing settings and default browser profile into the first account when needed.
-8. Initialize only the selected account and selected Discord tab under `%LocalAppData%/EpicRPGBot.UI/WebView2`.
-9. Poll an account's Bot tab while its engine runs or that tab is visible.
-10. Start the Guild watcher only when its saved `Active` setting and channel configuration are valid; Dungeon and Duel remain unloaded until selected or requested by their workflow.
+6. Start each configured Guild watcher only when its saved `Active` setting and channel configuration are valid.
+7. Initialize the selected account's selected Discord tab under `%LocalAppData%/EpicRPGBot.UI/WebView2`. Other tabs remain unloaded until demanded by their view or workflow.
+8. Poll an account's Bot tab while its engine runs or that tab is visible.
 
 User-visible behaviors:
 - `Pets` opens the [pet menu](pet-menu.md) with inventory selection, protections and manual/automatic fusion. The bot remains paused while the modal menu is open.
@@ -33,7 +31,7 @@ User-visible behaviors:
 - `Complete dungeon` starts an exclusive run that first performs `Trade area` on the bot tab in its currently open channel, then switches to the dedicated Dungeon tab for the listing-channel signup; while active, the button changes to `Stop dungeon`.
 - `Start duel` loads the profile through the channel currently held by the Bot tab and runs matchmaking in the dedicated Duel tab without forcing it into the foreground; while active, the button changes to `Stop duel`.
 - `Start` starts the automation engine, then sends `rpg cd` through the bot tab and waits for the cooldown snapshot before scheduling commands.
-- `Stop` stops engine timers; optional tabs without a remaining activity reason are disposed independently, while Bot and Player remain active.
+- `Stop` stops engine timers; tabs without a remaining activity reason are disposed according to [WebView lifecycle](webview-lifecycle.md).
 - The account switcher shows `Stopped • Name` or `Running • Name`; an active exclusive workflow is appended to that account. Discord status reflects the selected account.
 - `Start` uses the green primary treatment, `Stop` uses a restrained red treatment, and active exclusive workflow buttons use the cyan treatment.
 - `Initialize` starts with one opening `rpg cd` snapshot, skips tracked commands that are already on cooldown in that snapshot, and only saves refreshed baselines for commands that were ready to initialize.

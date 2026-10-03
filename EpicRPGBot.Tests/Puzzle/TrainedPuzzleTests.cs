@@ -46,7 +46,7 @@ public sealed class TrainedPuzzleTests
         }
     }
 
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-training-20260908/images/1266401205928595520.png")]
     public async Task GrayscaleEpicCoin_SeparateDevelopmentExampleUsesLearnedTemplate()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();
@@ -72,7 +72,7 @@ public sealed class TrainedPuzzleTests
         PuzzleItemCatalog.Load(Path.Combine(root, "items.json")),
         LocalPuzzlePolicy.Load(Path.Combine(root, "tools/puzzle/fine-policy.json")));
 
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-dataset/images/1406306444474585219.png")]
     public async Task NarrowQuestionCrop_IsSupportedButBlankCardsAreRejected()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();
@@ -88,7 +88,7 @@ public sealed class TrainedPuzzleTests
         }
     }
 
-    [WindowsFact]
+    [LocalPuzzleDatasetFact("artifacts/puzzle-dataset-expansion-20260908/images/1448259748289052765.png")]
     public async Task ColoredInterference_DoesNotSelectLearnedGrayCoin()
     {
         var root = LocalPuzzleTransformTests.RepositoryRoot();

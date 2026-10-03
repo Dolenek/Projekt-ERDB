@@ -1,6 +1,7 @@
 # Testing Automation
 
 `EpicRPGBot.Mcp` is a Windows-only MCP sidecar for local end-to-end testing of `EpicRPGBot.UI`.
+Build requirements and offline checks are documented in [development checks](development.md).
 
 Codex connection from Windows PowerShell:
 - Build the Windows server from the repository root:
@@ -104,7 +105,7 @@ Current assumptions:
 - The first version is for an interactive Windows desktop session only.
 - Discord authentication is still manual; the MCP server automates the already-logged-in embedded session.
 - Live Discord actions are allowed; there is no dedicated safe-mode channel restriction in the current implementation.
-- Bot and Player remain available as DevTools targets. Guild, Dungeon, and Duel targets exist only while selected or held by a workflow/watcher; target selection resolves each page via its injected tab-role marker.
+- DevTools targets exist while their tabs have an activity reason; see [WebView lifecycle](webview-lifecycle.md). Target selection resolves each page via its injected account and tab-role markers.
 
 Shared-profile constraint:
 - Close the regular UI instance before launching the MCP-managed UI. Both currently use the same WebView2 user-data folder. Different debugging options on simultaneous instances can cause initialization failure `0x8007139F`. Restart the MCP-managed instance after releasing the profile.

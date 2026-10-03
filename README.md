@@ -17,10 +17,11 @@ Docs:
 - [Cooldown management](docs/cooldown-management.md)
 - [Puzzle solver](docs/puzzle-solver.md)
 - [Testing automation](docs/testing-automation.md)
+- [Build and test checks](docs/development.md)
 
 Requirements:
 - Windows 10/11 x64
-- .NET Framework 4.8 Developer Pack
+- .NET 9 SDK, .NET 8 runtime, and .NET Framework 4.8
 - Microsoft Edge WebView2 Runtime
 
 Build and run:
@@ -36,8 +37,8 @@ dotnet run --project EpicRPGBot.Mcp/EpicRPGBot.Mcp.csproj -c Debug
 ```
 
 Local settings:
-- User-editable settings are stored in `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`.
-- The right-side settings fields auto-save when changed and are restored on the next launch.
+- Each account stores its settings in `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini`.
+- Settings edits auto-save and are restored on the next launch. See [account storage and migration](docs/multiple-accounts.md).
 
 Puzzle `.env`:
 - Only puzzle-related configuration stays in `.env` at the repository root.

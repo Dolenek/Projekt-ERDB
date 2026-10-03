@@ -15,7 +15,7 @@ Layout:
 - `Card Hand` opens a second modal for auto-play, nine reward weights, and the persisted deck-ownership import; see [Card hand automation](card-hand-automation.md)
 
 Persistence model:
-- File: `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`
+- File: `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini`
 - The settings window loads from the shared in-memory settings snapshot when it opens.
 - Every edit saves immediately back to the shared snapshot and the backing `.ini` file.
 - Existing keys are preserved. Card-hand keys store the enabled flag, nine weights, deck-loaded flag, sorted owned-card codes, and successful-load UTC timestamp.

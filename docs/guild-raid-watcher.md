@@ -26,7 +26,7 @@ Send behavior:
 - If the watcher is disabled, settings become incomplete, or the guild URL is invalid, polling stops and the watcher goes idle without affecting the main bot engine.
 
 Settings:
-- File: `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`
+- File: `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini`
 - Keys: `guild_raid_active`, `guild_raid_channel_url`, `guild_raid_trigger_text`, `guild_raid_match_mode`, `guild_raid_author_filter`
 - The main settings window opens a dedicated `Guild raid` dialog for these values.
 - Changes save immediately and apply live to the watcher.

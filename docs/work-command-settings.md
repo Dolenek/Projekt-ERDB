@@ -53,7 +53,7 @@ Defaults:
 - Areas `9-15` default to `rpg chainsaw`.
 
 Persistence:
-- Stored in `%LocalAppData%/EpicRPGBot.UI/settings/app-settings.ini`.
+- Stored in `%LocalAppData%/EpicRPGBot.UI/settings/accounts/<AccountId>.ini`.
 - Key: `work_commands`
 - Format: semicolon-separated `area=command` pairs covering all areas `1..15`.
 - Auto-Best uses the same format and commits its complete map with one settings save.
