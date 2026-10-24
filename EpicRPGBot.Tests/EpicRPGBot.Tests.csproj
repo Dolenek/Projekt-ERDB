@@ -12,7 +12,7 @@
     <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistryDocument.cs" Link="Accounts\AccountRegistryDocument.cs" />
     <Compile Include="..\EpicRPGBot.UI\Accounts\AccountRegistrySnapshot.cs" Link="Accounts\AccountRegistrySnapshot.cs" />
     <Compile Include="..\EpicRPGBot.UI\Pets\*.cs" Exclude="..\EpicRPGBot.UI\Pets\PetsWindow*.cs" Link="Pets\%(Filename)%(Extension)" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="xunit" Version="2.9.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
