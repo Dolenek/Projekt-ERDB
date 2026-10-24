@@ -42,6 +42,18 @@ dotnet build EpicRPGBotCSharp.sln -c Release --artifacts-path artifacts/isolated
 Some source-inspection tests expect the standard `bin/Release/net8.0` layout;
 run the full C# test suite with the standard output paths shown above.
 
+## C# coverage
+
+The tests link production source files into the test assembly. Include that
+assembly when collecting coverage; otherwise the report can contain no lines.
+The collector runs through VSTest:
+
+```powershell
+dotnet test EpicRPGBot.Tests/EpicRPGBot.Tests.csproj -c Release --no-build --no-restore --collect "XPlat Code Coverage" --results-directory artifacts/coverage -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.IncludeTestAssembly=true
+```
+
+The report is written to `artifacts/coverage/<run-id>/coverage.cobertura.xml`.
+
 ## Python tests
 
 Create an isolated environment and install the pinned tooling dependencies:
