@@ -34,6 +34,7 @@ Canonical pages:
 - [Guild raid watcher](docs/guild-raid-watcher.md)
 - [Testing automation](docs/testing-automation.md)
 - [Build and test checks](docs/development.md)
+- [Dependency management](docs/dependency-management.md)
 
 Supporting references:
 - [Root README](README.md)

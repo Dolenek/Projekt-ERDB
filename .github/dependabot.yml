@@ -1,0 +1,34 @@
+version: 2
+
+# Updates target the repository's default branch (main), including security fixes.
+updates:
+  - package-ecosystem: pip
+    directory: /tools/puzzle
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Prague
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: nuget
+    directories:
+      - /EpicRPGBot.UI
+      - /EpicRPGBot.Mcp
+      - /EpicRPGBot.Tests
+      - /tools/PuzzleReplay
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Prague
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Prague
+    open-pull-requests-limit: 5
